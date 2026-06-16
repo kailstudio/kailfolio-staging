@@ -1,0 +1,963 @@
+/* ─── CSS Variables ─────────────────────────────────────────────── */
+:root {
+  --blue:        #3355FF;
+  --blue-mid:    #4466FF;
+  --lavender:    #E8E0F5;
+  --lavender-2:  #D4C8F0;
+  --white:       #FFFFFF;
+  --text-dark:   #1a1a2e;
+  --text-mid:    #4a4a6a;
+  --radius-pill: 999px;
+  --radius-card: 28px;
+  --shadow-soft: 0 20px 60px rgba(50, 40, 120, 0.15);
+  --shadow-card: 0 30px 80px rgba(50, 40, 120, 0.2);
+
+  /* Glass tokens */
+  --glass-white:    rgba(255, 255, 255, 0.62);
+  --glass-border:   rgba(255, 255, 255, 0.78);
+  --glass-blur:     blur(40px) saturate(1.7);
+  --glass-shadow:   0 8px 40px rgba(120, 100, 200, 0.10),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+/* ─── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-weight: 400;
+  color: var(--text-dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Fallback bg in case app-bg hasn't painted yet */
+  background: #ddd5ff;
+}
+
+/* ─── App shell ─────────────────────────────────────────────────── */
+.app { width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMATED GRADIENT BACKGROUND
+   Soft aurora: lavender → soft purple → near-white → lime hint
+   Stays fixed behind everything; all glass panels blur/tint against it.
+═══════════════════════════════════════════════════════════════════ */
+
+@keyframes kailGrad {
+  0%   { background-position:   0%  50%; }
+  33%  { background-position:  60% 100%; }
+  66%  { background-position: 100%  40%; }
+  100% { background-position:   0%  50%; }
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* Airy, colorful gradient: lavender → soft purple → white → lime → back */
+  background: linear-gradient(
+    -45deg,
+    #e2d4ff,   /* light lavender */
+    #c8b4f8,   /* medium purple  */
+    #ddd6ff,   /* soft violet    */
+    #f2eeff,   /* near-white     */
+    #e8ffd8,   /* very light lime */
+    #d0c4f8    /* lavender again  */
+  );
+  background-size: 400% 400%;
+  animation: kailGrad 22s ease infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HERO SEQUENCE
+═══════════════════════════════════════════════════════════════════ */
+
+.hero-sequence {
+  position: relative;
+  width: 100%;
+}
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+}
+
+/*
+ * Background is now TRANSPARENT — the animated gradient shows through.
+ * Bubbles and character float directly on the gradient.
+ */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 0;
+}
+
+/* Unused lavender wash layer — kept for backwards compat */
+.hero-lavender {
+  position: absolute;
+  inset: 0;
+  background: var(--lavender);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Logo layers (unused in current HeroSequence but keep rules) */
+.hero-logo-pos {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hero-logo-anim {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-logo-img {
+  width: clamp(240px, 52vw, 660px);
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Bubble container */
+.hero-bubbles {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/*
+ * Bubble visual — premium glass orb.
+ * Strong specular + blue-tinted fill looks beautiful on the light gradient.
+ */
+.bubble-visual {
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 28% 26%,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(220, 228, 255, 0.80) 18%,
+    rgba(165, 188, 255, 0.50) 42%,
+    rgba(110, 148, 255, 0.22) 68%,
+    rgba(80,  120, 255, 0.07) 100%
+  );
+  border: 1.5px solid rgba(255, 255, 255, 0.90);
+  box-shadow:
+    inset 0 0 44px rgba(255, 255, 255, 0.65),
+    inset 0 -18px 36px rgba(120, 150, 255, 0.28),
+    0 14px 48px rgba(80, 100, 210, 0.18),
+    0 3px 10px rgba(100, 120, 240, 0.10);
+  backdrop-filter: blur(2px);
+  animation: floatBubble linear infinite;
+  will-change: transform;
+}
+
+@keyframes floatBubble {
+  0%   { transform: translateY(0px)   scale(1); }
+  25%  { transform: translateY(-16px) scale(1.012); }
+  50%  { transform: translateY(-6px)  scale(0.991); }
+  75%  { transform: translateY(-20px) scale(1.008); }
+  100% { transform: translateY(0px)   scale(1); }
+}
+
+/*
+ * Fixed character track — stays at viewport bottom throughout page.
+ */
+.hero-char-track {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.hero-char-img {
+  width: 80vw;
+  max-width: 1200px;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Scroll hint — dark text on light gradient */
+.scroll-hint {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(40, 30, 90, 0.48);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  z-index: 30;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PORTFOLIO SECTION  —  glassmorphic panel that rises over the hero
+═══════════════════════════════════════════════════════════════════ */
+
+/*
+ * Negative margin pulls the section up so it enters the viewport
+ * at ~frame 50 of the PNG sequence and reaches center at ~frame 75.
+ * Glassmorphism + rounded top corners give a "floating panel" effect.
+ *
+ * backdrop-filter is on .pf-section (not on any fixed child).
+ * ProjectDetail is rendered in App at root level so it avoids the
+ * containing-block restriction imposed by backdrop-filter.
+ */
+.pf-section {
+  width: 100%;
+  background: var(--glass-white);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: 40px 40px 0 0;
+  border-top: 1px solid var(--glass-border);
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+  border-right: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--glass-shadow);
+  padding: clamp(52px, 7vw, 96px) clamp(24px, 6vw, 80px) clamp(80px, 10vw, 130px);
+  margin-top: -40vh;
+  position: relative;
+  z-index: 10;
+}
+
+/* Subtle glowing lip at the very top of the glass panel */
+.pf-glass-lip {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.90) 25%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.90) 75%,
+    transparent 100%
+  );
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.pf-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(40px, 5vw, 80px);
+  align-items: start;
+}
+
+/* ── Studio stats bar ──────────────────────────────────────────── */
+.pf-studio-stats {
+  display: flex;
+  gap: clamp(20px, 3vw, 36px);
+  margin-bottom: clamp(28px, 3.5vw, 40px);
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  width: fit-content;
+  box-shadow: 0 2px 16px rgba(100, 80, 200, 0.07);
+}
+
+.pf-studio-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pf-studio-val {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+  font-weight: 800;
+  color: var(--blue);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pf-studio-lbl {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--text-mid);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Left column ───────────────────────────────────────────────── */
+.pf-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.pf-logo-sm {
+  width: clamp(60px, 8vw, 90px);
+  height: auto;
+  display: block;
+  margin-bottom: clamp(20px, 3vw, 32px);
+}
+
+.pf-headline {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(2.8rem, 5.5vw, 5rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--text-dark);
+  letter-spacing: -0.025em;
+  margin-bottom: clamp(14px, 2vw, 20px);
+}
+
+.hl-spark {
+  font-weight: 800;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-color: #c8ff00;
+  text-decoration-thickness: 5px;
+  text-underline-offset: 5px;
+}
+
+.hl-screen {
+  font-weight: 800;
+  font-style: normal;
+  background: var(--blue);
+  color: #ffffff;
+  padding: 4px 16px 6px;
+  border-radius: 12px;
+  display: inline-block;
+  line-height: 1.15;
+}
+
+.hl-shelf {
+  font-weight: 800;
+  font-style: normal;
+}
+
+.pf-subtitle {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1rem, 1.8vw, 1.28rem);
+  font-weight: 400;
+  color: var(--text-dark);
+  line-height: 1.4;
+  margin-bottom: clamp(16px, 2vw, 24px);
+}
+
+.hl-between {
+  background: #c8ff00;
+  color: #1a1a2e;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.pf-body {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+  font-weight: 400;
+  color: #5a5a78;
+  line-height: 1.75;
+  margin-bottom: clamp(32px, 4vw, 48px);
+  max-width: 430px;
+}
+
+/* ── Category accordion pills ─────────────────────────────────── */
+.pf-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pf-cat-block {
+  display: grid;
+  grid-template-rows: auto 0fr;
+  transition: grid-template-rows 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pf-cat-block.open {
+  grid-template-rows: auto 1fr;
+}
+
+.pf-carousel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.pf-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 15px 24px 15px 28px;
+  background: rgba(51, 85, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  border: 1px solid rgba(100, 140, 255, 0.35);
+  border-radius: var(--radius-pill);
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.8rem, 1.15vw, 0.92rem);
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 4px 18px rgba(51, 85, 255, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  letter-spacing: 0.01em;
+}
+
+.pf-pill:hover {
+  background: rgba(34, 68, 238, 0.90);
+  box-shadow: 0 6px 28px rgba(51, 85, 255, 0.32),
+              inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.pf-pill--open {
+  background: rgba(26, 50, 220, 0.92);
+  box-shadow: 0 8px 32px rgba(51, 85, 255, 0.38),
+              inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.pf-pill-name {
+  flex: 1;
+  text-align: center;
+}
+
+.pf-pill-icon {
+  position: absolute;
+  right: 20px;
+  font-size: 1rem;
+  opacity: 0.8;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.pf-pill-icon.rotated { transform: rotate(90deg); }
+
+/* ── Inline carousel ──────────────────────────────────────────── */
+.ic-wrap {
+  padding: 14px 0 8px;
+  cursor: grab;
+}
+
+.ic-viewport {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 16px;
+}
+
+.ic-track {
+  display: flex;
+  gap: 14px;
+  will-change: transform;
+  padding-bottom: 4px;
+}
+
+.ic-card {
+  width: 224px;
+  height: 158px;
+  border-radius: 16px;
+  flex-shrink: 0;
+  box-shadow:
+    0 6px 22px rgba(50, 40, 120, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: flex-end;
+  padding: 12px 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.22s, transform 0.22s, border-color 0.22s;
+  position: relative;
+}
+
+.ic-card:hover {
+  box-shadow:
+    0 14px 38px rgba(50, 40, 120, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.85);
+  transform: translateY(-3px);
+}
+
+.ic-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ic-card-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(0, 0, 0, 0.22);
+  padding: 4px 9px;
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.02em;
+}
+
+/* ── Right column — blue glass panel ─────────────────────────── */
+.pf-right {
+  position: sticky;
+  top: 40px;
+  align-self: start;
+}
+
+.pf-panel {
+  background: rgba(51, 85, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-radius: 28px;
+  aspect-ratio: 9 / 11;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(150, 175, 255, 0.35);
+  box-shadow:
+    0 32px 80px rgba(51, 85, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 60px rgba(255, 255, 255, 0.06);
+}
+
+.pf-panel-art { position: absolute; inset: 0; }
+
+.pf-panel-centre-orb {
+  position: absolute;
+  width: 50%;
+  aspect-ratio: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 38%,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(180, 200, 255, 0.24) 45%,
+    rgba(80, 120, 255, 0.07) 100%
+  );
+  border: 2px solid rgba(255, 255, 255, 0.32);
+}
+
+.pf-social-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-pill);
+  padding: 13px 24px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  z-index: 10;
+}
+
+.pf-social-icon {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.pf-social-icon:hover { opacity: 0.65; }
+
+/* PROJECT DETAIL OVERLAY */
+
+.pd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(230, 222, 255, 0.82);
+  backdrop-filter: blur(52px) saturate(1.9);
+  -webkit-backdrop-filter: blur(52px) saturate(1.9);
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 0 clamp(40px, 5vw, 64px);
+}
+
+.pd-sheet {
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 clamp(20px, 5vw, 52px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 3.5vw, 40px);
+}
+
+.pd-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(20px, 5vw, 52px);
+  background: rgba(245, 240, 255, 0.70);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  margin: 0 calc(-1 * clamp(20px, 5vw, 52px));
+}
+
+.pd-back,
+.pd-close {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  box-shadow: 0 2px 12px rgba(100, 80, 200, 0.10);
+}
+
+.pd-back:hover,
+.pd-close:hover {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 4px 20px rgba(100, 80, 200, 0.16);
+}
+
+.pd-close {
+  font-size: 1.15rem;
+  padding: 6px 14px;
+  line-height: 1;
+}
+
+.pd-header-logo {
+  height: 22px;
+  width: auto;
+  opacity: 0.55;
+}
+
+.pd-hero {
+  padding-top: clamp(16px, 2.5vw, 28px);
+}
+
+.pd-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(2rem, 4.5vw, 3.6rem);
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+
+.pd-tagline {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.95rem, 1.6vw, 1.18rem);
+  font-weight: 400;
+  color: var(--text-mid);
+  line-height: 1.55;
+  max-width: 560px;
+}
+
+.pd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: clamp(12px, 1.8vw, 18px);
+}
+
+.pd-card {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  padding: clamp(24px, 3vw, 36px);
+  box-shadow:
+    0 6px 32px rgba(100, 80, 200, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.22s, transform 0.22s;
+}
+
+.pd-card:hover {
+  box-shadow:
+    0 12px 48px rgba(100, 80, 200, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+}
+
+.pd-card-tag {
+  display: inline-block;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(80, 60, 160, 0.55);
+  margin-bottom: 14px;
+}
+
+.pd-card--visual {
+  min-height: clamp(220px, 26vw, 340px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  overflow: hidden;
+  background: unset;
+  padding: clamp(20px, 2.5vw, 28px);
+}
+
+.pd-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.30);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.pd-ring--1 { width: 60%; aspect-ratio: 1; }
+.pd-ring--2 { width: 90%; aspect-ratio: 1; border-color: rgba(255,255,255,0.18); }
+.pd-ring--3 { width: 120%; aspect-ratio: 1; border-color: rgba(255,255,255,0.10); }
+
+.pd-vis-initial {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -54%);
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(80px, 14vw, 160px);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.18);
+  line-height: 1;
+  pointer-events: none;
+  letter-spacing: -0.04em;
+  user-select: none;
+}
+
+.pd-vis-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  z-index: 1;
+}
+
+.pd-vis-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.pd-vis-sub {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.pd-card--about {
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(220px, 26vw, 340px);
+}
+
+.pd-about-text {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.88rem, 1.2vw, 1rem);
+  font-weight: 400;
+  color: var(--text-mid);
+  line-height: 1.72;
+  flex: 1;
+  margin-bottom: 20px;
+}
+
+.pd-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pd-tag {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.02em;
+}
+
+.pd-card--stats {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-stats-row {
+  display: flex;
+  gap: clamp(16px, 3vw, 36px);
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.pd-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pd-stat-val {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.pd-stat-lbl {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+.pd-card--cta {
+  display: flex;
+  flex-direction: column;
+}
+
+.pd-cta-heading {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1rem, 1.6vw, 1.22rem);
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.4;
+  margin-bottom: auto;
+  padding-bottom: 24px;
+  flex: 1;
+}
+
+.pd-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 28px;
+  border-radius: var(--radius-pill);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: opacity 0.18s, box-shadow 0.18s, transform 0.18s;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.20);
+  width: fit-content;
+}
+
+.pd-cta-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.24);
+}
+
+/* FOOTER */
+.footer {
+  background: rgba(215, 205, 245, 0.55);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  padding: 60px clamp(24px, 6vw, 80px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  color: var(--text-mid);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.footer-logo {
+  width: 72px;
+  height: auto;
+  opacity: 0.55;
+}
+
+.footer a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .hero-char-img { width: 88vw; max-width: 900px; }
+  .pd-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .pf-section { margin-top: -20vh; border-radius: 28px 28px 0 0; }
+  .pf-inner { grid-template-columns: 1fr; }
+  .pf-right { position: static; }
+  .pf-panel { aspect-ratio: 16 / 9; }
+  .pf-studio-stats { gap: 16px; }
+}
+
+@media (max-width: 480px) {
+  .hero-char-img { width: 95vw; }
+  .pf-section { margin-top: -12vh; }
+  .pf-headline { font-size: clamp(2.2rem, 11vw, 3rem); }
+  .pf-studio-stats { width: 100%; justify-content: space-between; }
+}
