@@ -2,6 +2,9 @@
 :root {
   --blue:        #3355FF;
   --blue-mid:    #4466FF;
+  --lilac:       #C4B8F0;
+  --lilac-mid:   #B0A2E8;
+  --lime:        #c8ff00;
   --lavender:    #E8E0F5;
   --lavender-2:  #D4C8F0;
   --white:       #FFFFFF;
@@ -18,6 +21,9 @@
   --glass-blur:     blur(40px) saturate(1.7);
   --glass-shadow:   0 8px 40px rgba(120, 100, 200, 0.10),
                     inset 0 1px 0 rgba(255, 255, 255, 0.88);
+
+  /* Header height token — used for padding-top throughout */
+  --header-h: 64px;
 }
 
 /* ─── Reset ─────────────────────────────────────────────────────── */
@@ -31,6 +37,7 @@
 /* Scrolling remains fully functional via wheel, trackpad, touch, keyboard */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--header-h);
   scrollbar-width: none;       /* Firefox */
   -ms-overflow-style: none;    /* IE / Edge legacy */
 }
@@ -57,6 +64,54 @@ body {
 .app { width: 100%; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   FIXED SITE HEADER — glassmorphism nav, z:100
+   High transparency so aurora + bubbles remain visible beneath.
+   Logo: left-aligned, matching project-detail header aesthetic.
+═══════════════════════════════════════════════════════════════════ */
+
+/*
+ * Site header — dark glass so the white logo has clear contrast against it.
+ * The gradient and bubbles still show through the blur; the dark tint
+ * keeps the logo legible against any background colour phase.
+ */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--header-h);
+  background: rgba(18, 10, 60, 0.32);     /* dark purple glass — contrasts white logo */
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 4px 32px rgba(10, 5, 40, 0.18),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.10);
+  pointer-events: auto;
+}
+
+.site-header-inner {
+  height: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* logo centred horizontally */
+}
+
+.site-header-logo {
+  height: clamp(20px, 2.4vw, 28px);
+  width: auto;
+  display: block;
+  opacity: 0.88;
+  transition: opacity 0.2s ease;
+}
+
+.site-header-logo:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════════
    SPLIT-SCREEN LAYOUT
    Left  70 % — scrollable portfolio column (solid lavender-white bg)
    Right 30 % — sticky animation anchor (transparent, aurora shows through)
@@ -76,6 +131,10 @@ body {
  * Left column — sticky panel, locked to top of viewport.
  * Portfolio content scrolls internally via overflow-y: auto.
  * Page scroll (window) drives the character animation only.
+ *
+ * background: transparent — lets the fixed aurora + bubbles (z:1) show
+ * through. The pf-section glassmorphism handles its own visual background.
+ * padding-top = header height so content starts below the fixed site header.
  */
 .split-left {
   position: sticky;
@@ -83,7 +142,8 @@ body {
   height: 100vh;
   overflow-y: auto;
   z-index: 2;
-  background: rgba(244, 241, 255, 0.96);
+  background: transparent;
+  padding-top: var(--header-h);
 }
 
 /*
@@ -103,10 +163,18 @@ body {
    Stays fixed behind everything; all glass panels blur/tint against it.
 ═══════════════════════════════════════════════════════════════════ */
 
+/*
+ * kailGrad — 6-stop keyframe loop gives more arc of movement than 4-stop.
+ * Diagonal shift covers all four corners so every brand colour passes
+ * through the foreground at least once per cycle.
+ */
 @keyframes kailGrad {
   0%   { background-position:   0%  50%; }
-  33%  { background-position:  60% 100%; }
-  66%  { background-position: 100%  40%; }
+  16%  { background-position:  30% 100%; }
+  33%  { background-position: 100%  70%; }
+  50%  { background-position:  90%   0%; }
+  66%  { background-position:  40%  30%; }
+  83%  { background-position:   0%  80%; }
   100% { background-position:   0%  50%; }
 }
 
@@ -114,18 +182,33 @@ body {
   position: fixed;
   inset: 0;
   z-index: -1;
-  /* Airy, colorful gradient: lavender → soft purple → white → lime → back */
+  /*
+   * Studio KAIL brand gradient — blue / lilac / lime at background-safe
+   * lightness so the page stays readable while the colours feel alive.
+   *
+   * Stops (counter-clockwise order creates the smoothest cross-fade):
+   *   #C4B8F0  — KAIL lilac (brand exact)
+   *   #7a8fff  — blue-violet bridge
+   *   #3d5cff  — KAIL blue, brightened for background depth
+   *   #d8ccff  — pale lilac highlight
+   *   #e5ffd0  — pale lime (lime at bg-safe lightness)
+   *   #a8bbff  — soft blue
+   *   #d8ff88  — lime-gold mid
+   *   #C4B8F0  — lilac close (loops smoothly)
+   */
   background: linear-gradient(
     -45deg,
-    #e2d4ff,   /* light lavender */
-    #c8b4f8,   /* medium purple  */
-    #ddd6ff,   /* soft violet    */
-    #f2eeff,   /* near-white     */
-    #e8ffd8,   /* very light lime */
-    #d0c4f8    /* lavender again  */
+    #C4B8F0,
+    #7a8fff,
+    #3d5cff,
+    #d8ccff,
+    #e5ffd0,
+    #a8bbff,
+    #d8ff88,
+    #C4B8F0
   );
-  background-size: 400% 400%;
-  animation: kailGrad 22s ease infinite;
+  background-size: 600% 600%;
+  animation: kailGrad 18s ease infinite;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -162,18 +245,28 @@ body {
  */
 
 /*
- * Bubble ecosystem — full-viewport fixed layer.
- * z:1 places bubbles above the aurora (z:-1) and below the left portfolio
- * column (split-left z:2), so they're visible in the right/transparent area
- * but naturally hidden behind the solid portfolio background on the left.
- * No overflow constraint — bubbles float freely as a global environment.
+ * Bubble ecosystem — full-viewport fixed layer, always the lowest visual layer.
+ *
+ * z-index stack (back → front):
+ *   app-bg            z: -1   fixed aurora gradient
+ *   hero-bubbles-panel z: 1   ALL bubbles — full viewport width
+ *   split-left        z:  2   portfolio column (transparent bg lets bubbles show)
+ *   pf-section        z:  4   portfolio glass panel (backdrop-filter blurs bubbles)
+ *   site-header       z:100   fixed nav header
+ *   hero-char-track   z:9999  character animation
+ *   pd-overlay        z:10000 project detail overlay
+ *
+ * Bubbles span x: 3 %–97 % so they appear on both sides of the screen.
+ * overflow: hidden clips any orb that drifts beyond the viewport boundary
+ * during parallax, preventing horizontal scrollbars on fixed-position children.
  */
 .hero-bubbles-panel {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* overflow:visible (default) — no rectangular container visible */
+  /* overflow: visible (default) — position:fixed elements do not cause
+     document scroll, so no clip needed. Clipping was hiding edge bubbles. */
 }
 
 /* legacy — kept for class references that may still exist */
@@ -266,14 +359,25 @@ body {
  * the left column. No negative margin-top needed: the hero no longer
  * overlaps it visually since the animation is on the right.
  */
+/*
+ * Portfolio section — fully transparent container.
+ *
+ * No background, no backdrop-filter here. Either of those would hide or
+ * smear the bubbles that need to be visible through this area.
+ * All visual treatments (glass, blur, opacity) live on the inner panels:
+ *   .hero-text-glass  — headline + subtitle card
+ *   .pf-body-glass    — body copy card
+ *   .pf-pill          — category pills (their own glassmorphism)
+ * This lets the bubbles flow naturally beneath all content.
+ */
 .pf-section {
   width: 100%;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(32px) saturate(1.6);
-  -webkit-backdrop-filter: blur(32px) saturate(1.6);
-  border-top: 1px solid rgba(255, 255, 255, 0.70);
-  box-shadow: 0 -4px 40px rgba(100, 80, 200, 0.08);
-  padding: clamp(48px, 7vw, 88px) clamp(24px, 5vw, 60px) clamp(72px, 10vw, 120px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: none;
+  box-shadow: none;
+  padding: clamp(36px, 5vw, 64px) clamp(24px, 5vw, 60px) clamp(72px, 10vw, 120px);
   position: relative;
   z-index: 4;
 }
@@ -394,13 +498,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.1em;
+  gap: 0.10em;
   font-family: 'Raleway', sans-serif;
   font-size: clamp(2.8rem, 5.5vw, 5rem);
   font-weight: 400;
-  line-height: 1.05;
+  line-height: 1.10;
   color: var(--text-dark);
-  letter-spacing: -0.025em;
+  letter-spacing: -0.022em;
   margin: 0;
 }
 
@@ -446,6 +550,62 @@ body {
   padding-bottom: 0.05em;
 }
 
+/* ── Glassmorphism text panels ─────────────────────────────────── */
+
+/*
+ * Hero headline + subtitle — layered glass behind the primary hero text.
+ * Subtle so the animated background and bubbles remain the star.
+ * High inner-shadow to create a soft specular top edge.
+ */
+/*
+ * Hero headline glass panel — higher opacity than pf-section so text is
+ * crisp and readable even with bubbles and aurora moving behind it.
+ * backdrop-filter blurs the layers beneath (bubbles + gradient).
+ */
+.hero-text-glass {
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+  padding: clamp(22px, 2.8vw, 34px) clamp(22px, 2.8vw, 34px) clamp(16px, 2vw, 24px);
+  box-shadow:
+    0 8px 40px rgba(100, 80, 200, 0.10),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(140, 120, 220, 0.06);
+  margin-bottom: clamp(18px, 2.2vw, 26px);
+}
+
+/*
+ * Body copy glass panel — same depth treatment, slightly less opaque
+ * so the headline panel reads as the primary focus.
+ */
+.pf-body-glass {
+  background: rgba(255, 255, 255, 0.46);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  padding: clamp(16px, 2vw, 22px) clamp(18px, 2.2vw, 28px);
+  box-shadow:
+    0 5px 24px rgba(100, 80, 200, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  margin-bottom: clamp(22px, 3vw, 36px);
+}
+
+/* Strip margins from elements now managed by the glass panel's padding */
+.hero-text-glass .pf-rotate-wrap { margin-bottom: 0; }
+.pf-body-glass   .pf-body        { margin-bottom: 0; }
+
+/* "and everything in between" — generous space above and below so it
+   reads as a distinct second beat after the headline, not a tight caption */
+.hero-text-glass .pf-subtitle {
+  margin-top:    clamp(18px, 2.2vw, 28px);
+  margin-bottom: clamp(6px,  1vw,   10px);
+  font-size:     clamp(1.05rem, 1.9vw, 1.32rem);  /* slightly larger than default */
+  line-height:   1.5;
+}
+
 /* ── Category accordion pills ─────────────────────────────────── */
 .pf-cats {
   display: flex;
@@ -469,10 +629,11 @@ body {
 }
 
 /*
- * Solid blue pill buttons — filled background, white text.
- * Hover   → background shifts to Studio KAIL Lime (#c8ff00), text goes dark
- * Active  → lime background holds; text dark
- * Transition on background + color only — no layout shifts.
+ * Pill buttons — glassmorphism treatment with Studio KAIL brand colours.
+ * Default  → lilac glass (translucent, blurred, inner highlight)
+ * Hover    → Studio KAIL blue (smooth 0.6 s transition)
+ * Open     → Studio KAIL lime (active/selected state)
+ * Transitions feel smooth and tactile.
  */
 .pf-pill {
   display: flex;
@@ -480,9 +641,9 @@ body {
   justify-content: center;
   gap: 0;
   padding: 15px 52px 15px 28px;
-  background: var(--blue);
-  color: #ffffff;
-  border: none;
+  background: rgba(196, 184, 240, 0.55);   /* lilac, translucent */
+  color: #3a2c80;
+  border: 1px solid rgba(255, 255, 255, 0.68);
   border-radius: 999px;
   font-family: 'Raleway', sans-serif;
   font-size: clamp(0.8rem, 1.15vw, 0.92rem);
@@ -490,29 +651,46 @@ body {
   cursor: pointer;
   width: 100%;
   text-align: center;
-  transition: background 0.35s ease, color 0.35s ease;
-  box-shadow: 0 4px 18px rgba(51, 85, 255, 0.22);
+  transition:
+    background 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    color      0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 4px 20px rgba(140, 120, 220, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -1px 0 rgba(140, 120, 220, 0.08);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
   position: relative;
   letter-spacing: 0.01em;
 }
 
 .pf-pill:hover {
-  background: #c8ff00;
-  color: var(--text-dark);
-  box-shadow: 0 4px 18px rgba(200, 255, 0, 0.30);
+  background: rgba(51, 85, 255, 0.82);    /* blue */
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.50);
+  box-shadow:
+    0 6px 28px rgba(51, 85, 255, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -1px 0 rgba(30, 60, 200, 0.15);
 }
 
 .pf-pill--open {
-  background: #c8ff00;
-  color: var(--text-dark);
-  border-radius: 999px;
-  box-shadow: 0 4px 18px rgba(200, 255, 0, 0.30);
+  background: rgba(200, 255, 0, 0.82);    /* lime */
+  color: #1a1a2e;
+  border-color: rgba(255, 255, 255, 0.80);
+  box-shadow:
+    0 6px 28px rgba(200, 255, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90),
+    inset 0 -1px 0 rgba(150, 200, 0, 0.12);
 }
 
-/* Active overrides hover — lime holds when hovering an open pill */
+/* Active holds lime even on hover */
 .pf-pill--open:hover {
-  background: #c8ff00;
-  color: var(--text-dark);
+  background: rgba(200, 255, 0, 0.90);
+  color: #1a1a2e;
+  border-color: rgba(255, 255, 255, 0.85);
 }
 
 .pf-pill-name {
@@ -533,19 +711,21 @@ body {
 
 /* ── Inline carousel ──────────────────────────────────────────── */
 .ic-wrap {
-  padding: 14px 0 8px;
-  cursor: grab;
+  /* Extra vertical room so hover shadow isn't clipped */
+  padding: 8px 0 16px;
+  /* Clip horizontally only — overflow-x trick via clip-path */
+  overflow: hidden;
+  cursor: default;
 }
 
 .ic-viewport {
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
-  border-radius: 16px;
 }
 
 .ic-track {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   will-change: transform;
   padding-bottom: 4px;
 }
@@ -553,49 +733,323 @@ body {
 .ic-card {
   width: 224px;
   height: 158px;
-  border-radius: 16px;
+  border-radius: 22px;
   flex-shrink: 0;
   box-shadow:
     0 6px 22px rgba(50, 40, 120, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.60);
   display: flex;
-  align-items: flex-end;
-  padding: 12px 14px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
   overflow: hidden;
   cursor: pointer;
-  transition: box-shadow 0.22s, transform 0.22s, border-color 0.22s;
+  transition: box-shadow 0.32s, transform 0.32s, border-color 0.32s;
   position: relative;
+  /* Glassmorphism on solid-colour cards */
+  backdrop-filter: blur(14px) saturate(1.35);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
 }
 
 .ic-card:hover {
   box-shadow:
     0 14px 38px rgba(50, 40, 120, 0.20),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border-color: rgba(255, 255, 255, 0.85);
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.90);
   transform: translateY(-3px);
 }
 
-.ic-card-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+/* Centered glass-pill label on solid cards */
 .ic-card-label {
   font-family: 'Raleway', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.96);
-  background: rgba(0, 0, 0, 0.22);
-  padding: 4px 9px;
-  border-radius: 6px;
-  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.20);
+  background: rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  padding: 6px 14px;
+  border-radius: 999px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10),
+              inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+
+/* ── Image cards with glassmorphism ──────────────────────────── */
+.ic-card--img {
   position: relative;
-  z-index: 1;
-  letter-spacing: 0.02em;
+  overflow: hidden;
+  backdrop-filter: none !important;           /* image handles its own depth */
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow:
+    0 8px 32px rgba(50, 40, 120, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60) !important;
+}
+
+/* Full-bleed photo background — zooms subtly on hover */
+.ic-card-photo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ic-card--img:hover .ic-card-photo {
+  transform: scale(1.06);
+}
+
+/* Very light directional wash — adds glass depth without hiding image */
+.ic-card-glass-wash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.00) 48%,
+    rgba(0,   0,   0,   0.08) 100%
+  );
+  border-radius: inherit;
+}
+
+/* Frosted label strip at the bottom — image cards */
+.ic-card-glass-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 14px 10px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.38);
+  text-align: center;
+}
+
+.ic-card-glass-label span {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.30);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PROJECT GRID — 2-col layout, lime / lilac alternating cards
+   with oval image, tag pills, title + ↗ arrow.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   PROJECT CARDS — lime / lilac alternating, inside RAF carousel.
+   Fixed 210 px width so the track can be infinite-scrolled.
+═══════════════════════════════════════════════════════════════════ */
+
+.pj-card {
+  width: 210px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 16px rgba(50, 40, 120, 0.10);
+  transition:
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    transform  0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pj-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 40px rgba(50, 40, 120, 0.20);
+}
+
+/* ── Mobile swipe carousel ───────────────────────────────────── */
+.ic-wrap--mobile {
+  padding: 8px 0 16px;
+  overflow: hidden;
+}
+
+.ic-viewport--mobile {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.ic-viewport--mobile::-webkit-scrollbar { display: none; }
+
+.ic-viewport--mobile .pj-card {
+  scroll-snap-align: start;
+  width: 160px;
+}
+
+/* Circular / oval image container — 1:1 matches reference */
+.pj-oval-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pj-oval-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pj-card:hover .pj-oval-img { transform: scale(1.06); }
+
+/* Tinted oval placeholder for cards without a photo */
+.pj-oval-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+/* Tag chips */
+.pj-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pj-tag {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.50rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: rgba(26, 26, 46, 0.78);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Footer row */
+.pj-footer {
+  padding-top: 2px;
+}
+
+/* Bordered title pill — 2px solid #333 */
+.pj-title-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  border: 1px solid #333333;
+  border-radius: 999px;
+  padding: 6px 8px 6px 12px;
+}
+
+.pj-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.2;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.pj-arrow {
+  font-size: 0.82rem;
+  flex-shrink: 0;
+  line-height: 1;
+  color: #333333;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pj-card:hover .pj-arrow {
+  transform: translate(3px, -3px);
+}
+
+/* ── Coming soon card ────────────────────────────────────────── */
+.pf-coming-soon {
+  margin: 14px 0 8px;
+  height: 120px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.60);
+  box-shadow:
+    0 8px 32px rgba(120, 100, 200, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Inner pill — matches pf-pill glass language */
+.pf-coming-soon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: rgba(196, 184, 240, 0.42);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 4px 16px rgba(120, 100, 200, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.pf-coming-soon-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pf-coming-soon-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7050d8;
+  opacity: 0.5;
+  animation: csDot 1.6s ease-in-out infinite;
+}
+.pf-coming-soon-dot:nth-child(2) { animation-delay: 0.22s; }
+.pf-coming-soon-dot:nth-child(3) { animation-delay: 0.44s; }
+
+@keyframes csDot {
+  0%, 80%, 100% { opacity: 0.28; transform: scale(0.80); }
+  40%           { opacity: 0.90; transform: scale(1.20); }
+}
+
+.pf-coming-soon-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #4a3080;
 }
 
 /* ── Right column — blue glass panel ─────────────────────────── */
@@ -1348,6 +1802,7 @@ body {
     position: relative;
     height: auto;
     overflow-y: visible;
+    padding-top: var(--header-h); /* space for fixed header */
     padding-bottom: 55vh; /* last content scrolls above the character */
   }
   .split-right { display: none; }
@@ -1371,7 +1826,11 @@ body {
 
 @media (max-width: 480px) {
   .hero-char-img  { width: 95vw; }
-  .pf-rotate-line { font-size: clamp(2.2rem, 10vw, 3rem); }
+  .pf-rotate-line {
+    font-size: clamp(2.2rem, 10vw, 3rem);
+    gap: 0.18em;
+    line-height: 1.2;
+  }
 }
 
 /* Project detail grid — unchanged responsive rules */

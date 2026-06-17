@@ -42,28 +42,38 @@ function preloadAll() {
 const ALL_FRAMES = Array.from({ length: FRAME_COUNT }, (_, i) => framePath(i))
 
 // ── Bubble data ──────────────────────────────────────────────────────
-// x / baseY are % of the full VIEWPORT (not a sub-panel).
-// The bubbles panel is position:fixed; inset:0 so coordinates are viewport-relative.
-// Three depth layers — parallax and drift are inversely proportional to size.
-// drift: horizontal pixel offset at full scroll, creating organic lateral motion.
+// x / baseY are % of the full VIEWPORT.  Panel is position:fixed; inset:0.
+//
+// Design rules:
+//  • Bubbles span x: 8–88 % — centres stay inside viewport so overflow:hidden
+//    on the panel never clips an orb mid-body (even with parallax drift).
+//  • Left side  (x ≤ 44 %) : atmosphere behind the glassmorphism portfolio panel.
+//  • Right side (x ≥ 56 %) : more visible, behind the character animation.
+//  • Centre band (x 44–56 %): subtle linking presence.
+//  • Three depth layers: bg (large, slow), mid (medium), fg (small, fast).
+//    parallax and drift scale inversely with size for natural depth.
 const BUBBLES = [
-  // ── Background — large, glacially slow ────────────────────────────
-  { id:  1, size: 360, x: 74, baseY: 42, parallax:  -35, drift:  12, blur: 0, speed: 22 },
-  { id:  2, size: 295, x: 88, baseY: 18, parallax:  -48, drift:  -8, blur: 1, speed: 28 },
-  { id:  3, size: 250, x: 62, baseY: 70, parallax:  -55, drift:  10, blur: 0, speed: 19 },
+  // ── Background — large, glacially slow — balanced L / R ───────────
+  { id:  1, size: 320, x:  9, baseY: 33, parallax:  -28, drift:   6, blur: 0, speed: 24 }, // far-left
+  { id:  2, size: 300, x: 77, baseY: 46, parallax:  -32, drift:  10, blur: 0, speed: 26 }, // right
+  { id:  3, size: 265, x: 88, baseY: 16, parallax:  -44, drift:  -7, blur: 1, speed: 29 }, // far-right
+  { id:  4, size: 240, x: 30, baseY: 74, parallax:  -38, drift:   9, blur: 0, speed: 21 }, // left-center
 
   // ── Midground — moderate speed and drift ──────────────────────────
-  { id:  4, size: 200, x: 80, baseY: 58, parallax: -105, drift: -15, blur: 2, speed: 21 },
-  { id:  5, size: 178, x: 67, baseY: 26, parallax: -118, drift:  18, blur: 3, speed: 24 },
-  { id:  6, size: 215, x: 94, baseY: 64, parallax:  -92, drift:  -6, blur: 2, speed: 18 },
-  { id:  7, size: 162, x: 72, baseY: 83, parallax: -128, drift:  12, blur: 3, speed: 26 },
-  { id:  8, size: 188, x: 84, baseY:  9, parallax: -112, drift: -10, blur: 2, speed: 20 },
+  { id:  5, size: 188, x: 20, baseY: 54, parallax:  -95, drift: -11, blur: 2, speed: 22 }, // left
+  { id:  6, size: 168, x: 44, baseY: 19, parallax: -108, drift:  14, blur: 2, speed: 25 }, // center-left
+  { id:  7, size: 200, x: 82, baseY: 62, parallax:  -98, drift: -13, blur: 2, speed: 22 }, // right
+  { id:  8, size: 172, x: 66, baseY: 27, parallax: -112, drift:  16, blur: 3, speed: 25 }, // center-right
+  { id:  9, size: 185, x: 55, baseY: 82, parallax: -120, drift:  11, blur: 2, speed: 27 }, // center-low
 
-  // ── Foreground — small, fast, dynamic ─────────────────────────────
-  { id:  9, size: 102, x: 70, baseY: 50, parallax: -198, drift:  22, blur: 5, speed: 17 },
-  { id: 10, size:  78, x: 78, baseY: 14, parallax: -248, drift: -18, blur: 7, speed: 23 },
-  { id: 11, size: 118, x: 92, baseY: 38, parallax: -178, drift:  14, blur: 4, speed: 20 },
-  { id: 12, size:  65, x: 59, baseY: 87, parallax: -272, drift: -20, blur: 8, speed: 25 },
+  // ── Foreground — small, fast, dynamic — both sides ────────────────
+  { id: 10, size:  88, x: 12, baseY: 78, parallax: -200, drift:  18, blur: 5, speed: 18 }, // far-left
+  { id: 11, size:  72, x: 37, baseY: 46, parallax: -232, drift: -13, blur: 6, speed: 24 }, // center-left
+  { id: 12, size: 104, x: 50, baseY: 14, parallax: -178, drift:   9, blur: 4, speed: 20 }, // center-top
+  { id: 13, size:  96, x: 72, baseY: 51, parallax: -190, drift:  20, blur: 5, speed: 18 }, // right
+  { id: 14, size:  74, x: 82, baseY: 12, parallax: -238, drift: -16, blur: 7, speed: 24 }, // right-top
+  { id: 15, size: 110, x: 88, baseY: 38, parallax: -170, drift:  12, blur: 4, speed: 21 }, // far-right-mid
+  { id: 16, size:  60, x: 62, baseY: 91, parallax: -260, drift: -18, blur: 8, speed: 26 }, // center-low
 ]
 
 // ── ParallaxBubble ────────────────────────────────────────────────────
