@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import HeroSequence from './components/HeroSequence.jsx'
 import PortfolioSection from './components/PortfolioSection.jsx'
 import ProjectDetail from './components/ProjectDetail.jsx'
@@ -10,25 +10,42 @@ export default function App() {
 
   return (
     <main className="app">
-      {/* Animated gradient background — fixed, behind everything */}
+      {/* Aurora gradient — fixed, behind everything */}
       <div className="app-bg" aria-hidden="true" />
 
-      {/* 1 — Hero: parallax bubbles + scroll-driven PNG character */}
-      <HeroSequence />
+      {/*
+       * Split-screen layout
+       *   Left  (45 %)  — scrollable portfolio column, solid background
+       *   Right (55 %)  — sticky animation panel, transparent (shows aurora)
+       *
+       * All animation elements (char, logo, bubbles) are position:fixed with
+       * left:45% so they live exclusively in the right viewport column.
+       */}
+      <div className="site-split">
 
-      {/* 2 — Portfolio: glass panel that rises over hero at frame ~75 */}
-      <PortfolioSection onProjectOpen={setDetailCat} />
+        {/*
+         * LEFT: portfolio content — fades in on load, simultaneously with right.
+         * HeroSequence renders only position:fixed elements (no left-column content),
+         * so the portfolio section is visible from the first frame.
+         */}
+        <motion.div
+          className="split-left"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <HeroSequence />
+          <PortfolioSection onProjectOpen={setDetailCat} />
+        </motion.div>
 
-      {/* Footer */}
-      <footer className="footer">
-        <img src="/logo.svg" alt="Studio KAIL" className="footer-logo" draggable={false} />
-        <p>© 2024 Studio KAIL. All rights reserved.</p>
-        <a href="mailto:hello@kail.studio">hello@kail.studio</a>
-      </footer>
+        {/* RIGHT: transparent — aurora shows through; animation is position:fixed */}
+        <div className="split-right" aria-hidden="true" />
+
+      </div>
 
       {/*
-       * Project detail — rendered at root so position:fixed covers the
-       * full viewport even though PortfolioSection uses backdrop-filter.
+       * Project detail — rendered at App root so position:fixed covers the
+       * full viewport regardless of split layout or backdrop-filter contexts.
        */}
       <AnimatePresence>
         {detailCat && (

@@ -65,7 +65,7 @@ export default function Hero({ containerRef }) {
          * Logo colour (#d4c7ff lavender) reads beautifully on blue.
          */}
         <img
-          src="/logo.svg"
+          src={`${import.meta.env.BASE_URL}logo.svg`}
           alt="Studio KAIL"
           className="hero-logo-img"
           draggable={false}

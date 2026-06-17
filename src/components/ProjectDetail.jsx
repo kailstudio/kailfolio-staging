@@ -1,88 +1,99 @@
 /**
- * ProjectDetail.jsx
+ * ProjectDetail.jsx — 8-card editorial bento grid
  *
- * Full-screen glassmorphic overlay that opens when a portfolio card is clicked.
- * Rendered at App-root level (sibling of PortfolioSection) so position:fixed
- * works correctly even though PortfolioSection uses backdrop-filter.
+ * Overlay structure (unchanged)
+ *   pd-overlay → pd-sheet → pd-header | pd-hero | pd-grid-8
  *
- * Layout
- * ┌──────────────────────────────────────────────────────────┐
- * │  [← Back]    Studio KAIL                           [×]  │  ← glass header
- * │  ─────────────────────────────────────────────────────  │
- * │  Category name                                           │  ← hero text
- * │  Tagline                                                 │
- * │                                                          │
- * │  ┌──────────────────┐  ┌──────────────────┐            │
- * │  │  VISUAL CARD     │  │  ABOUT CARD      │            │  ← 2×2 grid
- * │  │  (colour block)  │  │  (description)   │            │
- * │  ├──────────────────┤  ├──────────────────┤            │
- * │  │  STATS CARD      │  │  CTA CARD        │            │
- * │  │  (3 metrics)     │  │  (start project) │            │
- * │  └──────────────────┘  └──────────────────┘            │
- * └──────────────────────────────────────────────────────────┘
+ * Bento grid (3-col desktop, 2-col tablet, 1-col mobile)
+ * ┌─────────────────────────┬───────────────┐
+ * │                         │  Dark intro   │
+ * │  Visual / Brand card    ├───────────────┤
+ * │                         │  Deliverables │
+ * ├──────────────────────┬──┴───────────────┤
+ * │  About / Description │  Scope (blue)   │
+ * ├──────────┬───────────┼─────────────────┤
+ * │  Stat 1  │  Stat 2   │  CTA + Stat 3   │
+ * └──────────┴───────────┴─────────────────┘
  */
 
 import { motion } from 'framer-motion'
 
-// ── Overlay entry / exit transitions ───────────────────────────────
+// ── Transitions ─────────────────────────────────────────────────────
 const OVERLAY = {
-  initial:  { opacity: 0 },
-  animate:  { opacity: 1, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] } },
-  exit:     { opacity: 0, transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] } },
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.32, ease: [0.4, 0, 0.2, 1] } },
+  exit:    { opacity: 0, transition: { duration: 0.26, ease: [0.4, 0, 0.2, 1] } },
 }
 
 const CONTENT = {
-  initial:  { opacity: 0, y: 28, scale: 0.97, filter: 'blur(8px)' },
-  animate:  { opacity: 1, y:  0, scale: 1.00, filter: 'blur(0px)',
-              transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.06 } },
-  exit:     { opacity: 0, y: 12, scale: 0.98, filter: 'blur(6px)',
-              transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] } },
+  initial: { opacity: 0, y: 24, scale: 0.97, filter: 'blur(8px)' },
+  animate: { opacity: 1, y:  0, scale: 1.00, filter: 'blur(0px)',
+             transition: { duration: 0.44, ease: [0.16, 1, 0.3, 1], delay: 0.06 } },
+  exit:    { opacity: 0, y: 10, scale: 0.98, filter: 'blur(6px)',
+             transition: { duration: 0.26, ease: [0.4, 0, 0.2, 1] } },
 }
 
+// Custom index controls stagger
 const CARD = {
-  initial:  { opacity: 0, y: 20 },
-  animate:  (i) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.18 + i * 0.07 },
+  initial: { opacity: 0, y: 16 },
+  animate: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.12 + i * 0.055 },
   }),
 }
 
-// ── Decorative rings for visual card ───────────────────────────────
+// ── Card 1 — Large visual brand anchor ─────────────────────────────
 function VisualCard({ cat }) {
   return (
     <motion.div
-      className="pd-card pd-card--visual"
+      className="pdc pdc-visual"
       custom={0}
       variants={CARD}
       style={{
-        background: `linear-gradient(145deg, ${cat.accentDark} 0%, ${cat.accent} 55%, ${cat.accent}bb 100%)`,
+        background: `linear-gradient(148deg, ${cat.accentDark} 0%, ${cat.accent} 58%, ${cat.accent}bb 100%)`,
       }}
     >
       {/* Decorative concentric rings */}
-      <div className="pd-ring pd-ring--1" />
-      <div className="pd-ring pd-ring--2" />
-      <div className="pd-ring pd-ring--3" />
+      <div className="pdc-ring pdc-ring--1" />
+      <div className="pdc-ring pdc-ring--2" />
+      <div className="pdc-ring pdc-ring--3" />
 
-      {/* Giant category initial */}
-      <span className="pd-vis-initial">{cat.id[0].toUpperCase()}</span>
+      {/* Ghost initial */}
+      <span className="pdc-initial">{cat.id[0].toUpperCase()}</span>
 
-      {/* Bottom label */}
-      <div className="pd-vis-footer">
-        <span className="pd-vis-label">Studio KAIL</span>
-        <span className="pd-vis-sub">{cat.slides[0].label}</span>
+      {/* Bottom identity label */}
+      <div className="pdc-visual-footer">
+        <span className="pdc-visual-studio">Studio KAIL</span>
+        <span className="pdc-visual-service">{cat.slides[0].label}</span>
       </div>
     </motion.div>
   )
 }
 
-function AboutCard({ cat }) {
+// ── Card 2 — Dark atmospheric intro ────────────────────────────────
+function DarkIntroCard({ cat }) {
   return (
-    <motion.div className="pd-card pd-card--about" custom={1} variants={CARD}>
-      <span className="pd-card-tag">About</span>
-      <p className="pd-about-text">{cat.description}</p>
-      <div className="pd-tags">
+    <motion.div className="pdc pdc-dark" custom={1} variants={CARD}>
+      <span className="pdc-dark-pill">Studio KAIL</span>
+      <span className="pdc-dark-star" style={{ color: cat.accent }}>✦</span>
+      <p className="pdc-dark-text">{cat.tagline}</p>
+    </motion.div>
+  )
+}
+
+// ── Card 3 — Deliverables tag cloud ────────────────────────────────
+function DeliverablesCard({ cat }) {
+  return (
+    <motion.div className="pdc pdc-tags" custom={2} variants={CARD}>
+      <span className="pdc-eyebrow">Deliverables</span>
+      <div className="pdc-chips">
         {cat.slides.map((s) => (
-          <span key={s.id} className="pd-tag" style={{ background: `${cat.accent}55`, color: cat.accentDark }}>
+          <span
+            key={s.id}
+            className="pdc-chip"
+            style={{ color: cat.accentDark, background: `${cat.accent}28` }}
+          >
             {s.label}
           </span>
         ))}
@@ -91,39 +102,85 @@ function AboutCard({ cat }) {
   )
 }
 
-function StatsCard({ cat }) {
+// ── Card 4 — Full description (spans 2 cols) ────────────────────────
+function AboutCard({ cat }) {
   return (
-    <motion.div className="pd-card pd-card--stats" custom={2} variants={CARD}>
-      <span className="pd-card-tag">Impact</span>
-      <div className="pd-stats-row">
-        {cat.stats.map((s) => (
-          <div key={s.label} className="pd-stat">
-            <span className="pd-stat-val" style={{ color: cat.accentDark }}>{s.value}</span>
-            <span className="pd-stat-lbl">{s.label}</span>
-          </div>
-        ))}
-      </div>
+    <motion.div className="pdc pdc-about" custom={3} variants={CARD}>
+      <span className="pdc-eyebrow">About</span>
+      <p className="pdc-about-body">{cat.description}</p>
     </motion.div>
   )
 }
 
-function CtaCard({ cat }) {
+// ── Card 5 — Scope / approach list (blue) ──────────────────────────
+function ScopeCard({ cat }) {
   return (
-    <motion.div className="pd-card pd-card--cta" custom={3} variants={CARD}>
-      <span className="pd-card-tag">Start Here</span>
-      <p className="pd-cta-heading">Ready to build something exceptional?</p>
+    <motion.div className="pdc pdc-scope" custom={4} variants={CARD}>
+      <span className="pdc-eyebrow pdc-eyebrow--light">Our Scope</span>
+      <ul className="pdc-scope-list">
+        {cat.slides.map((s, i) => (
+          <li key={s.id} className="pdc-scope-item">
+            <span className="pdc-scope-num">0{i + 1}</span>
+            {s.label}
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  )
+}
+
+// ── Card 6 — Stat 1 (light) ─────────────────────────────────────────
+function StatLightCard({ cat }) {
+  const s = cat.stats[0]
+  return (
+    <motion.div className="pdc pdc-stat-lt" custom={5} variants={CARD}>
+      <span className="pdc-eyebrow">Impact</span>
+      <span className="pdc-big-num" style={{ color: cat.accentDark }}>{s.value}</span>
+      <span className="pdc-stat-label">{s.label}</span>
+    </motion.div>
+  )
+}
+
+// ── Card 7 — Stat 2 (dark) ──────────────────────────────────────────
+function StatDarkCard({ cat }) {
+  const s = cat.stats[1]
+  return (
+    <motion.div className="pdc pdc-stat-dk" custom={6} variants={CARD}>
+      <span className="pdc-eyebrow pdc-eyebrow--light">Result</span>
+      <span className="pdc-big-num pdc-big-num--white">{s.value}</span>
+      <span className="pdc-stat-label pdc-stat-label--muted">{s.label}</span>
+    </motion.div>
+  )
+}
+
+// ── Card 8 — CTA (lime) + Stat 3 ────────────────────────────────────
+function CtaCard({ cat }) {
+  const s = cat.stats[2]
+  return (
+    <motion.div className="pdc pdc-cta" custom={7} variants={CARD}>
+      {/* Third stat at top */}
+      <span className="pdc-cta-stat-val">{s.value}</span>
+      <span className="pdc-cta-stat-lbl">{s.label}</span>
+
+      <div className="pdc-cta-divider" />
+
+      <p className="pdc-cta-heading">
+        Ready to build something exceptional?
+      </p>
+
+      {/* Arrow CTA link */}
       <a
         href="mailto:hello@kail.studio"
-        className="pd-cta-btn"
-        style={{ background: cat.accentDark }}
+        className="pdc-cta-arrow-btn"
+        aria-label="Get in touch with Studio KAIL"
       >
-        Get in touch →
+        ↗
       </a>
     </motion.div>
   )
 }
 
-// ── Main overlay component ──────────────────────────────────────────
+// ── Main overlay ────────────────────────────────────────────────────
 export default function ProjectDetail({ cat, onClose }) {
   return (
     <motion.div
@@ -136,27 +193,40 @@ export default function ProjectDetail({ cat, onClose }) {
     >
       <motion.div className="pd-sheet" {...CONTENT}>
 
-        {/* ── Header ──────────────────────────────────────────────── */}
+        {/* ── Header (unchanged) ─────────────────────────────────── */}
         <header className="pd-header">
           <button className="pd-back" onClick={onClose} aria-label="Close">
             ← Back
           </button>
-          <img src="/logo.svg" alt="Studio KAIL" className="pd-header-logo" />
+          <img
+            src={`${import.meta.env.BASE_URL}logo.svg`}
+            alt="Studio KAIL"
+            className="pd-header-logo"
+          />
           <button className="pd-close" onClick={onClose} aria-label="Close">×</button>
         </header>
 
-        {/* ── Hero text ───────────────────────────────────────────── */}
+        {/* ── Hero text (unchanged) ──────────────────────────────── */}
         <div className="pd-hero">
           <h1 className="pd-title">{cat.name}</h1>
           <p className="pd-tagline">{cat.tagline}</p>
         </div>
 
-        {/* ── 2×2 card grid ───────────────────────────────────────── */}
-        <motion.div className="pd-grid" initial="initial" animate="animate" exit="exit">
-          <VisualCard cat={cat} />
-          <AboutCard  cat={cat} />
-          <StatsCard  cat={cat} />
-          <CtaCard    cat={cat} />
+        {/* ── 8-card bento grid ──────────────────────────────────── */}
+        <motion.div
+          className="pd-grid-8"
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          <VisualCard        cat={cat} />
+          <DarkIntroCard     cat={cat} />
+          <DeliverablesCard  cat={cat} />
+          <AboutCard         cat={cat} />
+          <ScopeCard         cat={cat} />
+          <StatLightCard     cat={cat} />
+          <StatDarkCard      cat={cat} />
+          <CtaCard           cat={cat} />
         </motion.div>
 
       </motion.div>

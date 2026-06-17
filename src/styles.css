@@ -27,7 +27,21 @@
   padding: 0;
 }
 
-html { scroll-behavior: smooth; }
+/* ─── Hide scrollbars (all browsers) ────────────────────────────── */
+/* Scrolling remains fully functional via wheel, trackpad, touch, keyboard */
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE / Edge legacy */
+}
+html::-webkit-scrollbar { display: none; } /* Chrome / Safari / Edge */
+
+/* Hide scrollbar on any element that may get overflow-y: auto/scroll */
+*::-webkit-scrollbar { display: none; }
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
 body {
   font-family: 'Raleway', system-ui, sans-serif;
@@ -36,12 +50,52 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Fallback bg in case app-bg hasn't painted yet */
   background: #ddd5ff;
 }
 
 /* ─── App shell ─────────────────────────────────────────────────── */
 .app { width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SPLIT-SCREEN LAYOUT
+   Left  70 % — scrollable portfolio column (solid lavender-white bg)
+   Right 30 % — sticky animation anchor (transparent, aurora shows through)
+   Animations are oversized and intentionally bleed past the right
+   viewport edge for a broken-grid, editorial composition.
+═══════════════════════════════════════════════════════════════════ */
+
+.site-split {
+  display: grid;
+  grid-template-columns: 70% 30%;
+  /* Must be taller than viewport + animation scroll distance so sticky items
+     never run out of grid area to stick within. */
+  min-height: calc(3000px + 100vh);
+}
+
+/*
+ * Left column — sticky panel, locked to top of viewport.
+ * Portfolio content scrolls internally via overflow-y: auto.
+ * Page scroll (window) drives the character animation only.
+ */
+.split-left {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 2;
+  background: rgba(244, 241, 255, 0.96);
+}
+
+/*
+ * Right column — sticky, transparent. Character + bubbles are
+ * position:fixed so they render over this regardless.
+ */
+.split-right {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  pointer-events: none;
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    ANIMATED GRADIENT BACKGROUND
@@ -75,40 +129,8 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   HERO SEQUENCE
+   HERO SEQUENCE  — fixed right-panel elements only (no left scaffold)
 ═══════════════════════════════════════════════════════════════════ */
-
-.hero-sequence {
-  position: relative;
-  width: 100%;
-}
-
-.hero-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  width: 100%;
-}
-
-/*
- * Background is now TRANSPARENT — the animated gradient shows through.
- * Bubbles and character float directly on the gradient.
- */
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background: transparent;
-  z-index: 0;
-}
-
-/* Unused lavender wash layer — kept for backwards compat */
-.hero-lavender {
-  position: absolute;
-  inset: 0;
-  background: var(--lavender);
-  pointer-events: none;
-  z-index: 1;
-}
 
 /* Logo layers (unused in current HeroSequence but keep rules) */
 .hero-logo-pos {
@@ -134,7 +156,27 @@ body {
   -webkit-user-drag: none;
 }
 
-/* Bubble container */
+/* ── Right-panel fixed containers ────────────────────────────────
+ * All three are position:fixed starting at left:45vw so they live
+ * entirely inside the right viewport column.
+ */
+
+/*
+ * Bubble ecosystem — full-viewport fixed layer.
+ * z:1 places bubbles above the aurora (z:-1) and below the left portfolio
+ * column (split-left z:2), so they're visible in the right/transparent area
+ * but naturally hidden behind the solid portfolio background on the left.
+ * No overflow constraint — bubbles float freely as a global environment.
+ */
+.hero-bubbles-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* overflow:visible (default) — no rectangular container visible */
+}
+
+/* legacy — kept for class references that may still exist */
 .hero-bubbles {
   position: absolute;
   inset: 0;
@@ -176,44 +218,34 @@ body {
 }
 
 /*
- * Fixed character track — stays at viewport bottom throughout page.
+ * Character animation — bottom-pinned, anchored at left:70%.
+ * justify-content:flex-end + padding-right:10vw places the image's
+ * right edge at 90 vw — 10 vw of intentional negative space.
+ * The animation sits confidently close to the browser edge while
+ * still floating within its own breathing room.
  */
 .hero-char-track {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 70%;
   right: 0;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: flex-end;
+  padding-right: 10vw;
   z-index: 9999;
   pointer-events: none;
+  overflow: visible;
 }
 
 .hero-char-img {
-  width: 80vw;
-  max-width: 1200px;
+  /* right edge = 90 vw; fills ~80–95 vh depending on frame aspect ratio */
+  width: 55vw;
+  max-width: none;
   height: auto;
   display: block;
   user-select: none;
   -webkit-user-drag: none;
-}
-
-/* Scroll hint — dark text on light gradient */
-.scroll-hint {
-  position: absolute;
-  bottom: 44px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: rgba(40, 30, 90, 0.48);
-  font-family: 'Raleway', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  z-index: 30;
-  pointer-events: none;
-  white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -229,20 +261,21 @@ body {
  * ProjectDetail is rendered in App at root level so it avoids the
  * containing-block restriction imposed by backdrop-filter.
  */
+/*
+ * Portfolio section — sits directly below the 240 vh hero scaffold in
+ * the left column. No negative margin-top needed: the hero no longer
+ * overlaps it visually since the animation is on the right.
+ */
 .pf-section {
   width: 100%;
-  background: var(--glass-white);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: 40px 40px 0 0;
-  border-top: 1px solid var(--glass-border);
-  border-left: 1px solid rgba(255, 255, 255, 0.55);
-  border-right: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: var(--glass-shadow);
-  padding: clamp(52px, 7vw, 96px) clamp(24px, 6vw, 80px) clamp(80px, 10vw, 130px);
-  margin-top: -40vh;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(32px) saturate(1.6);
+  -webkit-backdrop-filter: blur(32px) saturate(1.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow: 0 -4px 40px rgba(100, 80, 200, 0.08);
+  padding: clamp(48px, 7vw, 88px) clamp(24px, 5vw, 60px) clamp(72px, 10vw, 120px);
   position: relative;
-  z-index: 10;
+  z-index: 4;
 }
 
 /* Subtle glowing lip at the very top of the glass panel */
@@ -264,53 +297,15 @@ body {
   pointer-events: none;
 }
 
+/*
+ * Single-column — the decorative right panel has been removed.
+ * pf-left now spans the full left-column width.
+ */
 .pf-inner {
-  max-width: 1280px;
+  max-width: 640px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(40px, 5vw, 80px);
-  align-items: start;
-}
-
-/* ── Studio stats bar ──────────────────────────────────────────── */
-.pf-studio-stats {
-  display: flex;
-  gap: clamp(20px, 3vw, 36px);
-  margin-bottom: clamp(28px, 3.5vw, 40px);
-  padding: 14px 20px;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  border-radius: 16px;
-  width: fit-content;
-  box-shadow: 0 2px 16px rgba(100, 80, 200, 0.07);
-}
-
-.pf-studio-stat {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.pf-studio-val {
-  font-family: 'Raleway', sans-serif;
-  font-size: clamp(1.1rem, 1.8vw, 1.4rem);
-  font-weight: 800;
-  color: var(--blue);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.pf-studio-lbl {
-  font-family: 'Raleway', sans-serif;
-  font-size: 0.62rem;
-  font-weight: 500;
-  color: var(--text-mid);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 /* ── Left column ───────────────────────────────────────────────── */
@@ -389,6 +384,68 @@ body {
   max-width: 430px;
 }
 
+/* ── Rotating word strip ──────────────────────────────────────── */
+.pf-rotate-wrap {
+  margin-bottom: clamp(14px, 2vw, 20px); /* matches old pf-headline margin */
+}
+
+/* Matches pf-headline exactly */
+.pf-rotate-line {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1em;
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(2.8rem, 5.5vw, 5rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--text-dark);
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+/* Each row — first: "From spark", second: "to [chip]" */
+.pf-rotate-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18em;
+}
+
+/* Lime underline beneath "spark" — drawn left-to-right via scaleX */
+.pf-spark-underline {
+  position: absolute;
+  bottom: -0.06em;
+  left: 0;
+  right: 0;
+  height: 0.09em;
+  min-height: 3px;
+  background: #c8ff00;
+  display: block;
+  border-radius: 2px;
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+/* The animated chip — brand blue pill, sized to match headline em */
+.pf-rotate-chip {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue);
+  color: #ffffff;
+  padding: 0.05em 0.28em 0.1em;
+  border-radius: 0.18em;
+  overflow: hidden;
+  line-height: inherit;
+}
+
+/* Each character slot clips the entering/exiting letter */
+.pf-rotate-char-slot {
+  display: inline-flex;
+  overflow: hidden;
+  padding-bottom: 0.05em;
+}
+
 /* ── Category accordion pills ─────────────────────────────────── */
 .pf-cats {
   display: flex;
@@ -411,43 +468,51 @@ body {
   min-height: 0;
 }
 
+/*
+ * Solid blue pill buttons — filled background, white text.
+ * Hover   → background shifts to Studio KAIL Lime (#c8ff00), text goes dark
+ * Active  → lime background holds; text dark
+ * Transition on background + color only — no layout shifts.
+ */
 .pf-pill {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 15px 24px 15px 28px;
-  background: rgba(51, 85, 255, 0.82);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 15px 52px 15px 28px;
+  background: var(--blue);
   color: #ffffff;
-  border: 1px solid rgba(100, 140, 255, 0.35);
-  border-radius: var(--radius-pill);
+  border: none;
+  border-radius: 999px;
   font-family: 'Raleway', sans-serif;
   font-size: clamp(0.8rem, 1.15vw, 0.92rem);
   font-weight: 600;
   cursor: pointer;
   width: 100%;
   text-align: center;
-  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
-  box-shadow: 0 4px 18px rgba(51, 85, 255, 0.18),
-              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: background 0.35s ease, color 0.35s ease;
+  box-shadow: 0 4px 18px rgba(51, 85, 255, 0.22);
   position: relative;
   letter-spacing: 0.01em;
 }
 
 .pf-pill:hover {
-  background: rgba(34, 68, 238, 0.90);
-  box-shadow: 0 6px 28px rgba(51, 85, 255, 0.32),
-              inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: #c8ff00;
+  color: var(--text-dark);
+  box-shadow: 0 4px 18px rgba(200, 255, 0, 0.30);
 }
 
 .pf-pill--open {
-  background: rgba(26, 50, 220, 0.92);
-  box-shadow: 0 8px 32px rgba(51, 85, 255, 0.38),
-              inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  background: #c8ff00;
+  color: var(--text-dark);
+  border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(200, 255, 0, 0.30);
+}
+
+/* Active overrides hover — lime holds when hovering an open pill */
+.pf-pill--open:hover {
+  background: #c8ff00;
+  color: var(--text-dark);
 }
 
 .pf-pill-name {
@@ -459,7 +524,7 @@ body {
   position: absolute;
   right: 20px;
   font-size: 1rem;
-  opacity: 0.8;
+  opacity: 0.85;
   transition: transform 0.3s ease;
   display: inline-block;
 }
@@ -910,6 +975,318 @@ body {
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.24);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PROJECT DETAIL — 8-CARD BENTO GRID
+   Grid areas (3-col desktop)
+   ┌──────────────────────┬─────────────┐
+   │  visual  │  visual  │    dark     │
+   │  visual  │  visual  │    tags     │
+   │  about   │  about   │    scope    │
+   │  stat1   │  stat2   │    cta      │
+   └──────────┴──────────┴─────────────┘
+═══════════════════════════════════════════════════════════════════ */
+
+.pd-grid-8 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas:
+    "visual visual dark"
+    "visual visual tags"
+    "about  about  scope"
+    "stat1  stat2  cta";
+  gap: clamp(10px, 1.1vw, 14px);
+  align-items: stretch;
+}
+
+/* ── Card base — flat, no border, very subtle lift shadow ──────── */
+.pdc {
+  border-radius: clamp(16px, 1.6vw, 20px);
+  padding: clamp(20px, 2.2vw, 28px);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(30, 20, 80, 0.06);
+}
+
+/* ── Grid area assignments ─────────────────────────────────────── */
+.pdc-visual  { grid-area: visual; min-height: clamp(300px, 34vw, 460px); }
+.pdc-dark    { grid-area: dark;   background: #0e0d1c; color: #fff; }
+.pdc-tags    { grid-area: tags;   background: rgba(255, 255, 255, 0.76); }
+.pdc-about   { grid-area: about;  background: rgba(255, 255, 255, 0.76); }
+.pdc-scope   { grid-area: scope;  background: var(--blue); color: #fff; }
+.pdc-stat-lt { grid-area: stat1;  background: rgba(255, 255, 255, 0.76); }
+.pdc-stat-dk { grid-area: stat2;  background: #0e0d1c; color: #fff; }
+.pdc-cta     { grid-area: cta;    background: #c8ff00; color: #1a1a2e; }
+
+/* ── Shared eyebrow label ──────────────────────────────────────── */
+.pdc-eyebrow {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  margin-bottom: 12px;
+  display: block;
+  flex-shrink: 0;
+}
+.pdc-eyebrow--light { color: rgba(255, 255, 255, 0.46); }
+.pdc-eyebrow--dark  { color: rgba(26, 26, 46, 0.52); }
+
+/* ── Visual card internals ─────────────────────────────────────── */
+.pdc-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.24);
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.pdc-ring--1 { width: 44%; aspect-ratio: 1; border-color: rgba(255,255,255,0.32); }
+.pdc-ring--2 { width: 70%; aspect-ratio: 1; border-color: rgba(255,255,255,0.18); }
+.pdc-ring--3 { width: 96%; aspect-ratio: 1; border-color: rgba(255,255,255,0.10); }
+
+.pdc-initial {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(120px, 20vw, 260px);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.14);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.04em;
+}
+
+.pdc-visual-footer {
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pdc-visual-studio {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.60);
+}
+.pdc-visual-service {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.96rem, 1.5vw, 1.18rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.96);
+  line-height: 1.25;
+}
+
+/* ── Dark card internals ───────────────────────────────────────── */
+.pdc-dark-pill {
+  display: inline-block;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 5px 13px;
+  width: fit-content;
+  flex-shrink: 0;
+}
+.pdc-dark-star {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  line-height: 1;
+  margin: 16px 0;
+  /* colour set inline */
+}
+.pdc-dark-text {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.80rem, 1.05vw, 0.92rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.70;
+  margin-top: auto;
+}
+
+/* ── Deliverables (tags) card ──────────────────────────────────── */
+.pdc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+.pdc-chip {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 5px 13px;
+  border-radius: 999px;
+  /* bg + colour set inline */
+}
+
+/* ── About card ────────────────────────────────────────────────── */
+.pdc-about-body {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.86rem, 1.12vw, 0.98rem);
+  font-weight: 400;
+  color: var(--text-mid);
+  line-height: 1.78;
+  flex: 1;
+}
+
+/* ── Scope card ────────────────────────────────────────────────── */
+.pdc-scope-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  margin-top: 6px;
+}
+.pdc-scope-item {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.78rem, 1.0vw, 0.88rem);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  line-height: 1.45;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+.pdc-scope-item:last-child { border-bottom: none; padding-bottom: 0; }
+.pdc-scope-num {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.32);
+  flex-shrink: 0;
+}
+
+/* ── Stat cards ────────────────────────────────────────────────── */
+.pdc-big-num {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  margin-bottom: 8px;
+  /* colour set inline or per variant */
+}
+.pdc-big-num--white { color: #ffffff; }
+
+.pdc-stat-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  margin-top: auto;
+}
+.pdc-stat-label--muted { color: rgba(255, 255, 255, 0.38); }
+
+/* ── CTA card ──────────────────────────────────────────────────── */
+.pdc-cta-stat-val {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #1a1a2e;
+  letter-spacing: -0.03em;
+  display: block;
+}
+.pdc-cta-stat-lbl {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 46, 0.52);
+  display: block;
+  margin-top: 3px;
+}
+.pdc-cta-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(26, 26, 46, 0.14);
+  margin: 14px 0;
+  flex-shrink: 0;
+}
+.pdc-cta-heading {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.80rem, 1.05vw, 0.92rem);
+  font-weight: 600;
+  color: rgba(26, 26, 46, 0.70);
+  line-height: 1.55;
+  flex: 1;
+}
+.pdc-cta-arrow-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  color: #c8ff00;
+  font-size: 1.25rem;
+  text-decoration: none;
+  margin-top: 18px;
+  align-self: flex-end;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.18s;
+}
+.pdc-cta-arrow-btn:hover {
+  transform: scale(1.12) rotate(-8deg);
+  background: #0e0d1c;
+}
+
+/* ── Bento responsive ──────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .pd-grid-8 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "visual visual"
+      "dark   tags"
+      "about  about"
+      "scope  scope"
+      "stat1  stat2"
+      "cta    cta";
+  }
+  .pdc-visual { min-height: clamp(220px, 38vw, 340px); }
+  .pdc-cta-arrow-btn { align-self: flex-start; margin-top: 14px; }
+}
+
+@media (max-width: 560px) {
+  .pd-grid-8 {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "visual"
+      "dark"
+      "tags"
+      "about"
+      "scope"
+      "stat1"
+      "stat2"
+      "cta";
+  }
+  .pdc-visual { min-height: 250px; }
+  .pdc-initial { font-size: clamp(90px, 28vw, 160px); }
+}
+
 /* FOOTER */
 .footer {
   background: rgba(215, 205, 245, 0.55);
@@ -941,23 +1318,63 @@ body {
   font-weight: 600;
 }
 
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .hero-char-img { width: 88vw; max-width: 900px; }
-  .pd-grid { grid-template-columns: 1fr; }
+/* ── Responsive ─────────────────────────────────────────────────── */
+
+/*
+ * Tablet — 60/40 split; reduce right gap proportionally.
+ * Bubble panel stays inset:0 (full viewport) — no left adjustment needed.
+ */
+@media (max-width: 1024px) {
+  .site-split      { grid-template-columns: 60% 40%; }
+  .hero-char-track { left: 60%; padding-right: 7vw; }
+  .hero-char-img   { width: 50vw; }
 }
 
+/*
+ * Mobile — single column. Page height = portfolio content + padding-bottom.
+ * NO min-height: calc(3000px + 100vh) — that's desktop-only for the sticky
+ * scroll scaffold. On mobile the animation is always position:fixed at the
+ * bottom; it advances with scrollY but the page never extends artificially.
+ * padding-bottom: 55vh lets the last portfolio item scroll clear of the
+ * character before the page ends — no dead space beyond that.
+ */
 @media (max-width: 768px) {
-  .pf-section { margin-top: -20vh; border-radius: 28px 28px 0 0; }
-  .pf-inner { grid-template-columns: 1fr; }
-  .pf-right { position: static; }
-  .pf-panel { aspect-ratio: 16 / 9; }
-  .pf-studio-stats { gap: 16px; }
+  .site-split  {
+    grid-template-columns: 1fr;
+    /* inherits min-height: calc(3000px + 100vh) from base rule —
+       keeps enough scroll distance for the animation to complete */
+  }
+  .split-left  {
+    position: relative;
+    height: auto;
+    overflow-y: visible;
+    padding-bottom: 55vh; /* last content scrolls above the character */
+  }
+  .split-right { display: none; }
+
+  .hero-char-track {
+    top: auto;
+    bottom: 0;
+    height: auto;
+    left: 0;
+    right: 0;
+    padding-right: 0;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .hero-char-img { width: 80vw; max-width: 480px; }
+  .pf-section    { border-radius: 0; }
 }
 
 @media (max-width: 480px) {
-  .hero-char-img { width: 95vw; }
-  .pf-section { margin-top: -12vh; }
-  .pf-headline { font-size: clamp(2.2rem, 11vw, 3rem); }
-  .pf-studio-stats { width: 100%; justify-content: space-between; }
+  .hero-char-img  { width: 95vw; }
+  .pf-rotate-line { font-size: clamp(2.2rem, 10vw, 3rem); }
+}
+
+/* Project detail grid — unchanged responsive rules */
+@media (max-width: 900px) {
+  .pd-grid { grid-template-columns: 1fr; }
 }

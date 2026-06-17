@@ -27,7 +27,7 @@ import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-mot
 
 // ─── Configuration ─────────────────────────────────────────────────
 const FRAME_COUNT  = 121           // total number of PNG frames (0 … 120)
-const FRAME_PREFIX = '/frames/frame_'  // path prefix inside /public
+const FRAME_PREFIX = `${import.meta.env.BASE_URL}frames/frame_`  // path prefix inside /public
 const FRAME_PAD    = 5             // zero-padding digits  (frame_00000.png)
 const SCROLL_HEIGHT = '500vh'      // how tall the scroll section is
 // ───────────────────────────────────────────────────────────────────

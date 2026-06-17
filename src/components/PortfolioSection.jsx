@@ -1,18 +1,16 @@
 /**
  * PortfolioSection.jsx
  *
- * Glassmorphic portfolio section.
- * Rises over the hero from frame ~50, centred at ~frame 75.
+ * Glassmorphic portfolio section — left column of the split-screen layout.
  *
- * LEFT   Stats bar → logo → headline → subtitle → body → accordion pills
- *         Each pill expands an auto-scroll inline carousel
- *         Clicking any carousel card calls props.onProjectOpen(cat)
- *
- * RIGHT  Blue bubble-art glass panel + frosted social bar
+ *   logo → headline (scroll-reveal) → subtitle → body → accordion pills
+ *   Each pill expands an auto-scroll inline carousel.
+ *   Clicking any carousel card calls props.onProjectOpen(cat).
  */
 
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { motion, useMotionValue } from 'framer-motion'
+import { motion, useMotionValue, LayoutGroup } from 'framer-motion'
+import { TextRotate } from './TextRotate'
 
 // ── Category data (extended for ProjectDetail) ──────────────────────
 export const CATEGORIES = [
@@ -198,40 +196,112 @@ export default function PortfolioSection({ onProjectOpen }) {
         {/* ═══ LEFT COLUMN ════════════════════════════════════════════ */}
         <div className="pf-left">
 
-          {/* Studio stats bar */}
-          <div className="pf-studio-stats">
-            {[
-              { value: '100+', label: 'Clients' },
-              { value: '6+',   label: 'Years'   },
-              { value: '4',    label: 'Disciplines' },
-              { value: '2019', label: 'Founded'  },
-            ].map((s) => (
-              <div key={s.label} className="pf-studio-stat">
-                <span className="pf-studio-val">{s.value}</span>
-                <span className="pf-studio-lbl">{s.label}</span>
-              </div>
-            ))}
+          {/* Logo — fades in first */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, margin: '-8%' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}logo.svg`}
+              alt="Studio KAIL"
+              className="pf-logo-sm"
+              draggable={false}
+            />
+          </motion.div>
+
+          {/* Headline — word-by-word stagger; lime underline draws after 1s */}
+          <div className="pf-rotate-wrap">
+            <LayoutGroup>
+              <h2 className="pf-rotate-line" aria-label="From spark to screen, shelf, sales, and more">
+
+                {/* Row 1 — "From" then "spark" stagger in individually */}
+                <span className="pf-rotate-row">
+                  <motion.span
+                    style={{ display: 'inline-block' }}
+                    initial={{ opacity: 0, y: 14, filter: 'blur(5px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+                  >
+                    From
+                  </motion.span>
+
+                  {/* "spark" + lime underline */}
+                  <motion.span
+                    style={{ display: 'inline-block', position: 'relative' }}
+                    initial={{ opacity: 0, y: 14, filter: 'blur(5px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
+                  >
+                    spark
+                    <motion.span
+                      className="pf-spark-underline"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94], delay: 1.0 }}
+                    />
+                  </motion.span>
+
+                  {/* "to" — same row, no underline */}
+                  <motion.span
+                    style={{ display: 'inline-block' }}
+                    initial={{ opacity: 0, y: 14, filter: 'blur(5px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.26 }}
+                  >
+                    to
+                  </motion.span>
+                </span>
+
+                {/* Row 2 — rotating chip */}
+                <motion.span
+                  className="pf-rotate-row"
+                  layout
+                  initial={{ opacity: 0, y: 14, filter: 'blur(5px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.31 }}
+                >
+                  <TextRotate
+                    texts={['screen', 'shelf', 'sales', 'substance', 'sustainability', 'solutions']}
+                    mainClassName="pf-rotate-chip"
+                    staggerFrom="last"
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    exit={{ y: '-120%' }}
+                    staggerDuration={0.03}
+                    splitLevelClassName="pf-rotate-char-slot"
+                    transition={{ type: 'spring', damping: 30, stiffness: 400 }}
+                    rotationInterval={2200}
+                  />
+                </motion.span>
+
+              </h2>
+            </LayoutGroup>
           </div>
 
-          <img src="/logo.svg" alt="Studio KAIL" className="pf-logo-sm" draggable={false} />
-
-          <h2 className="pf-headline">
-            From <em className="hl-spark">spark</em>
-            <br />
-            to{' '}<span className="hl-screen">screen</span>{' '}to
-            <br />
-            <strong className="hl-shelf">shelf</strong>
-          </h2>
-
-          <p className="pf-subtitle">
+          {/* Subtitle — sequences after the headline words */}
+          <motion.p
+            className="pf-subtitle"
+            initial={{ opacity: 0, y: 14, filter: 'blur(5px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.44 }}
+          >
             and <mark className="hl-between">everything in between.</mark>
-          </p>
+          </motion.p>
 
-          <p className="pf-body">
+          {/* Body copy */}
+          <motion.p
+            className="pf-body"
+            initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, margin: '-8%' }}
+            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.36 }}
+          >
             We design strategic brand foundations across identity, websites,
             animation, print, and packaging — building cohesive systems that
             work seamlessly across digital and physical spaces.
-          </p>
+          </motion.p>
 
           {/* Expandable category pills */}
           <div className="pf-cats">
@@ -261,25 +331,6 @@ export default function PortfolioSection({ onProjectOpen }) {
                 </div>
               </motion.div>
             ))}
-          </div>
-        </div>
-
-        {/* ═══ RIGHT COLUMN — bubble art panel ═══════════════════════ */}
-        <div className="pf-right">
-          <div className="pf-panel">
-            <div className="pf-panel-art">
-              <PanelBubble size={62} top={8}     left={12}  opacity={0.9}  />
-              <PanelBubble size={38} top={4}     right={6}  opacity={0.75} />
-              <PanelBubble size={28} bottom={28} left={5}   opacity={0.65} />
-              <PanelBubble size={46} bottom={10} right={8}  opacity={0.8}  />
-              <PanelBubble size={20} top={42}    right={18} opacity={0.6}  />
-              <div className="pf-panel-centre-orb" />
-            </div>
-            <div className="pf-social-bar">
-              {['IG', 'YT', 'DR', 'BE'].map((s) => (
-                <span key={s} className="pf-social-icon">{s}</span>
-              ))}
-            </div>
           </div>
         </div>
 
