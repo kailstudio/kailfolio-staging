@@ -344,17 +344,16 @@ export default function PortfolioSection({ onProjectOpen }) {
                       transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.33 }}
                     >
                       spark
-                      {/* Hand-drawn circle, drawn in via SVG pathLength */}
-                      <svg className="pf-spark-circle" viewBox="0 0 100 42" aria-hidden="true" fill="none">
-                        <motion.path
-                          d="M 6,21 C 4,9 19,2 50,2 C 81,2 96,9 94,21 C 92,33 77,40 50,40 C 23,40 8,33 6,21 C 5,17 7,24 10,22"
+                      {/* Smooth ellipse, drawn in via SVG pathLength */}
+                      <svg className="pf-spark-circle" viewBox="0 0 110 46" aria-hidden="true" fill="none">
+                        <motion.ellipse
+                          cx="55" cy="23" rx="50" ry="19"
                           stroke="#c8ff00"
-                          strokeWidth="3"
+                          strokeWidth="5"
                           strokeLinecap="round"
-                          strokeLinejoin="round"
                           initial={{ pathLength: 0 }}
                           animate={{ pathLength: 1 }}
-                          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94], delay: 1.15 }}
+                          transition={{ duration: 0.75, ease: [0.25, 0.46, 0.45, 0.94], delay: 1.9 }}
                         />
                       </svg>
                     </motion.span>

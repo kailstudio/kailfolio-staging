@@ -191,7 +191,7 @@ body {
 
   .split-right { display: none; }
 
-  /* Character animation — show on mobile, centred at bottom behind text panels */
+  /* Character animation — smaller on mobile, centred at bottom */
   .hero-char-track {
     left: 0;
     right: 0;
@@ -201,7 +201,7 @@ body {
   }
 
   .hero-char-img {
-    width: 88vw;
+    width: 59vw;   /* 66vw × 0.9 = 10% smaller */
   }
 
   /* Tighten glass panel padding */
@@ -641,7 +641,7 @@ body {
   gap: 0.18em;
 }
 
-/* Hand-drawn circle around "spark" — drawn via SVG pathLength */
+/* Smooth ellipse around "spark" — drawn via SVG pathLength */
 .pf-spark-circle {
   position: absolute;
   top: 50%;
@@ -649,6 +649,7 @@ body {
   transform: translate(-50%, -50%);
   width: 120%;
   height: 175%;
+  z-index: -1;
   pointer-events: none;
   overflow: visible;
 }
@@ -1943,6 +1944,95 @@ body {
 
 
 /* ══════════════════════════════════════════════════════════════════════
+   VIDEO SECTION — contained showreel with glassmorphism controls
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Outer section: no background so the fixed aurora + bubbles show through */
+.video-section {
+  position: relative;
+  width: 100%;
+  padding: 80px 48px;
+  z-index: 10;
+}
+
+/* Rounded rectangle container that clips the video */
+.video-wrapper {
+  position: relative;
+  max-width: 780px;
+  margin: 0 auto;
+  border-radius: 999px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #060614;   /* dark fallback while video loads */
+  box-shadow:
+    0 48px 120px rgba(20, 10, 60, 0.32),
+    0  8px  32px rgba(51, 85, 255, 0.12);
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Controls row — centered at bottom of wrapper */
+.video-controls {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+/* Glassmorphism button */
+.video-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  color: #fff;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.video-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transform: scale(1.08);
+}
+
+.video-btn:active { transform: scale(0.94); }
+
+.video-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
+  flex-shrink: 0;
+}
+
+/* Mobile — smaller radius + tighter padding */
+@media (max-width: 900px) {
+  .video-section { padding: 48px 20px; }
+  .video-wrapper  { border-radius: 999px; }
+  .video-controls { bottom: 20px; }
+  .video-btn      { width: 44px; height: 44px; }
+  .video-btn svg  { width: 16px; height: 16px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    SITE FOOTER — light editorial, full-bleed wordmark
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -2064,7 +2154,6 @@ body {
 @media (max-width: 900px) {
   .hero-mobile-spacer {
     display: block;
-    height: 2500px;   /* matches MOBILE_SPACER in HeroSequence.jsx */
     width: 100%;
   }
 }
@@ -2238,4 +2327,183 @@ body {
 @keyframes lsDotPulse {
   0%, 80%, 100% { opacity: 0.30; transform: scale(0.85); }
   40%           { opacity: 1;    transform: scale(1.18); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   ScrollExpandMedia (sem-*)
+   ─ scroll-intercept intro section above the portfolio
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sem-root {
+  overflow-x: hidden;
+  /* Sits above the hero character (z:9999) while active */
+  position: relative;
+  z-index: 10000;
+}
+
+.sem-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: transparent; /* aurora gradient + bubbles show through */
+}
+
+/* ── Background image ── */
+.sem-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sem-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.sem-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Layout container ── */
+.sem-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+/* ── Stage: holds expanding media + flying title ── */
+.sem-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Expanding media box ── */
+.sem-media-wrap {
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  /* border-radius driven inline: 999px pill → 0 as scroll progresses */
+  flex-shrink: 0;
+}
+
+.sem-media-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.sem-no-pointer { pointer-events: none; }
+
+.sem-media-frame {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+}
+
+.sem-media-video,
+.sem-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Dark veil over media — fades as media expands */
+.sem-media-veil {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
+/* ── Date / scroll-hint row pinned below the media box ── */
+.sem-labels {
+  position: absolute;
+  bottom: -3rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sem-date,
+.sem-hint {
+  font-size: 0.8125rem;
+  font-family: 'Raleway', sans-serif;
+  letter-spacing: 0.08em;
+  color: rgba(191, 219, 254, 0.85); /* ~blue-200 */
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ── Flying title words ── */
+.sem-title-row {
+  position: absolute;
+  z-index: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100vw;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sem-title {
+  font-size: clamp(2.25rem, 5.5vw, 5rem);
+  font-weight: 700;
+  font-family: 'Raleway', sans-serif;
+  color: rgba(191, 219, 254, 0.9); /* ~blue-200 */
+  margin: 0;
+  padding: 0 2rem;
+  white-space: nowrap;
+}
+
+.sem-blend-diff .sem-title {
+  mix-blend-mode: difference;
+  color: #fff;
+}
+
+/* ── Content revealed after full expansion ── */
+.sem-content {
+  width: 100%;
+  margin-top: 4rem;
+  padding: 2rem 0;
+  color: rgba(191, 219, 254, 0.85);
+  text-align: center;
+}
+
+/* ── Mobile tweaks ── */
+@media (max-width: 767px) {
+  .sem-title { font-size: clamp(1.5rem, 7vw, 2.5rem); }
+  .sem-container { padding: 0 1rem; }
+  .sem-labels { bottom: -2.5rem; }
 }

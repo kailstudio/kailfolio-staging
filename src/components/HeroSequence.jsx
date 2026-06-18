@@ -122,14 +122,14 @@ export default function HeroSequence() {
 
   useEffect(() => { preloadAll() }, [])
 
-  // Lift the char track so it never overlaps the footer.
-  // Dynamically sets `bottom` = however many px of footer are visible.
+  // Lift the char track so it sticks above the video section.
+  // Falls back to footer if video section isn't present.
   useEffect(() => {
     const el = charTrackRef.current
-    const footer = document.querySelector('.site-footer')
-    if (!el || !footer) return
+    const stopper = document.querySelector('.video-section') || document.querySelector('.site-footer')
+    if (!el || !stopper) return
     const update = () => {
-      const overlap = Math.max(0, window.innerHeight - footer.getBoundingClientRect().top)
+      const overlap = Math.max(0, window.innerHeight - stopper.getBoundingClientRect().top)
       el.style.bottom = `${overlap}px`
     }
     window.addEventListener('scroll', update, { passive: true })
