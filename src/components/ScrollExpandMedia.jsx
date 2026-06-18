@@ -54,15 +54,6 @@ export default function ScrollExpandMedia({
     setMediaFullyExpanded(false)
   }, [mediaType])
 
-  // ── Video: reset to start when pill fully collapses (scrollProgress → 0) ─
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v || mediaType !== 'video') return
-    if (scrollProgress === 0) {
-      v.currentTime = 0
-      v.play().catch(() => {})
-    }
-  }, [scrollProgress, mediaType])
 
   // ── Scroll interception ─────────────────────────────────────────────
   useEffect(() => {
@@ -188,6 +179,12 @@ export default function ScrollExpandMedia({
                       poster={posterSrc}
                       autoPlay muted playsInline preload="auto"
                       className="sem-media-video"
+                      onEnded={(e) => {
+                        // Seek to last frame and stay there
+                        const v = e.currentTarget
+                        v.currentTime = v.duration - 0.001
+                        v.pause()
+                      }}
                     />
                     <div className="sem-media-veil" style={{ opacity: veilOpacity }} />
                   </div>
