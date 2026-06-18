@@ -109,11 +109,9 @@ const TextRotate = forwardRef(function TextRotate(
   const totalChars = elements.reduce((s, w) => s + w.characters.length, 0)
 
   return (
-    <motion.span
+    <span
       className={mainClassName}
       style={{ display: 'inline-flex', flexWrap: 'wrap', whiteSpace: 'pre-wrap', ...mainStyle }}
-      layout
-      transition={transition}
     >
       {/* Screen-reader text */}
       <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clipPath: 'inset(50%)' }}>
@@ -121,10 +119,9 @@ const TextRotate = forwardRef(function TextRotate(
       </span>
 
       <AnimatePresence mode={animatePresenceMode} initial={animatePresenceInitial}>
-        <motion.div
+        <div
           key={currentIndex}
           style={{ display: 'inline-flex', flexWrap: 'wrap' }}
-          layout
           aria-hidden="true"
         >
           {elements.map((wordObj, wordIdx, arr) => {
@@ -152,9 +149,9 @@ const TextRotate = forwardRef(function TextRotate(
               </span>
             )
           })}
-        </motion.div>
+        </div>
       </AnimatePresence>
-    </motion.span>
+    </span>
   )
 })
 

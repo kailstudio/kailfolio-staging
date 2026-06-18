@@ -8,7 +8,7 @@
  */
 
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { motion, useMotionValue, LayoutGroup } from 'framer-motion'
+import { motion, useMotionValue } from 'framer-motion'
 import { TextRotate } from './TextRotate'
 
 // ── Carousel constants ───────────────────────────────────────────────
@@ -324,7 +324,6 @@ export default function PortfolioSection({ onProjectOpen }) {
             transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
           >
             <div className="pf-rotate-wrap">
-              <LayoutGroup>
                 <h2 className="pf-rotate-line" aria-label="From spark to screen, shelf, sales, and more">
 
                   <span className="pf-rotate-row">
@@ -370,7 +369,6 @@ export default function PortfolioSection({ onProjectOpen }) {
 
                   <motion.span
                     className="pf-rotate-row"
-                    layout
                     initial={{ opacity: 0, y: 14, filter: 'blur(5px)' }}
                     animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                     transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.46 }}
@@ -390,7 +388,6 @@ export default function PortfolioSection({ onProjectOpen }) {
                   </motion.span>
 
                 </h2>
-              </LayoutGroup>
             </div>
 
             <motion.p

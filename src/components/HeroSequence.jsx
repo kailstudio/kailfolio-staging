@@ -95,7 +95,7 @@ export default function HeroSequence() {
         const maxScroll = Math.max(
           document.documentElement.scrollHeight - window.innerHeight, 400
         )
-        setScrollRange(Math.min(maxScroll, 3000))
+        setScrollRange(Math.min(maxScroll, 1200))
       }
     }
     update()
