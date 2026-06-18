@@ -26,6 +26,39 @@
   --header-h: 64px;
 }
 
+/* ── Custom cursor ──────────────────────────────────────────────────── */
+*, *::before, *::after { cursor: none !important; }
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  pointer-events: none;
+  z-index: 99999;
+  /* translate is updated every RAF frame (no transition — locks to cursor) */
+  translate: -60px -60px;
+  /* scale is CSS-transitioned for smooth easing on hover */
+  scale: 1;
+  transition: scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: translate, scale;
+}
+.custom-cursor.is-hover {
+  scale: 0.5;
+}
+
+
+
+/* Hide on touch devices — no mouse cursor needed */
+@media (hover: none), (pointer: coarse) {
+  .custom-cursor { display: none; }
+  *, *::before, *::after { cursor: auto !important; }
+}
+
+
 /* ─── Reset ─────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -123,7 +156,7 @@ body {
 
   .site-header-inner {
     padding: 0 16px;
-    justify-content: flex-start;  /* logo left-aligned on mobile */
+    justify-content: center;  /* logo centred on mobile, matching desktop */
   }
 
   .site-header-logo {
@@ -141,6 +174,7 @@ body {
    Mobile (≤ 768 px): full-width single column, right panel hidden.
 ═══════════════════════════════════════════════════════════════════ */
 
+
 .site-split {
   display: grid;
   grid-template-columns: 70% 30%;
@@ -157,9 +191,18 @@ body {
 
   .split-right { display: none; }
 
-  /* Hide character animation — position:fixed needs explicit suppression */
-  .hero-char-track    { display: none; }
-  .hero-bubbles-panel { display: none; }
+  /* Character animation — show on mobile, centred at bottom behind text panels */
+  .hero-char-track {
+    left: 0;
+    right: 0;
+    justify-content: center;
+    padding-right: 0;
+    z-index: 0;
+  }
+
+  .hero-char-img {
+    width: 88vw;
+  }
 
   /* Tighten glass panel padding */
   .hero-text-glass {
@@ -346,6 +389,7 @@ body {
  * during parallax, preventing horizontal scrollbars on fixed-position children.
  */
 .hero-bubbles-panel {
+  opacity: 0; /* Framer Motion reveals when frameReady */
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -414,6 +458,7 @@ body {
   z-index: 9999;
   pointer-events: none;
   overflow: visible;
+  opacity: 0; /* Framer Motion reveals when frameReady */
 }
 
 .hero-char-img {
@@ -523,10 +568,6 @@ body {
 .hl-spark {
   font-weight: 800;
   font-style: italic;
-  text-decoration: underline;
-  text-decoration-color: #c8ff00;
-  text-decoration-thickness: 5px;
-  text-underline-offset: 5px;
 }
 
 .hl-screen {
@@ -600,19 +641,16 @@ body {
   gap: 0.18em;
 }
 
-/* Lime underline beneath "spark" — drawn left-to-right via scaleX */
-.pf-spark-underline {
+/* Hand-drawn circle around "spark" — drawn via SVG pathLength */
+.pf-spark-circle {
   position: absolute;
-  bottom: -0.06em;
-  left: 0;
-  right: 0;
-  height: 0.09em;
-  min-height: 3px;
-  background: #c8ff00;
-  display: block;
-  border-radius: 2px;
-  transform-origin: left center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 175%;
   pointer-events: none;
+  overflow: visible;
 }
 
 /* The animated chip — brand blue pill, sized to match headline em */
@@ -1064,9 +1102,10 @@ body {
   height: 100%;
   background-size: cover;
   background-position: center;
+  opacity: 0.7;
   transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.pj-card:hover .pj-photo-img { transform: scale(1.05); }
+.pj-card:hover .pj-photo-img { transform: scale(1.05); opacity: 0.9; }
 
 /* Placeholder for cards without a photo */
 .pj-photo-placeholder {
@@ -1118,13 +1157,15 @@ body {
   transition: background 0.22s ease, border-color 0.22s ease;
 }
 
-.pj-card:hover .pj-title-pill {
-  background: rgba(20, 20, 40, 0.70);
-  border-color: rgba(20, 20, 40, 0.70);
+.pj-card:hover .pj-title-pill,
+.pj-card:active .pj-title-pill {
+  background: #d4ff5c;
+  border-color: #d4ff5c;
 }
 
-.pj-card:hover .pj-title {
-  color: #ffffff;
+.pj-card:hover .pj-title,
+.pj-card:active .pj-title {
+  color: #333333;
 }
 
 
@@ -1132,7 +1173,7 @@ body {
   font-family: 'Raleway', sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #333333;
   line-height: 1.2;
   margin: 0;
   overflow: hidden;
@@ -1152,7 +1193,6 @@ body {
 
 .pj-card:hover .pj-arrow {
   transform: scale(1.25);
-  color: #ffffff;
 }
 
 /* ── Coming soon card ────────────────────────────────────────── */
@@ -1900,6 +1940,135 @@ body {
 ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Overlay ────────────────────────────────────────────────────── */
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SITE FOOTER — light editorial, full-bleed wordmark
+   ══════════════════════════════════════════════════════════════════════ */
+
+.site-footer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(160deg, #ffffff 0%, #f4f2ff 55%, #eaefff 100%);
+  border-top: 1px solid rgba(100, 80, 200, 0.10);
+  margin-top: 12px;
+}
+
+/* ── Top bar ── */
+.footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(20px, 3vw, 36px) clamp(20px, 4vw, 56px);
+}
+
+/* "Studio KAIL" label — top left */
+.footer-label {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300;
+  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 46, 0.55);
+}
+
+/* ── Socials ── */
+.footer-socials {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  /* glassmorphism bubble — blue/lilac tinted so it reads on the light footer */
+  background: rgba(80, 60, 200, 0.10);
+  backdrop-filter: blur(12px) saturate(1.6);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  border: 1px solid rgba(100, 80, 220, 0.28);
+  box-shadow:
+    0 2px 12px rgba(51, 85, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  color: #3355FF;
+  text-decoration: none;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    color 0.22s ease,
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footer-social-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footer-social-btn:hover {
+  background: rgba(51, 85, 255, 0.16);
+  border-color: rgba(51, 85, 255, 0.45);
+  box-shadow:
+    0 4px 20px rgba(51, 85, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  color: #3355FF;
+  transform: translateY(-2px) scale(1.08);
+}
+
+/* ── Large wordmark ── */
+.footer-wordmark-wrap {
+  /* Clip overflow so the wordmark cuts off at footer edge */
+  overflow: hidden;
+  line-height: 1;
+  /* Pull up so the bottom of the letters bleeds off the footer */
+  padding-bottom: 0;
+}
+
+.footer-wordmark {
+  display: block;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300;
+  /* Scale to fill ~100vw — tweak if needed for exact bleed */
+  font-size: clamp(80px, 16vw, 240px);
+  line-height: 0.82;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  color: rgba(26, 26, 46, 0.10);
+  padding: 0 clamp(16px, 3vw, 40px);
+  /* bottom ~30% of the text intentionally overflows */
+  transform: translateY(28%);
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+  .footer-wordmark {
+    font-size: clamp(52px, 18vw, 100px);
+  }
+}
+
+/* ── Mobile animation scroll scaffold ──────────────────────────────── */
+/* Invisible block that adds scroll room for the hero animation on mobile.
+   Hidden on desktop — desktop has enough page height from the portfolio. */
+.hero-mobile-spacer {
+  display: none;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hero-mobile-spacer {
+    display: block;
+    height: 2500px;   /* matches MOBILE_SPACER in HeroSequence.jsx */
+    width: 100%;
+  }
+}
+
 .ls-overlay {
   position: fixed;
   inset: 0;

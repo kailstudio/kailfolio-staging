@@ -1,20 +1,12 @@
 /**
  * LoadingScreen.jsx
  *
- * Light-coloured glassmorphism splash. Stays visible until every one of the
- * 121 character-animation frames has loaded (Promise.all), with a 1.5 s
- * minimum display time so it never just flashes.
- *
- * Visuals
- *   • Light gradient background (white → pale blue/lilac)
- *   • Large ambient colour blobs (blue / lilac / lime) matching homepage palette
- *   • Glass-sphere bubbles identical in style to the homepage floating orbs
- *   • Frosted-glass centre card — white glass, dark logo, pulsing dots
+ * Stays visible until all 121 optimised character-animation frames have
+ * loaded, with a 1.5 s minimum display time so it never just flashes.
  *
  * Dismissal
- *   • Promise.all(all 121 frames) + 1.5 s min → calls onDone()
- *   • 8 s hard cap so a broken asset never hangs forever
- *   • Parent's <AnimatePresence> handles the 0.6 s exit fade
+ *   Promise.all(121 frames) + 1.5 s min → calls onDone()
+ *   30 s hard cap so a slow connection eventually proceeds
  */
 
 import { useEffect } from 'react'
@@ -31,26 +23,21 @@ function framePath(i) {
 export default function LoadingScreen({ onDone }) {
   useEffect(() => {
     let done = false
+    const finish = () => { if (!done) { done = true; onDone() } }
 
-    // Preload every animation frame
     const framePromises = Array.from({ length: FRAME_COUNT }, (_, i) =>
       new Promise((resolve) => {
         const img = new Image()
         img.onload  = resolve
-        img.onerror = resolve   // never block on a missing file
+        img.onerror = resolve
         img.src = framePath(i)
       })
     )
 
-    // 1.5 s minimum so the screen feels intentional
     const minTime = new Promise((r) => setTimeout(r, 1500))
+    const hardCap = setTimeout(finish, 30000)
 
-    // Hard cap — never hang longer than 8 s
-    const hardCap = setTimeout(() => { if (!done) { done = true; onDone() } }, 8000)
-
-    Promise.all([...framePromises, minTime]).then(() => {
-      if (!done) { done = true; onDone() }
-    })
+    Promise.all([...framePromises, minTime]).then(finish)
 
     return () => { done = true; clearTimeout(hardCap) }
   }, [onDone])
@@ -66,7 +53,7 @@ export default function LoadingScreen({ onDone }) {
       <div className="ls-blob ls-blob--lilac"  aria-hidden="true" />
       <div className="ls-blob ls-blob--lime"   aria-hidden="true" />
 
-      {/* ── Floating glass-sphere bubbles (mirrors homepage style) ── */}
+      {/* ── Floating glass-sphere bubbles ────────────────────────── */}
       <div className="ls-orb ls-orb--a" aria-hidden="true" />
       <div className="ls-orb ls-orb--b" aria-hidden="true" />
       <div className="ls-orb ls-orb--c" aria-hidden="true" />
@@ -82,12 +69,8 @@ export default function LoadingScreen({ onDone }) {
           className="ls-logo"
           draggable="false"
         />
-
         <div className="ls-divider" aria-hidden="true" />
-
         <p className="ls-tagline">Creative Studio</p>
-
-        {/* Pulsing dot trio — loading indicator */}
         <div className="ls-dots" aria-hidden="true">
           <span className="ls-dot ls-dot--1" />
           <span className="ls-dot ls-dot--2" />

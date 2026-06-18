@@ -113,23 +113,23 @@ export const CATEGORIES = [
     ],
     slides: [
       {
-        id: 1, bg: '#C8B898', img: 'projects/woodco.png', label: 'Woodco',
+        id: 1, bg: '#C8B898', img: 'projects/woodco.jpg', label: 'Woodco',
         tags: ['Packaging', 'Label Design', 'Visual Identity'],
       },
       {
-        id: 2, bg: '#E8B098', img: 'projects/la-terra-rossa.png', label: 'La Terra Rossa',
+        id: 2, bg: '#E8B098', img: 'projects/la-terra-rossa.jpg', label: 'La Terra Rossa',
         tags: ['Packaging', 'Label Design', 'Brand Identity'],
       },
       {
-        id: 3, bg: '#C8A8D8', img: 'projects/oracle-cards.png', label: 'Self Awakening Oracle Cards',
+        id: 3, bg: '#C8A8D8', img: 'projects/oracle-cards.jpg', label: 'Self Awakening Oracle Cards',
         tags: ['Print', 'Book Design', 'Visual Identity'],
       },
       {
-        id: 4, bg: '#F0C8C0', img: 'projects/signature-balm.png', label: 'Signature Balm',
+        id: 4, bg: '#F0C8C0', img: 'projects/signature-balm.jpg', label: 'Signature Balm',
         tags: ['Packaging', 'Label Design', 'Wellness'],
       },
       {
-        id: 5, bg: '#F0D898', img: 'projects/lucciola.png', label: 'Lucciola',
+        id: 5, bg: '#F0D898', img: 'projects/lucciola.jpg', label: 'Lucciola',
         tags: ['Packaging', 'Label Design', 'Food & Beverage'],
       },
     ],
@@ -344,12 +344,19 @@ export default function PortfolioSection({ onProjectOpen }) {
                       transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.33 }}
                     >
                       spark
-                      <motion.span
-                        className="pf-spark-underline"
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94], delay: 1.15 }}
-                      />
+                      {/* Hand-drawn circle, drawn in via SVG pathLength */}
+                      <svg className="pf-spark-circle" viewBox="0 0 100 42" aria-hidden="true" fill="none">
+                        <motion.path
+                          d="M 6,21 C 4,9 19,2 50,2 C 81,2 96,9 94,21 C 92,33 77,40 50,40 C 23,40 8,33 6,21 C 5,17 7,24 10,22"
+                          stroke="#c8ff00"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94], delay: 1.15 }}
+                        />
+                      </svg>
                     </motion.span>
 
                     <motion.span
