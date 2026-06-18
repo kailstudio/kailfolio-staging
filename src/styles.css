@@ -256,19 +256,18 @@ body {
 }
 
 /*
- * Left column — sticky panel, locked to top of viewport.
- * Portfolio content scrolls internally via overflow-y: auto.
- * Page scroll (window) drives the character animation only.
- *
- * background: transparent — lets the fixed aurora + bubbles (z:1) show
- * through. The pf-section glassmorphism handles its own visual background.
- * padding-top = header height so content starts below the fixed site header.
+ * Left column — sticky to viewport top, but NOT height-constrained.
+ * align-self: start means the column hugs its content height rather than
+ * stretching to fill the 3000 px+ grid row. This allows accordion
+ * expansions to grow naturally without ever clipping or requiring
+ * internal scroll.
+ * Page scroll (window) still drives the hero character animation
+ * because HeroSequence reads window.scrollY directly.
  */
 .split-left {
   position: sticky;
   top: 0;
-  height: 100vh;
-  overflow-y: auto;
+  align-self: start;      /* hug content — never clip to 100 vh */
   z-index: 2;
   background: transparent;
   padding-top: var(--header-h);
@@ -735,12 +734,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* Ensure expanded carousels never overflow out of the section */
+  overflow: visible;
+  /* Bottom breathing room so the last expanded section has space */
+  padding-bottom: 32px;
 }
 
 .pf-cat-block {
   display: grid;
   grid-template-rows: auto 0fr;
-  transition: grid-template-rows 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: grid-template-rows 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pf-cat-block.open {
@@ -748,6 +751,12 @@ body {
 }
 
 .pf-carousel-inner {
+  /* overflow: hidden is needed for the grid-template-rows accordion to work,
+     but we only want to clip the height during collapse — never clip content
+     once the row is fully open. Using overflow-y:visible here would break the
+     grid collapse animation, so we keep overflow:hidden on the wrapper but
+     ensure ic-wrap / ic-viewport below use overflow-x:clip so vertical
+     hover shadows and card tops are never masked. */
   overflow: hidden;
   min-height: 0;
 }
@@ -835,10 +844,13 @@ body {
 
 /* ── Inline carousel ──────────────────────────────────────────── */
 .ic-wrap {
-  /* Extra vertical room so hover shadow isn't clipped */
-  padding: 8px 0 16px;
-  /* Clip horizontally only — overflow-x trick via clip-path */
-  overflow: hidden;
+  /* Vertical breathing room for hover shadows */
+  padding: 6px 0 14px;
+  /* overflow-x: clip clips the horizontal infinite-scroll track without
+     creating a new scroll context on the y-axis, so hover shadows and
+     card bottoms are never masked. */
+  overflow-x: clip;
+  overflow-y: visible;
   cursor: default;
 }
 
@@ -1033,7 +1045,8 @@ body {
 /* ── Mobile swipe carousel ───────────────────────────────────── */
 .ic-wrap--mobile {
   padding: 8px 0 16px;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .ic-viewport--mobile {
@@ -1056,7 +1069,7 @@ body {
 
 /* ── Stacked photo cards — folder / pocket effect ─────────────── */
 .pj-photo-area {
-  padding: 14px 4px 4px;
+  padding: 8px 4px 4px;
   flex-shrink: 0;
 }
 
@@ -1090,7 +1103,7 @@ body {
   position: relative;
   z-index: 2;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   border-radius: 14px;
   overflow: hidden;
   box-shadow:
@@ -1976,10 +1989,10 @@ body {
   display: block;
 }
 
-/* Controls row — centered at bottom of wrapper */
+/* Controls row — top of video, left-of-center */
 .video-controls {
   position: absolute;
-  bottom: 36px;
+  top: 24px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -2023,12 +2036,66 @@ body {
   flex-shrink: 0;
 }
 
+/* ── Progress bar ── */
+.video-progress-wrap {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, 72%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
+  cursor: pointer;
+  z-index: 10;
+  user-select: none;
+}
+
+.video-progress-track {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.20);
+  overflow: visible;
+}
+
+.video-progress-fill {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: #fff;
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+
+.video-progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0,0,0,0.35);
+  pointer-events: none;
+  transition: left 0.1s linear;
+}
+
 /* Mobile — tighter padding (border-radius stays pill) */
 @media (max-width: 900px) {
-  .video-section  { padding: 48px 20px; }
-  .video-controls { bottom: 20px; }
-  .video-btn      { width: 44px; height: 44px; }
-  .video-btn svg  { width: 16px; height: 16px; }
+  .video-section         { padding: 48px 20px; }
+  .video-controls        { top: 16px; }
+  .video-btn             { width: 44px; height: 44px; }
+  .video-btn svg         { width: 16px; height: 16px; }
+  .video-progress-wrap   { bottom: 32px; width: min(320px, 80%); padding: 8px 14px; }
+  .video-progress-thumb  { width: 10px; height: 10px; }
 }
 
 /* ── Fullscreen mode ────────────────────────────────────────────────── */
@@ -2078,6 +2145,26 @@ body {
   box-shadow: 0 -4px 32px rgba(10, 5, 40, 0.18),
               inset 0 1px 0 rgba(255, 255, 255, 0.10);
   margin-top: 12px;
+}
+
+/* White gradient glow line at the top of the footer — matches header bottom line */
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent        0%,
+    rgba(255,255,255,0.45) 25%,
+    rgba(255,255,255,0.90) 50%,
+    rgba(255,255,255,0.45) 75%,
+    transparent        100%
+  );
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* ── Top bar ── */
