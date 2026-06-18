@@ -19,9 +19,10 @@ import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-mot
 const FRAME_COUNT  = 121
 const FRAME_PREFIX = `${import.meta.env.BASE_URL}frames/frame_`
 const FRAME_PAD    = 5
+const FRAME_EXT    = '.png'
 
 function framePath(i) {
-  return `${FRAME_PREFIX}${String(i).padStart(FRAME_PAD, '0')}.png`
+  return `${FRAME_PREFIX}${String(i).padStart(FRAME_PAD, '0')}${FRAME_EXT}`
 }
 function preloadAll() {
   for (let i = 0; i < FRAME_COUNT; i++) {
@@ -78,6 +79,7 @@ function ParallaxBubble({ size, x, baseY, blur, speed, parallax, drift = 0, scro
 export default function HeroSequence() {
   const [frameIndex, setFrameIndex] = useState(0)
   const [frameReady, setFrameReady] = useState(false)
+  const [isMobile,   setIsMobile]   = useState(() => window.innerWidth <= MOBILE_BREAKPT)
   const charTrackRef = useRef(null)
 
   const { scrollY, scrollYProgress } = useScroll()
@@ -85,7 +87,9 @@ export default function HeroSequence() {
 
   useEffect(() => {
     const update = () => {
-      if (window.innerWidth <= MOBILE_BREAKPT) {
+      const mobile = window.innerWidth <= MOBILE_BREAKPT
+      setIsMobile(mobile)
+      if (mobile) {
         setScrollRange(MOBILE_SPACER)
       } else {
         const maxScroll = Math.max(
@@ -101,8 +105,9 @@ export default function HeroSequence() {
 
   const animProgress = useTransform(scrollY, [0, scrollRange], [0, 1], { clamp: true })
 
+  // Mobile: freeze on frame 0 — no scroll-driven animation
   useMotionValueEvent(animProgress, 'change', (p) => {
-    setFrameIndex(Math.round(p * (FRAME_COUNT - 1)))
+    if (!isMobile) setFrameIndex(Math.round(p * (FRAME_COUNT - 1)))
   })
 
   // Wait for frame 0 to decode before revealing — prevents flash

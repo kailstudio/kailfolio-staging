@@ -15,9 +15,26 @@ import { motion } from 'framer-motion'
 const FRAME_COUNT  = 121
 const FRAME_PREFIX = `${import.meta.env.BASE_URL}frames/frame_`
 const FRAME_PAD    = 5
+const FRAME_EXT    = '.png'
+const SCROLL_VIDEO = `${import.meta.env.BASE_URL}scroll-hero-video.mp4`
 
 function framePath(i) {
-  return `${FRAME_PREFIX}${String(i).padStart(FRAME_PAD, '0')}.png`
+  return `${FRAME_PREFIX}${String(i).padStart(FRAME_PAD, '0')}${FRAME_EXT}`
+}
+
+// Resolve when a video has buffered enough to play through (readyState 4)
+// or on error / timeout.
+function waitForVideo(src) {
+  return new Promise((resolve) => {
+    const v = document.createElement('video')
+    v.preload = 'auto'
+    v.muted   = true
+    const done = () => resolve()
+    v.addEventListener('canplaythrough', done, { once: true })
+    v.addEventListener('error',          done, { once: true })
+    v.src = src
+    v.load()
+  })
 }
 
 export default function LoadingScreen({ onDone }) {
@@ -34,10 +51,11 @@ export default function LoadingScreen({ onDone }) {
       })
     )
 
-    const minTime = new Promise((r) => setTimeout(r, 1500))
-    const hardCap = setTimeout(finish, 30000)
+    const videoPromise = waitForVideo(SCROLL_VIDEO)
+    const minTime      = new Promise((r) => setTimeout(r, 1500))
+    const hardCap      = setTimeout(finish, 30000)
 
-    Promise.all([...framePromises, minTime]).then(finish)
+    Promise.all([...framePromises, videoPromise, minTime]).then(finish)
 
     return () => { done = true; clearTimeout(hardCap) }
   }, [onDone])

@@ -2023,17 +2023,46 @@ body {
   flex-shrink: 0;
 }
 
-/* Mobile — smaller radius + tighter padding */
+/* Mobile — tighter padding (border-radius stays pill) */
 @media (max-width: 900px) {
-  .video-section { padding: 48px 20px; }
-  .video-wrapper  { border-radius: 999px; }
+  .video-section  { padding: 48px 20px; }
   .video-controls { bottom: 20px; }
   .video-btn      { width: 44px; height: 44px; }
   .video-btn svg  { width: 16px; height: 16px; }
 }
 
+/* ── Fullscreen mode ────────────────────────────────────────────────── */
+/* Wrapper fills screen; video uses contain (no crop) with pill corners  */
+.video-wrapper:-webkit-full-screen,
+.video-wrapper:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  aspect-ratio: unset;
+  border-radius: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-wrapper:-webkit-full-screen .video-player,
+.video-wrapper:fullscreen .video-player {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;   /* fit 1920×1080 without cropping vertical content */
+  border-radius: 48px;   /* pill shape preserved within the black fullscreen bg */
+}
+
+.video-wrapper:-webkit-full-screen .video-controls,
+.video-wrapper:fullscreen .video-controls {
+  bottom: 32px;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
-   SITE FOOTER — light editorial, full-bleed wordmark
+   SITE FOOTER — dark glassmorphism, matching header aesthetic
    ══════════════════════════════════════════════════════════════════════ */
 
 .site-footer {
@@ -2041,8 +2070,13 @@ body {
   z-index: 10;
   width: 100%;
   overflow: hidden;
-  background: linear-gradient(160deg, #ffffff 0%, #f4f2ff 55%, #eaefff 100%);
-  border-top: 1px solid rgba(100, 80, 200, 0.10);
+  /* Same dark glass as site-header */
+  background: rgba(18, 10, 60, 0.32);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 -4px 32px rgba(10, 5, 40, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.10);
   margin-top: 12px;
 }
 
@@ -2061,7 +2095,7 @@ body {
   font-size: clamp(0.85rem, 1.4vw, 1.05rem);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(26, 26, 46, 0.55);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* ── Socials ── */
@@ -2078,15 +2112,15 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  /* glassmorphism bubble — blue/lilac tinted so it reads on the light footer */
-  background: rgba(80, 60, 200, 0.10);
+  /* glassmorphism — white-tinted to read on dark footer */
+  background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(12px) saturate(1.6);
   -webkit-backdrop-filter: blur(12px) saturate(1.6);
-  border: 1px solid rgba(100, 80, 220, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow:
-    0 2px 12px rgba(51, 85, 255, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  color: #3355FF;
+    0 2px 12px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.80);
   text-decoration: none;
   transition:
     background 0.22s ease,
@@ -2102,60 +2136,41 @@ body {
 }
 
 .footer-social-btn:hover {
-  background: rgba(51, 85, 255, 0.16);
-  border-color: rgba(51, 85, 255, 0.45);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.40);
   box-shadow:
-    0 4px 20px rgba(51, 85, 255, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  color: #3355FF;
+    0 4px 20px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
+  color: #ffffff;
   transform: translateY(-2px) scale(1.08);
 }
 
-/* ── Large wordmark ── */
+/* ── Full-bleed logo graphic ── */
 .footer-wordmark-wrap {
-  /* Clip overflow so the wordmark cuts off at footer edge */
-  overflow: hidden;
-  line-height: 1;
-  /* Pull up so the bottom of the letters bleeds off the footer */
-  padding-bottom: 0;
+  overflow: hidden;   /* clips logo at footer bottom edge */
+  line-height: 0;
+  padding: 0;
 }
 
-.footer-wordmark {
+.footer-wordmark-logo {
   display: block;
-  font-family: 'Raleway', sans-serif;
-  font-weight: 300;
-  /* Scale to fill ~100vw — tweak if needed for exact bleed */
-  font-size: clamp(80px, 16vw, 240px);
-  line-height: 0.82;
-  white-space: nowrap;
-  letter-spacing: -0.02em;
-  color: rgba(26, 26, 46, 0.10);
-  padding: 0 clamp(16px, 3vw, 40px);
-  /* bottom ~30% of the text intentionally overflows */
-  transform: translateY(28%);
+  /* Logo spans the full viewport width */
+  width: 100%;
+  height: auto;
+  /* Shift down so the lower portion bleeds off the footer edge */
+  transform: translateY(22%);
+  /* Logo SVG is white — show as white on the dark glass footer */
+  opacity: 0.12;
   pointer-events: none;
   user-select: none;
 }
 
-@media (max-width: 600px) {
-  .footer-wordmark {
-    font-size: clamp(52px, 18vw, 100px);
-  }
-}
-
 /* ── Mobile animation scroll scaffold ──────────────────────────────── */
-/* Invisible block that adds scroll room for the hero animation on mobile.
-   Hidden on desktop — desktop has enough page height from the portfolio. */
+/* No longer needed — mobile shows a still frame (no scroll animation).
+   Hidden on all breakpoints. */
 .hero-mobile-spacer {
   display: none;
   pointer-events: none;
-}
-
-@media (max-width: 900px) {
-  .hero-mobile-spacer {
-    display: block;
-    width: 100%;
-  }
 }
 
 .ls-overlay {

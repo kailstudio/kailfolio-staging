@@ -30,15 +30,21 @@ export default function ScrollExpandMedia({
   const [mediaFullyExpanded, setMediaFullyExpanded] = useState(false)
   const [touchStartY,        setTouchStartY]        = useState(0)
   const [isMobile,           setIsMobile]           = useState(false)
+  const [vpW,                setVpW]                = useState(390)
+  const [vpH,                setVpH]                = useState(800)
   const sectionRef = useRef(null)
   const videoRef   = useRef(null)
 
-  // ── Mobile detection ────────────────────────────────────────────────
+  // ── Viewport + mobile detection ──────────────────────────────────────
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
+    const update = () => {
+      setIsMobile(window.innerWidth < 768)
+      setVpW(window.innerWidth)
+      setVpH(window.innerHeight)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
   }, [])
 
   // ── Reset on mediaType change ────────────────────────────────────────
@@ -120,9 +126,11 @@ export default function ScrollExpandMedia({
   }, [scrollProgress, mediaFullyExpanded, touchStartY])
 
   // ── Computed values ─────────────────────────────────────────────────
-  // Start as a small pill (wide, short), expand to fill the viewport
-  const mediaW          = 400 + scrollProgress * (isMobile ? 540 : 1150)
-  const mediaH          = 240 + scrollProgress * (isMobile ? 260 : 560)
+  // Mobile starts 50% smaller; expands to fill the full viewport
+  const startW = isMobile ? 200 : 400
+  const startH = isMobile ? 120 : 240
+  const mediaW = startW + scrollProgress * (isMobile ? (vpW + 40 - startW) : 1150)
+  const mediaH = startH + scrollProgress * (isMobile ? (vpH + 40 - startH) : 560)
   // Border-radius: 999px pill → 0 at full expansion
   const mediaBorderRadius = Math.round(999 * (1 - scrollProgress))
   const textTranslateX  = scrollProgress * (isMobile ? 180 : 150)

@@ -2,10 +2,12 @@
  * Footer.jsx — light-themed editorial footer
  *
  * Layout:
- *   Top bar: "STUDIO KAIL" label (left) + social icons (right)
- *   Bottom:  massive "Studio KAIL" wordmark in Raleway Light, full-bleed,
- *            overflows and clips at the bottom edge for editorial drama.
+ *   Top bar: "Studio KAIL" label (left) + social icons (right)
+ *   Bottom:  official logo scaled to 100vw, partially clipped at the bottom
+ *            edge for editorial drama — same muted grey as the old wordmark.
  */
+
+const LOGO_SRC = `${import.meta.env.BASE_URL}logo.svg`
 
 const SOCIALS = [
   {
@@ -69,9 +71,14 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ── Large wordmark ──────────────────────────────────────── */}
+      {/* ── Full-bleed logo graphic ──────────────────────────────── */}
       <div className="footer-wordmark-wrap" aria-hidden="true">
-        <span className="footer-wordmark">Studio KAIL</span>
+        <img
+          src={LOGO_SRC}
+          alt=""
+          className="footer-wordmark-logo"
+          draggable={false}
+        />
       </div>
     </footer>
   )
