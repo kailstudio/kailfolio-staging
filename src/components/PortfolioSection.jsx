@@ -16,9 +16,8 @@ const CARD_W    = 210   // px — card width inside the track
 const CARD_GAP  = 12    // px — gap between cards
 const SPEED_PPS = 24    // px/s ≈ one card every 8–9 s
 
-// ── Brand colours ────────────────────────────────────────────────────
-const LIME  = '#d4ff5c'
-const LILAC = '#C4B8F0'
+// ── Brand colour classes (tints applied via CSS on glass cards) ──────
+// Even → lilac tint  |  Odd → blue tint
 
 // Converts hex → rgba for tinted oval placeholders
 function hexToRgba(hex, alpha) {
@@ -155,30 +154,35 @@ export const CATEGORIES = [
 
 // ── Single project card ──────────────────────────────────────────────
 function ProjectCard({ slide, index, onCardClick }) {
-  const bg = index % 2 === 0 ? LIME : LILAC
+  const tint = index % 2 === 0 ? 'pj-card--lilac' : 'pj-card--blue'
 
   return (
     <div
-      className="pj-card"
-      style={{ background: bg }}
+      className={`pj-card ${tint}`}
       onClick={onCardClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onCardClick?.()}
     >
-      {/* Oval / circular image */}
-      <div className="pj-oval-wrap">
-        {slide.img ? (
-          <div
-            className="pj-oval-img"
-            style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${slide.img})` }}
-          />
-        ) : (
-          <div
-            className="pj-oval-placeholder"
-            style={{ background: hexToRgba(slide.bg, 0.45) }}
-          />
-        )}
+      {/* Stacked photo cards */}
+      <div className="pj-photo-area">
+        <div className="pj-photo-stack">
+          <div className="pj-photo-back pj-photo-back--2" />
+          <div className="pj-photo-back pj-photo-back--1" />
+          <div className="pj-photo-front">
+            {slide.img ? (
+              <div
+                className="pj-photo-img"
+                style={{ backgroundImage: `url(${import.meta.env.BASE_URL}${slide.img})` }}
+              />
+            ) : (
+              <div
+                className="pj-photo-placeholder"
+                style={{ background: hexToRgba(slide.bg, 0.35) }}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Tag chips */}

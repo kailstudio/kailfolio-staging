@@ -857,6 +857,7 @@ body {
    Fixed 210 px width so the track can be infinite-scrolled.
 ═══════════════════════════════════════════════════════════════════ */
 
+/* ── Glass base ─────────────────────────────────────────────── */
 .pj-card {
   width: 210px;
   flex-shrink: 0;
@@ -867,18 +868,43 @@ body {
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  box-shadow: 0 4px 16px rgba(50, 40, 120, 0.10);
+  /* Glassmorphism */
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow:
+    0 8px 28px rgba(50, 40, 120, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
   transition:
     box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-    transform  0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transform  0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.28s ease,
+    border-color 0.28s ease;
   user-select: none;
   -webkit-user-select: none;
 }
 
+/* Subtle brand-colour tints — still glassy */
+.pj-card--lilac {
+  background: rgba(196, 184, 240, 0.30);
+  border-color: rgba(255, 255, 255, 0.62);
+}
+.pj-card--blue {
+  background: rgba(51, 85, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.52);
+}
+
 .pj-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 14px 40px rgba(50, 40, 120, 0.20);
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(255, 255, 255, 0.80);
+  box-shadow:
+    0 18px 48px rgba(50, 40, 120, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90);
 }
+.pj-card--lilac:hover { background: rgba(196, 184, 240, 0.42); }
+.pj-card--blue:hover  { background: rgba(51, 85, 255, 0.20); }
 
 /* ── Mobile swipe carousel ───────────────────────────────────── */
 .ic-wrap--mobile {
@@ -904,32 +930,68 @@ body {
   width: 160px;
 }
 
-/* Circular / oval image container — 1:1 matches reference */
-.pj-oval-wrap {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 999px;
-  overflow: hidden;
+/* ── Stacked photo cards — folder / pocket effect ─────────────── */
+.pj-photo-area {
+  padding: 14px 4px 4px;
   flex-shrink: 0;
 }
 
-.pj-oval-img {
+/* Wrapper sets height via the in-flow front card */
+.pj-photo-stack {
+  position: relative;
+  width: 90%;
+  margin: 0 auto;
+}
+
+/* Back paper cards — rotated behind the front */
+.pj-photo-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.10);
+}
+.pj-photo-back--1 {
+  background: rgba(255, 255, 255, 0.62);
+  transform: rotate(5deg);
+  z-index: 1;
+}
+.pj-photo-back--2 {
+  background: rgba(255, 255, 255, 0.40);
+  transform: rotate(-4deg);
+  z-index: 0;
+}
+
+/* Front photo card — in flow, sets stack height */
+.pj-photo-front {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+}
+
+.pj-photo-img {
   width: 100%;
   height: 100%;
   background-size: cover;
   background-position: center;
   transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.pj-card:hover .pj-oval-img { transform: scale(1.06); }
+.pj-card:hover .pj-photo-img { transform: scale(1.05); }
 
-/* Tinted oval placeholder for cards without a photo */
-.pj-oval-placeholder {
+/* Placeholder for cards without a photo */
+.pj-photo-placeholder {
   width: 100%;
   height: 100%;
 }
 
 /* Tag chips */
 .pj-tags {
+  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -940,32 +1002,50 @@ body {
   font-size: 0.50rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: rgba(26, 26, 46, 0.78);
-  background: rgba(255, 255, 255, 0.75);
+  color: rgba(26, 26, 46, 0.80);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.60);
   padding: 3px 7px;
   border-radius: 999px;
   white-space: nowrap;
 }
 
-/* Footer row */
+/* Footer row — pinned to card bottom */
 .pj-footer {
-  padding-top: 2px;
+  margin-top: auto;
+  padding-top: 6px;
 }
 
-/* Bordered title pill — 2px solid #333 */
+/* Bordered title pill — glass fill, darkens on hover */
 .pj-title-pill {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  border: 1px solid #333333;
+  background: rgba(255, 255, 255, 0.38);
+  border: 1px solid rgba(26, 26, 46, 0.28);
   border-radius: 999px;
   padding: 6px 8px 6px 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.22s ease, border-color 0.22s ease;
 }
+
+.pj-card:hover .pj-title-pill {
+  background: rgba(20, 20, 40, 0.70);
+  border-color: rgba(20, 20, 40, 0.70);
+}
+
+.pj-card:hover .pj-title {
+  color: #ffffff;
+}
+
 
 .pj-title {
   font-family: 'Raleway', sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #1a1a2e;
   line-height: 1.2;
@@ -979,13 +1059,15 @@ body {
 .pj-arrow {
   font-size: 0.82rem;
   flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   line-height: 1;
   color: #333333;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pj-card:hover .pj-arrow {
-  transform: translate(3px, -3px);
+  transform: scale(1.25);
+  color: #ffffff;
 }
 
 /* ── Coming soon card ────────────────────────────────────────── */
