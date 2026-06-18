@@ -38,6 +38,20 @@ function waitForVideo(src) {
 }
 
 export default function LoadingScreen({ onDone }) {
+  // Prevent the underlying page from scrolling while the loader is visible
+  useEffect(() => {
+    const el  = document.documentElement
+    const bod = document.body
+    const prevEl  = el.style.overflow
+    const prevBod = bod.style.overflow
+    el.style.overflow  = 'hidden'
+    bod.style.overflow = 'hidden'
+    return () => {
+      el.style.overflow  = prevEl
+      bod.style.overflow = prevBod
+    }
+  }, [])
+
   useEffect(() => {
     let done = false
     const finish = () => { if (!done) { done = true; onDone() } }

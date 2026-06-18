@@ -2180,6 +2180,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: none;     /* absorb touch events — prevent scroll bleed-through */
+  overflow: hidden;
   background: linear-gradient(140deg, #ffffff 0%, #f0eeff 45%, #e6efff 100%);
   overflow: hidden;
 }
