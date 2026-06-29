@@ -6,7 +6,7 @@
  *  2. Premium case study — when slide.caseStudy is present
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { PDFFlipbook } from './PDFFlipbook'
 
@@ -46,7 +46,22 @@ const CBS = {
 //  UTILITY COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════
 
-// 16-ray sunburst SVG (the CBS logo mark)
+// CBS Logo — real image with SVG fallback
+function CBSLogo({ size = 120 }) {
+  const base = import.meta.env.BASE_URL
+  return (
+    <img
+      src={`${base}cbs/cbs-logo.png`}
+      alt="Care-Based Safety logo"
+      width={size}
+      height={size}
+      style={{ objectFit: 'contain', display: 'block' }}
+      onError={(e) => { e.currentTarget.style.display = 'none' }}
+    />
+  )
+}
+
+// 16-ray sunburst SVG (kept as fallback/accent element)
 function SunburstSVG({ size = 120, color = '#F9F0E6' }) {
   const rays = Array.from({ length: 16 }, (_, i) => {
     const a = (i / 16) * Math.PI * 2 - Math.PI / 2
@@ -108,15 +123,14 @@ function Reveal({ children, delay = 0, className }) {
   )
 }
 
-// Section wrapper with numbered label + title
+// Section wrapper — title only (numbering removed)
 function CSSection({ label, title, children, variant = 'light', className }) {
   const cls = ['cs-section', `cs-section--${variant}`, className].filter(Boolean).join(' ')
   return (
     <section className={cls}>
-      {(label || title) && (
+      {title && (
         <Reveal>
           <div className="cs-section-header">
-            {label && <span className="cs-section-num">{label}</span>}
             {title && <h2 className="cs-section-title">{title}</h2>}
           </div>
         </Reveal>
@@ -254,8 +268,8 @@ function CSHero({ cs, slide }) {
         <div className="cs-hero-visual">
           <div className="cs-hero-img">
             <div className="cs-hero-img-bg">
-              <SunburstSVG size={220} color={CBS.cream} />
-              <p className="cs-ph-label">Brand Identity System — Care-Based Safety</p>
+              <CBSLogo size={220} />
+              <p className="cs-ph-label">Brand Identity System, Care-Based Safety</p>
             </div>
           </div>
           <div className="cs-float cs-float--tl">
@@ -295,33 +309,11 @@ function CSOverview({ cs }) {
         <Reveal delay={0.08} className="cs-bc cs-bc--wide cs-bc--dark">
           <span className="cs-bc-eye">Overview</span>
           <p className="cs-bc-body cs-bc-body--light">
-            A community-rooted organisation in Washtenaw County, Michigan — building and advocating for non-police crisis response, prevention-first systems, and community-led approaches to public safety grounded in abolitionist principles.
+            A community-rooted organisation in Washtenaw County, Michigan: building and advocating for non-police crisis response, prevention-first systems, and community-led approaches to public safety grounded in abolitionist principles.
           </p>
           <div className="cs-bc-tag">Abolitionist · Community-led · Prevention-first</div>
         </Reveal>
 
-        <Reveal delay={0.13} className="cs-bc cs-bc--peach">
-          <span className="cs-bc-eye">The Problem</span>
-          <h3 className="cs-bc-head">The brand hadn't caught up with the conviction.</h3>
-        </Reveal>
-
-        <Reveal delay={0.18} className="cs-bc cs-bc--mint">
-          <span className="cs-bc-eye">The Solution</span>
-          <h3 className="cs-bc-head">A complete identity system — built from first principles.</h3>
-        </Reveal>
-
-        <Reveal delay={0.23} className="cs-bc cs-bc--glass">
-          <span className="cs-bc-eye">My Role</span>
-          <h3 className="cs-bc-head">Brand Strategist + Creative Director</h3>
-          <p className="cs-bc-sub">End-to-end across 6 phases</p>
-        </Reveal>
-
-        <Reveal delay={0.28} className="cs-bc cs-bc--wide cs-bc--cream">
-          <span className="cs-bc-eye">Key Outcome</span>
-          <h3 className="cs-bc-head cs-bc-head--lg">
-            A brand system capable of carrying the same conviction — with the same warmth and clarity — across radically different rooms.
-          </h3>
-        </Reveal>
       </div>
     </CSSection>
   )
@@ -329,10 +321,10 @@ function CSOverview({ cs }) {
 
 // ── 03 The Brief ─────────────────────────────────────────────────────
 const BRIEF_CARDS = [
-  { icon: '⌘', title: 'The Challenge', body: 'Build a brand for radically different rooms — from someone reaching out in crisis to a government funding partner.' },
+  { icon: '⌘', title: 'The Challenge', body: 'Build a brand for radically different rooms: from someone reaching out in crisis to a government funding partner.' },
   { icon: '◎', title: 'User Needs', body: 'Warmth and directness for community members. Rigour and credibility for funders. Results-led clarity for government.' },
-  { icon: '✦', title: 'Business Goals', body: 'Six structured phases. A complete visual system. Deployable immediately across every touchpoint — social, print, digital, campaign.' },
-  { icon: '◈', title: 'Success Metrics', body: 'Same conviction. Same warmth. Same clarity — whether the audience is a funder in a boardroom or a person reaching out for help.' },
+  { icon: '✦', title: 'Business Goals', body: 'Six structured phases. A complete visual system. Deployable immediately across every touchpoint: social, print, digital, campaign.' },
+  { icon: '◈', title: 'Success Metrics', body: 'Same conviction. Same warmth. Same clarity: whether the audience is a funder in a boardroom or a person reaching out for help.' },
 ]
 
 function CSBrief({ cs }) {
@@ -406,8 +398,8 @@ function CSVisualIdentity({ cs }) {
   const logo   = visual?.subsections?.[0]
   const colour = visual?.subsections?.[1]
   const palette = [
-    { hex: CBS.espresso, name: 'Espresso',   usage: 'Primary anchor — authority, depth' },
-    { hex: CBS.cream,    name: 'Warm Cream', usage: 'Primary ground — warmth, openness' },
+    { hex: CBS.espresso, name: 'Espresso',   usage: 'Primary anchor: authority, depth' },
+    { hex: CBS.cream,    name: 'Warm Cream', usage: 'Primary ground: warmth, openness' },
     { hex: CBS.blue,     name: 'Steel Blue', usage: 'Trust, calm, secondary voice' },
     { hex: CBS.mint,     name: 'Soft Mint',  usage: 'Growth, care, optimism' },
     { hex: CBS.peach,    name: 'Warm Peach', usage: 'Warmth, celebration, energy' },
@@ -416,7 +408,7 @@ function CSVisualIdentity({ cs }) {
     <CSSection label="04" title="Visual Identity" variant="dark">
       <Reveal delay={0.1} className="cs-logo-showcase">
         <div className="cs-logo-visual">
-          <div className="cs-logo-ring"><SunburstSVG size={160} color={CBS.cream} /></div>
+          <div className="cs-logo-ring"><CBSLogo size={160} /></div>
           <div className="cs-logo-wordmark">
             <span className="cs-logo-name" style={{ color: CBS.cream }}>Care-Based Safety</span>
             <span className="cs-logo-tag" style={{ color: CBS.mint }}>Safety is relational.</span>
@@ -456,14 +448,14 @@ function CSVisualIdentity({ cs }) {
             <span className="cs-type-demo cs-type-demo--bold" style={{ color: CBS.cream }}>Aa</span>
             <div>
               <strong style={{ color: CBS.cream }}>Montserrat SemiBold</strong>
-              <p style={{ color: CBS.cream + '88', fontSize: 13 }}>Headers — confidence, structural clarity</p>
+              <p style={{ color: CBS.cream + '88', fontSize: 13 }}>Headers: confidence, structural clarity</p>
             </div>
           </div>
           <div className="cs-type-row">
             <span className="cs-type-demo cs-type-demo--light" style={{ color: CBS.cream }}>Aa</span>
             <div>
               <strong style={{ color: CBS.cream }}>Montserrat Light</strong>
-              <p style={{ color: CBS.cream + '88', fontSize: 13 }}>Body — openness, 6th-grade accessibility</p>
+              <p style={{ color: CBS.cream + '88', fontSize: 13 }}>Body: openness, 6th-grade accessibility</p>
             </div>
           </div>
         </div>
@@ -476,7 +468,7 @@ function CSVisualIdentity({ cs }) {
 // ── 06 Process Timeline ──────────────────────────────────────────────
 const PHASES = [
   { n: '01', name: 'Discovery',         desc: 'Brand audit, audience mapping, competitive landscape' },
-  { n: '02', name: 'Logo Development',  desc: 'Two creative directions — Beam selected and refined' },
+  { n: '02', name: 'Logo Development',  desc: 'Two creative directions: Beam selected and refined' },
   { n: '03', name: 'Colour & Type',     desc: 'Earthy palette finalised, Montserrat system set' },
   { n: '04', name: 'Imagery',           desc: 'Illustration style, photography direction, icon system' },
   { n: '05', name: 'Voice & Messaging', desc: 'Messaging architecture, tone of voice, campaign lines' },
@@ -503,28 +495,73 @@ function CSTimeline() {
 }
 
 // ── 07 Gallery ───────────────────────────────────────────────────────
+const BASE = import.meta.env.BASE_URL
+
 const GALLERY_ITEMS = [
-  { label: 'Brand Identity Overview',           cls: 'wide', ph: 1 },
-  { label: 'Logo Exploration — Beam Direction', cls: 'tall', ph: 2 },
-  { label: 'Colour System Application',         cls: 'std',  ph: 3 },
-  { label: 'Social Media Templates',            cls: 'std',  ph: 4 },
-  { label: 'Community Resource Print',          cls: 'std',  ph: 5 },
-  { label: 'Website Direction',                 cls: 'wide', ph: 6 },
-  { label: 'Photography Direction',             cls: 'std',  ph: 2 },
-  { label: 'Illustration System',               cls: 'std',  ph: 3 },
+  { label: 'Brand Photography',    cls: 'wide', src: `${BASE}cbs/imagery/CBS1.jpg` },
+  { label: 'Community in Action',  cls: 'std',  src: `${BASE}cbs/imagery/CBS2.jpg` },
+  { label: 'People & Place',       cls: 'std',  src: `${BASE}cbs/imagery/CBS3.jpg` },
+  { label: 'Social Media Content', cls: 'std',  src: `${BASE}cbs/social/1.png` },
+  { label: 'Social Media Content', cls: 'std',  src: `${BASE}cbs/social/2.png` },
+  { label: 'Illustration System',  cls: 'wide', src: `${BASE}cbs/illustrations/Illustration1.webp` },
+  { label: 'Illustration Detail',  cls: 'std',  src: `${BASE}cbs/illustrations/Illustration2.webp` },
+  { label: 'Campaign Graphics',    cls: 'std',  src: `${BASE}cbs/illustrations/Illustration3.webp` },
 ]
 
-function CSGallery() {
+function GalImg({ src, label }) {
   return (
-    <CSSection label="05" title="Brand in Context">
-      <div className="cs-gallery">
-        {GALLERY_ITEMS.map(({ label, cls, ph }, i) => (
-          <Reveal key={label} delay={0.04 + i * 0.04}
-            className={`cs-gal-item cs-gal-item--${cls} cs-ph-${ph}`}>
-            <span className="cs-gal-label">{label}</span>
-          </Reveal>
-        ))}
-      </div>
+    <img
+      src={src}
+      alt={label}
+      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 'inherit' }}
+      loading="lazy"
+    />
+  )
+}
+
+// ── Shared: Accordion image gallery ──────────────────────────────────
+function ImageGallery({ images, colors = [] }) {
+  if (!images || images.length === 0) return null
+  return (
+    <div className="img-gallery-row">
+      {images.map((src, i) => (
+        <div
+          key={i}
+          className="img-gallery-item"
+          style={{ background: colors[i % colors.length] || 'transparent' }}
+        >
+          <img src={src} alt={`Illustration ${i + 1}`} loading="lazy" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Muted CBS palette — brand colours at reduced saturation/lightness
+const CBS_GALLERY_COLORS = [
+  '#F5E2CC', // peach tint
+  '#D6E9E6', // mint tint
+  '#C6D5E1', // blue tint
+  '#F0E2D5', // cream/espresso tint
+  '#E5D0C8', // warm espresso tint
+  '#D8EAE8', // mint tint 2
+]
+
+// Muted PGM palette — brand colours at reduced saturation/lightness
+const PGM_GALLERY_COLORS = [
+  '#C6CEDF', // slate tint
+  '#B6D5D5', // teal tint
+  '#F7BFA6', // orange tint
+  '#F3DCAB', // ochre tint
+  '#F0EDE7', // linen (base)
+  '#C0CCE0', // slate tint 2
+]
+
+// ── Shared: Custom Illustrations & Iconography section ────────────────
+function IllustrationsSection({ label = '05', images = [], colors = [] }) {
+  return (
+    <CSSection label={label} title="Custom Illustrations & Iconography">
+      <ImageGallery images={images} colors={colors} />
     </CSSection>
   )
 }
@@ -602,7 +639,7 @@ const BOOK_PAGES = [
             <div key={hex} style={{ background: hex, width: 28, height: 28, borderRadius: 6, border: '1px solid rgba(0,0,0,0.08)', flexShrink: 0 }} />
           ))}
         </div>
-        <p>Earthy and Natural — stability and warmth, never clinical.</p>
+        <p>Earthy and Natural: stability and warmth, never clinical.</p>
       </div>
     ),
   },
@@ -613,7 +650,7 @@ const BOOK_PAGES = [
         <span className="cs-book-pg">05</span>
         <h4>Typography</h4>
         <div style={{ fontSize: 24, fontWeight: 600, margin: '10px 0 4px' }}>Montserrat SemiBold</div>
-        <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.6 }}>Montserrat Light — body text at 6th-grade reading level</div>
+        <div style={{ fontSize: 13, fontWeight: 300, lineHeight: 1.6 }}>Montserrat Light: body text at 6th-grade reading level</div>
       </div>
     ),
   },
@@ -636,19 +673,13 @@ const BOOK_PAGES = [
 function CSFlipbook() {
   const pdfUrl = `${import.meta.env.BASE_URL}guidelines/cbs-guidelines.pdf`
   return (
-    <CSSection label="07" title="Brand Guidelines" variant="light">
-      <Reveal delay={0.1}>
-        <PDFFlipbook
-          pdfUrl={pdfUrl}
-          title="Care-Based Safety — Brand Guidelines"
-          accentColor={CBS.espresso}
-          totalHint={17}
-        />
-        <p className="cs-book-note" style={{ marginTop: 12 }}>
-          Drop <code>cbs-guidelines.pdf</code> into <code>public/guidelines/</code> to activate · CBS brand system 2024
-        </p>
-      </Reveal>
-    </CSSection>
+    <div className="cs-flipbook-wrap">
+      <PDFFlipbook
+        pdfUrl={pdfUrl}
+        accentColor={CBS.espresso}
+        totalHint={17}
+      />
+    </div>
   )
 }
 
@@ -696,37 +727,135 @@ function CSFlipbookLegacy() {
             />
           ))}
         </div>
-        <p className="cs-book-note">Page {page + 1} of {BOOK_PAGES.length} — Replace with final PDF when ready</p>
+        <p className="cs-book-note">Page {page + 1} of {BOOK_PAGES.length}. Replace with final PDF when ready.</p>
       </Reveal>
     </CSSection>
   )
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+//  PHOTO STACK — adapted from InteractivePhotoStack (TypeScript/Tailwind → JSX/CSS)
+// ═══════════════════════════════════════════════════════════════════════
+
+function generateNonOverlappingTransforms(items) {
+  const positions = []
+  const displayed = items.slice(0, 5)
+  const cardWidthVW  = 25
+  const cardHeightVH = 45
+  const maxRetries   = 100
+  const rng = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+
+  displayed.forEach(() => {
+    let pos, collision, retries = 0
+    do {
+      collision = false
+      pos = { x: rng(-40, 40), y: rng(-22, 22), r: rng(-22, 22) }
+      for (const p of positions) {
+        if (Math.abs(pos.x - p.x) < cardWidthVW && Math.abs(pos.y - p.y) < cardHeightVH) {
+          collision = true; break
+        }
+      }
+      retries++
+    } while (collision && retries < maxRetries)
+    positions.push(pos)
+  })
+  return positions.map(p => `translate(${p.x}vw, ${p.y}vh) rotate(${p.r}deg)`)
+}
+
+const BASE_ROTATIONS = [0, -2, 4, -4, 6]
+
+function PhotoStack({ items, title, accentColor }) {
+  const [topIndex,       setTopIndex]       = useState(0)
+  const [hovered,        setHovered]        = useState(false)
+  const [clickedIndex,   setClickedIndex]   = useState(null)
+  const [spreadXforms,   setSpreadXforms]   = useState([])
+
+  const displayed = items.slice(0, 5)
+  const numItems  = displayed.length
+
+  const handleEnter = useCallback(() => {
+    setSpreadXforms(generateNonOverlappingTransforms(items))
+    setHovered(true)
+  }, [items])
+
+  const handleLeave = useCallback(() => {
+    if (clickedIndex === null) setHovered(false)
+  }, [clickedIndex])
+
+  const handleClick = useCallback((index) => {
+    if (hovered) {
+      setClickedIndex(index)
+      setTimeout(() => {
+        setHovered(false)
+        setTopIndex(index)
+        setClickedIndex(null)
+      }, 650)
+    } else {
+      setTopIndex(index)
+    }
+  }, [hovered])
+
+  return (
+    <div className="pstack">
+      <div className="pstack-area" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+        <div className="pstack-inner">
+          {displayed.map((item, i) => {
+            let stackPos = i - topIndex
+            if (stackPos < 0) stackPos += numItems
+            const isTop     = i === topIndex
+            const isClicked = i === clickedIndex
+
+            const transform = hovered
+              ? (spreadXforms[i] || 'translate(0,0) rotate(0deg)')
+              : `translateY(${stackPos * 8}px) scale(${1 - stackPos * 0.05}) rotate(${isTop ? 0 : BASE_ROTATIONS[stackPos]}deg)`
+
+            const zIndex = isClicked ? 200 : hovered ? 100 : isTop ? numItems : numItems - stackPos
+
+            return (
+              <div
+                key={item.name}
+                className={`pstack-card${isClicked ? ' pstack-card--spin' : ''}${hovered ? ' pstack-card--spread' : ''}`}
+                style={{ transform, zIndex }}
+                onClick={() => handleClick(i)}
+              >
+                <div className="pstack-img">
+                  <img src={item.src} alt={item.name} loading="lazy" />
+                </div>
+                <div className="pstack-label">
+                  <span>{item.name}</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      {title && (
+        <div className="pstack-footer">
+          <h3 className="pstack-title" style={accentColor ? { color: accentColor } : {}}>{title}</h3>
+          <p className="pstack-hint">Hover to explore · click to select</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── 10 Applications ──────────────────────────────────────────────────
-const APP_ITEMS = [
-  { label: 'Social Media',       sub: 'Instagram & Facebook templates', ph: 3 },
-  { label: 'Web Direction',      sub: 'Brand homepage concept',         ph: 6 },
-  { label: 'Print Collateral',   sub: 'Community resource documents',   ph: 4 },
-  { label: 'Campaign Materials', sub: '"Care keeps communities safe"',  ph: 5 },
+const CBS_STACK_ITEMS = [
+  { src: `${BASE}cbs/social/1.png`,      name: 'Social Campaign'     },
+  { src: `${BASE}cbs/imagery/CBS4.jpg`,  name: 'Brand Photography'   },
+  { src: `${BASE}cbs/social/4.png`,      name: 'Digital Content'     },
+  { src: `${BASE}cbs/imagery/CBS6.jpg`,  name: 'Community'           },
+  { src: `${BASE}cbs/social/7.png`,      name: 'Campaign Materials'  },
 ]
 
-function CSApplications({ cs }) {
-  const apps = cs.sections.find((s) => s.id === 'applications')
+function CSApplications() {
   return (
-    <CSSection label="08" title="Applications" variant="accent">
-      <Reveal delay={0.06}>
-        <p className="cs-lead cs-lead--sm">{apps?.body?.substring(0, 240)}...</p>
-      </Reveal>
-      <div className="cs-apps-grid">
-        {APP_ITEMS.map(({ label, sub, ph }, i) => (
-          <Reveal key={label} delay={0.1 + i * 0.07} className={`cs-app-card cs-ph-${ph}`}>
-            <div className="cs-app-meta">
-              <span className="cs-app-name">{label}</span>
-              <span className="cs-app-sub">{sub}</span>
-            </div>
-          </Reveal>
-        ))}
-      </div>
+    <CSSection title="Applications" variant="accent">
+      <PhotoStack
+        items={CBS_STACK_ITEMS}
+        title="Brand in the World"
+        accentColor={CBS.espresso}
+      />
     </CSSection>
   )
 }
@@ -742,8 +871,8 @@ function CSOutcome({ cs }) {
           {paras.map((p, i) => <p key={i}>{p}</p>)}
         </Reveal>
         <Reveal delay={0.2} className="cs-outcome-callout">
-          <SunburstSVG size={44} color={CBS.espresso} />
-          <p>"A complete strategic and creative work — built with intention, delivered without compromise."</p>
+          <CBSLogo size={44} />
+          <p>"A complete strategic and creative work, built with intention, delivered without compromise."</p>
         </Reveal>
       </div>
     </CSSection>
@@ -825,6 +954,21 @@ function PGMLogoSVG({ size = 120, color = '#F0EDE7' }) {
 }
 
 
+// PGM Logo — real image with SVG fallback
+function PGMLogoImg({ size = 120 }) {
+  const base = import.meta.env.BASE_URL
+  return (
+    <img
+      src={`${base}pgm/pgm-logo.png`}
+      alt="PGM logo"
+      width={size}
+      height={size}
+      style={{ objectFit: 'contain', display: 'block' }}
+      onError={(e) => { e.currentTarget.style.display = 'none' }}
+    />
+  )
+}
+
 // ── PGM 01 Hero ──────────────────────────────────────────────────────
 function PGMHero({ cs, slide }) {
   return (
@@ -844,8 +988,8 @@ function PGMHero({ cs, slide }) {
         <div className="cs-hero-visual pgm-hero-visual">
           <div className="cs-hero-img pgm-hero-img">
             <div className="cs-hero-img-bg pgm-hero-img-bg">
-              <PGMLogoSVG size={200} color={PGM.linen} />
-              <p className="cs-ph-label" style={{ color: PGM.ochre }}>Brand Identity System — PGM Global</p>
+              <PGMLogoImg size={200} />
+              <p className="cs-ph-label" style={{ color: PGM.ochre }}>Brand Identity System, PGM Global</p>
             </div>
           </div>
           <div className="cs-float cs-float--tl pgm-float">
@@ -886,31 +1030,6 @@ function PGMOverview({ cs }) {
             Community-centred · Power-shifting · Global
           </div>
         </Reveal>
-        <Reveal delay={0.13} className="cs-bc pgm-bc--orange">
-          <span className="cs-bc-eye">The Challenge</span>
-          <h3 className="cs-bc-head">A global movement without a visual language to match its ambition.</h3>
-        </Reveal>
-        <Reveal delay={0.18} className="cs-bc pgm-bc--teal">
-          <span className="cs-bc-eye" style={{ color: PGM.linen + 'bb' }}>Scope</span>
-          <p className="cs-bc-body cs-bc-body--light" style={{ fontSize: 13, lineHeight: 1.6 }}>
-            Brand guidelines from ground up — logo, colour, typography, illustration, voice, and full applications.
-          </p>
-        </Reveal>
-        <Reveal delay={0.23} className="cs-bc pgm-bc--linen">
-          <span className="cs-bc-eye" style={{ color: PGM.slate }}>4 Audiences</span>
-          <ul className="pgm-audience-list">
-            <li>Activists &amp; grassroots organisers</li>
-            <li>Philanthropy professionals</li>
-            <li>Industry newcomers</li>
-            <li>Social media audiences</li>
-          </ul>
-        </Reveal>
-        <Reveal delay={0.28} className="cs-bc cs-bc--wide pgm-bc--ochre-gradient">
-          <span className="cs-bc-eye" style={{ color: PGM.slate }}>Key Outcome</span>
-          <h3 className="cs-bc-head cs-bc-head--lg" style={{ color: PGM.slate }}>
-            A brand that speaks with communities — not about them.
-          </h3>
-        </Reveal>
       </div>
     </CSSection>
   )
@@ -918,9 +1037,9 @@ function PGMOverview({ cs }) {
 
 // ── PGM 03 The Brief ─────────────────────────────────────────────────
 const PGM_BRIEF_CARDS = [
-  { icon: '◎', title: 'The Challenge',  body: 'Build a brand that serves grassroots activists, experienced funders, and complete newcomers — simultaneously, credibly.' },
+  { icon: '◎', title: 'The Challenge',  body: 'Build a brand that serves grassroots activists, experienced funders, and complete newcomers: simultaneously, credibly.' },
   { icon: '⌘', title: 'User Needs',     body: 'Warmth and solidarity for community leaders. Rigour and peer respect for philanthropy professionals. Clarity for newcomers.' },
-  { icon: '✦', title: 'Business Goals', body: 'Six structured phases. A complete visual system. Deployable across every touchpoint — social, reports, presentations, events.' },
+  { icon: '✦', title: 'Business Goals', body: 'Six structured phases. A complete visual system. Deployable across every touchpoint: social, reports, presentations, events.' },
   { icon: '◈', title: 'Success',        body: 'A brand that practises what PGM preaches: participatory in spirit, clear without jargon, warm without sentimentality.' },
 ]
 
@@ -943,6 +1062,60 @@ function PGMBrief({ cs }) {
   )
 }
 
+// ── PGM Our Process ──────────────────────────────────────────────────
+const PGM_PHASES = [
+  {
+    n: '01', name: 'Brand Discovery & Direction',
+    desc: 'Review of existing materials, competitor research, and moodboard directions.',
+    deliverable: 'Brand overview draft · Visual direction moodboard · Project roadmap',
+  },
+  {
+    n: '02', name: 'Logo Refinement, Colour & Type',
+    desc: 'Logo concept exploration, colour and typography pairings, scalability testing.',
+    deliverable: 'Refined primary logo · Logo guidelines · Colour & Typography system',
+  },
+  {
+    n: '03', name: 'Colour & Typography Systems',
+    desc: 'Full palette development across HEX, RGB, CMYK and Pantone. Typeface hierarchy finalised.',
+    deliverable: 'Completed colour palette · Typography section · Updated sample layouts',
+  },
+  {
+    n: '04', name: 'Imagery, Graphics & Iconography',
+    desc: 'Photography style guidelines, graphic shapes, icon system and cohesion mockups.',
+    deliverable: 'Imagery style guide · Iconography section · Sample applications',
+  },
+  {
+    n: '05', name: 'Voice, Messaging & Applications',
+    desc: 'Tone of voice, messaging pillars, sample copy, and brand application templates.',
+    deliverable: 'Voice & Messaging section · Brand Applications section · Final templates',
+  },
+  {
+    n: '06', name: 'Final Guidelines & Handover',
+    desc: 'Full document assembly, proofing, consistency checks and asset export.',
+    deliverable: 'Brand guidelines PDF · Editable source files · Asset library · Implementation notes',
+  },
+]
+
+function PGMProcess() {
+  return (
+    <CSSection title="Our Process" variant="light">
+      <div className="cs-timeline pgm-timeline">
+        {PGM_PHASES.map(({ n, name, desc, deliverable }, i) => (
+          <Reveal key={n} delay={0.06 + i * 0.08} className="cs-tl-item pgm-tl-item">
+            <div className="cs-tl-dot pgm-tl-dot" style={{ borderColor: PGM.orange + '55' }}>
+              <span style={{ color: PGM.orange }}>{n}</span>
+            </div>
+            <div className="cs-tl-body">
+              <h4 className="cs-tl-name pgm-tl-name" style={{ color: PGM.slate }}>{name}</h4>
+              <p className="cs-tl-desc" style={{ color: PGM.slate + 'aa' }}>{desc}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </CSSection>
+  )
+}
+
 // ── PGM 04 Research & Strategy ───────────────────────────────────────
 const PGM_TRAITS = [
   { label: 'Conversational', sub: 'not corporate'       },
@@ -957,15 +1130,15 @@ function PGMStrategy({ cs }) {
   const paras    = strategy?.body?.split('\n\n') ?? []
   return (
     <CSSection label="03" title="Research & Strategy" variant="dark">
-      <div className="cs-strategy-grid">
-        <div className="cs-strat-card-main">
+      <div className="pgm-strategy-grid">
+        <div className="pgm-strat-main">
           {paras.map((p, i) => (
             <Reveal key={i} delay={0.06 + i * 0.1}>
               <p className="cs-lead cs-lead--sm pgm-strat-para">{p}</p>
             </Reveal>
           ))}
         </div>
-        <Reveal delay={0.2} className="cs-strat-card-side pgm-strat-side">
+        <Reveal delay={0.2} className="pgm-strat-side">
           <span className="cs-strat-label" style={{ color: PGM.ochre }}>Brand Personality</span>
           <div className="pgm-traits">
             {PGM_TRAITS.map(({ label, sub }) => (
@@ -997,122 +1170,98 @@ function PGMStrategy({ cs }) {
 
 // ── PGM 05 Visual Identity ───────────────────────────────────────────
 function PGMVisualIdentity({ cs }) {
-  const visual   = cs.sections.find((s) => s.id === 'visual')
-  const subs     = visual?.subsections ?? []
-  const swatches = [PGM.slate, PGM.teal, PGM.orange, PGM.ochre, PGM.linen]
-  const swatchNames = ['Midnight Slate', 'Muted Teal', 'Burnt Orange', 'Golden Ochre', 'Linen White']
+  const visual = cs.sections.find((s) => s.id === 'visual')
+  const subs   = visual?.subsections ?? []
+
+  const palette = [
+    { hex: PGM.slate,  name: 'Midnight Slate', usage: 'Primary anchor: depth, authority'    },
+    { hex: PGM.teal,   name: 'Muted Teal',     usage: 'Calm, connection, secondary voice'   },
+    { hex: PGM.orange, name: 'Burnt Orange',   usage: 'Energy, joy, urgency'                },
+    { hex: PGM.ochre,  name: 'Golden Ochre',   usage: 'Warmth, optimism, celebration'       },
+    { hex: PGM.linen,  name: 'Linen White',    usage: 'Open ground, breathing room'         },
+  ]
 
   return (
-    <CSSection label="04" title="Visual Identity">
-      <Reveal delay={0.06}>
-        <div className="cs-logo-showcase pgm-logo-showcase">
-          <div className="pgm-logo-ring">
-            <PGMLogoSVG size={140} color={PGM.linen} />
-          </div>
-          <div className="cs-logo-desc">
-            <h4>{subs[0]?.title}</h4>
-            <p>{subs[0]?.body}</p>
+    <CSSection title="Visual Identity" variant="dark">
+      {/* Logo showcase */}
+      <Reveal delay={0.06} className="cs-logo-showcase pgm-logo-showcase">
+        <div className="pgm-logo-ring">
+          <PGMLogoImg size={260} />
+        </div>
+        <div className="cs-logo-desc">
+          <h4 className="cs-vi-sub" style={{ color: PGM.ochre }}>The Logo</h4>
+          <p className="cs-vi-body" style={{ color: PGM.linen + 'cc' }}>{subs[0]?.body}</p>
+          <div className="cs-logo-specs">
+            {['4 abstract figures', 'Continuous circle', 'Equal balance', 'Community at centre'].map((s) => (
+              <span key={s} className="cs-logo-spec" style={{ borderColor: PGM.teal + '44', color: PGM.linen + 'aa' }}>{s}</span>
+            ))}
           </div>
         </div>
       </Reveal>
+
+      {/* Colour palette */}
       <Reveal delay={0.14}>
-        <div className="cs-palette pgm-palette">
-          {swatches.map((hex, i) => (
-            <div key={hex} className="pgm-swatch-col">
-              <div className="pgm-swatch" style={{ background: hex }} />
-              <span className="pgm-swatch-name">{swatchNames[i]}</span>
-              <span className="pgm-swatch-hex">{hex}</span>
-            </div>
+        <div className="cs-vi-divider" style={{ borderColor: 'rgba(240,237,231,0.12)' }} />
+        <h4 className="cs-vi-sub" style={{ color: PGM.ochre, marginBottom: 8 }}>Colour Palette</h4>
+        <p className="cs-vi-body" style={{ color: PGM.linen + 'cc', marginBottom: 28 }}>
+          A warm, grounded palette balancing depth with optimism across every touchpoint.
+        </p>
+        <div className="cs-palette">
+          {palette.map(({ hex, name, usage }, i) => (
+            <Reveal key={hex} delay={0.06 + i * 0.06} className="cs-swatch-card">
+              <div className="cs-swatch-colour" style={{ background: hex, border: hex === PGM.linen ? '1px solid rgba(255,255,255,0.15)' : 'none' }} />
+              <div className="cs-swatch-info">
+                <span className="cs-swatch-hex">{hex}</span>
+                <span className="cs-swatch-name">{name}</span>
+                <span className="cs-swatch-usage">{usage}</span>
+              </div>
+            </Reveal>
           ))}
         </div>
       </Reveal>
-      <Reveal delay={0.2} className="pgm-type-card">
-        <div className="pgm-type-row">
-          <span style={{ color: PGM.linen + '88', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cal Sans — Display</span>
-          <span className="pgm-type-demo-display" style={{ color: PGM.ochre }}>Shifting Power</span>
-        </div>
-        <div className="pgm-type-row">
-          <span style={{ color: PGM.linen + '88', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Darker Grotesque — Body</span>
-          <span className="pgm-type-demo-body" style={{ color: PGM.linen + 'cc' }}>
-            A global community advancing participatory approaches in philanthropy.
-          </span>
-        </div>
-      </Reveal>
-      <Reveal delay={0.28} className="pgm-illus-card">
-        <span className="cs-bc-eye" style={{ color: PGM.teal }}>Illustration Style</span>
-        <p style={{ color: PGM.slate }}>{subs[3]?.body}</p>
-      </Reveal>
-    </CSSection>
-  )
-}
 
-// ── PGM 06 Process Timeline ──────────────────────────────────────────
-const PGM_PHASES = [
-  { num: '01', label: 'Brand Discovery & Direction',      deliverable: 'Visual direction moodboard · Project roadmap' },
-  { num: '02', label: 'Logo Refinement & Type Systems',   deliverable: 'Primary logo · Colour palette · Typography system' },
-  { num: '03', label: 'Colour & Typography Refinement',   deliverable: 'Final HEX/RGB specs · Typographic hierarchy' },
-  { num: '04', label: 'Imagery, Graphics & Iconography',  deliverable: 'Photography style · Illustration direction · Icons' },
-  { num: '05', label: 'Voice, Messaging & Applications',  deliverable: 'Tone of voice · Messaging pillars · Templates' },
-  { num: '06', label: 'Final Guidelines & Handover',      deliverable: 'Brand guidelines PDF · Asset library · Notes' },
-]
-
-function PGMTimeline() {
-  return (
-    <CSSection label="05" title="Process Timeline" variant="dark">
-      <div className="cs-timeline pgm-timeline">
-        {PGM_PHASES.map(({ num, label, deliverable }, i) => (
-          <Reveal key={num} delay={0.06 + i * 0.08} className="cs-tl-item pgm-tl-item">
-            <div className="cs-tl-num" style={{ color: PGM.orange, borderColor: PGM.orange + '44' }}>{num}</div>
-            <div className="cs-tl-body">
-              <h4 className="cs-tl-label" style={{ color: PGM.linen }}>{label}</h4>
-              <p className="cs-tl-detail" style={{ color: PGM.ochre + 'bb' }}>{deliverable}</p>
+      {/* Typography */}
+      <Reveal delay={0.2} className="cs-type-card">
+        <h4 className="cs-vi-sub" style={{ color: PGM.ochre }}>Typography</h4>
+        <div className="cs-type-rows">
+          <div className="cs-type-row">
+            <span className="pgm-type-demo-display" style={{ color: PGM.linen, fontSize: '2.8rem', lineHeight: 1 }}>Aa</span>
+            <div>
+              <strong style={{ color: PGM.linen }}>Cal Sans Regular</strong>
+              <p style={{ color: PGM.linen + '88', fontSize: 13 }}>Display: warmth, humanity, contemporary feel</p>
             </div>
-          </Reveal>
-        ))}
-      </div>
-    </CSSection>
-  )
-}
-
-// ── PGM 07 Gallery ───────────────────────────────────────────────────
-const PGM_GALLERY = [
-  { label: 'Logo System',        sub: 'Primary · Horizontal · Shorthand',   cls: 'pgm-ph-1' },
-  { label: 'Colour Palette',     sub: 'Midnight Slate to Linen White',      cls: 'pgm-ph-2' },
-  { label: 'Typography',         sub: 'Cal Sans + Darker Grotesque',        cls: 'pgm-ph-3' },
-  { label: 'Illustration Style', sub: 'Flat vector · Inclusive characters', cls: 'pgm-ph-4' },
-  { label: 'Social Templates',   sub: 'Instagram · LinkedIn · Reports',     cls: 'pgm-ph-5' },
-  { label: 'Brand in Context',   sub: 'Real environments · Warm light',     cls: 'pgm-ph-6' },
-]
-
-function PGMGallery() {
-  return (
-    <CSSection label="06" title="Brand Gallery" variant="accent">
-      <div className="cs-gallery pgm-gallery">
-        {PGM_GALLERY.map(({ label, sub, cls }, i) => (
-          <Reveal key={label} delay={0.06 + i * 0.07}
-            className={`cs-gal-item ${i === 0 ? 'cs-gal-item--wide' : ''} ${cls}`}>
-            <div className="cs-gal-meta">
-              <span className="cs-gal-label">{label}</span>
-              <span className="cs-gal-sub">{sub}</span>
+          </div>
+          <div className="cs-type-row">
+            <span className="pgm-type-demo-body" style={{ color: PGM.linen, fontSize: '2.4rem', lineHeight: 1, fontWeight: 400 }}>Aa</span>
+            <div>
+              <strong style={{ color: PGM.linen }}>Darker Grotesque</strong>
+              <p style={{ color: PGM.linen + '88', fontSize: 13 }}>Body: clarity, legibility across all reading levels</p>
             </div>
-          </Reveal>
-        ))}
-      </div>
+          </div>
+        </div>
+        <p className="cs-type-sample" style={{ color: PGM.linen + '55' }}>
+          "Shifting power in philanthropy by centring community knowledge."
+        </p>
+      </Reveal>
     </CSSection>
   )
 }
+
+// PGMGallery replaced by shared IllustrationsSection (see below)
 
 // ── PGM 08 Impact Stats ──────────────────────────────────────────────
 const PGM_STATS = [
-  { value: 6,   suffix: '',  label: 'Phases Delivered'      },
-  { value: 17,  suffix: '',  label: 'Guideline Pages'       },
-  { value: 4,   suffix: '',  label: 'Audience Tiers Mapped' },
-  { value: 100, suffix: '%', label: 'Brief Coverage'        },
+  { value: 6,  suffix: '',  label: 'Phases Delivered'      },
+  { value: 17, suffix: '',  label: 'Guideline Pages'       },
+  { value: 15, suffix: '',  label: 'Illustrations'         },
+  { value: 4,  suffix: '',  label: 'Logo Variations'       },
+  { value: 5,  suffix: '',  label: 'Brand Colours'         },
+  { value: 4,  suffix: '',  label: 'Brand Values'          },
 ]
 
 function PGMImpact() {
   return (
-    <CSSection label="07" title="Project Scope">
+    <CSSection title="Outcome">
       <div className="cs-impact-grid pgm-impact-grid">
         {PGM_STATS.map(({ value, suffix, label }, i) => (
           <Reveal key={label} delay={0.08 + i * 0.1} className="cs-impact-card pgm-impact-card">
@@ -1132,44 +1281,33 @@ function PGMFlipbook() {
   const base   = import.meta.env.BASE_URL
   const pdfUrl = `${base}guidelines/pgm-guidelines.pdf`
   return (
-    <CSSection label="08" title="Brand Guidelines" variant="light">
-      <Reveal delay={0.08}>
-        <PDFFlipbook
-          pdfUrl={pdfUrl}
-          title="PGM — Brand Guidelines 2024"
-          accentColor={PGM.slate}
-          totalHint={17}
-        />
-      </Reveal>
-    </CSSection>
+    <div className="cs-flipbook-wrap">
+      <PDFFlipbook
+        pdfUrl={pdfUrl}
+        accentColor={PGM.slate}
+        totalHint={17}
+      />
+    </div>
   )
 }
 
 // ── PGM 10 Applications ──────────────────────────────────────────────
-const PGM_APP_ITEMS = [
-  { label: 'Social Media',        sub: 'Instagram, LinkedIn & campaign templates', cls: 'pgm-app-1' },
-  { label: 'Reports & Documents', sub: 'Publication layout & document templates',  cls: 'pgm-app-2' },
-  { label: 'Presentations',       sub: 'Practitioner & knowledge-sharing decks',   cls: 'pgm-app-3' },
-  { label: 'Brand Collateral',    sub: 'Business cards, letterheads & stationery', cls: 'pgm-app-4' },
+const PGM_STACK_ITEMS = [
+  { src: `${BASE}pgm/applications/mug.png`,              name: 'Brand Merchandise'   },
+  { src: `${BASE}pgm/applications/tote.png`,             name: 'Brand Collateral'    },
+  { src: `${BASE}pgm/illustrations/Illustration2.webp`,  name: 'Illustration System' },
+  { src: `${BASE}pgm/illustrations/Illustration5.webp`,  name: 'Campaign Graphics'   },
+  { src: `${BASE}pgm/illustrations/Illustration8.webp`,  name: 'Custom Icons'        },
 ]
 
-function PGMApplications({ cs }) {
-  const apps = cs.sections.find((s) => s.id === 'applications')
+function PGMApplications() {
   return (
-    <CSSection label="09" title="Applications" variant="accent">
-      <Reveal delay={0.06}>
-        <p className="cs-lead cs-lead--sm">{apps?.body?.substring(0, 260)}…</p>
-      </Reveal>
-      <div className="cs-apps-grid pgm-apps-grid">
-        {PGM_APP_ITEMS.map(({ label, sub, cls }, i) => (
-          <Reveal key={label} delay={0.1 + i * 0.07} className={`cs-app-card ${cls}`}>
-            <div className="cs-app-meta">
-              <span className="cs-app-name">{label}</span>
-              <span className="cs-app-sub">{sub}</span>
-            </div>
-          </Reveal>
-        ))}
-      </div>
+    <CSSection title="Applications" variant="accent">
+      <PhotoStack
+        items={PGM_STACK_ITEMS}
+        title="Brand in the World"
+        accentColor={PGM.slate}
+      />
     </CSSection>
   )
 }
@@ -1185,9 +1323,9 @@ function PGMOutcome({ cs }) {
           {paras.map((p, i) => <p key={i}>{p}</p>)}
         </Reveal>
         <Reveal delay={0.2} className="cs-outcome-callout pgm-outcome-callout">
-          <PGMLogoSVG size={44} color={PGM.slate} />
+          <PGMLogoImg size={44} />
           <p style={{ color: PGM.slate }}>
-            "A brand that practises what PGM preaches — speaking with communities, not about them."
+            "A brand that practises what PGM preaches: speaking with communities, not about them."
           </p>
         </Reveal>
       </div>
@@ -1221,44 +1359,453 @@ function PGMReflection({ cs }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+//  PACKAGING CASE STUDIES — generic component system
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Shared icon SVGs ──────────────────────────────────────────────────
+const BehanceSVG = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor">
+    <path d="M8.5 10.5C9.6 10.5 10.5 9.6 10.5 8.5S9.6 6.5 8.5 6.5H4v8h4.8c1.25 0 2.2-.95 2.2-2.2 0-1-.63-1.6-1.5-1.75-.31-.04-.65-.05-1-.05zM5.5 8H8c.83 0 1.5.67 1.5 1.5S8.83 11 8 11H5.5V8zm3 5H5.5v-1H8.5c.55 0 1 .45 1 1s-.45 1-1 1zM15.5 9.5c-1.5 0-3 1-3 2.5h6c0-1.5-1.5-2.5-3-2.5zm-2.5 4c.3.8 1.3 1 2 1s1.8-.3 2.1-1h1.5c-.5 1.5-1.6 2.5-3.3 2.5-1.9 0-3.5-1.5-3.5-3.5S13 9 15 9c2.2 0 3.5 1.5 3.5 3.5v1h-5.5zM13.5 6h4v1h-4V6z"/>
+  </svg>
+)
+const DribbbleSVG = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6"/>
+    <path d="M3.5 9c2.3 0 5-1 7-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M18.5 9c-2 .5-4.5 2.5-5.5 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M7 18c1.5-3 4-6 11-6.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+)
+const GlobeSVG = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6"/>
+    <ellipse cx="11" cy="11" rx="3.5" ry="8" stroke="currentColor" strokeWidth="1.4"/>
+    <line x1="3" y1="11" x2="19" y2="11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <line x1="4" y1="7.5" x2="18" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    <line x1="4" y1="14.5" x2="18" y2="14.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+)
+const AmazonSVG = () => (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor">
+    <path d="M4.5 14.5C8 17 14 17 17.5 14.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+    <path d="M16 15.5l2-1-1 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    <text x="4" y="12" fontSize="7" fontWeight="700" fontFamily="sans-serif" fill="currentColor">amazon</text>
+  </svg>
+)
+const VimeoSVG = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M23.977 6.416c-.105 2.338-1.739 5.543-4.894 9.609-3.268 4.247-6.026 6.37-8.29 6.37-1.409 0-2.578-1.294-3.553-3.881L5.322 11.4C4.603 8.816 3.834 7.522 3.01 7.522c-.179 0-.806.378-1.881 1.132L0 7.197c1.185-1.044 2.351-2.084 3.501-3.128C5.08 2.701 6.266 1.984 7.055 1.91c1.867-.18 3.016 1.1 3.447 3.838.465 2.953.789 4.789.971 5.507.539 2.45 1.131 3.674 1.776 3.674.502 0 1.256-.796 2.265-2.385 1.004-1.589 1.54-2.797 1.612-3.628.144-1.371-.395-2.061-1.614-2.061-.574 0-1.167.121-1.777.391 1.186-3.868 3.434-5.757 6.762-5.637 2.473.06 3.628 1.664 3.48 4.807z"/>
+  </svg>
+)
+
+// ── Generic Pkg components ────────────────────────────────────────────
+
+function PkgHero({ cs, slide, cfg }) {
+  const { accent, dark, heroSrc, heroLabel } = cfg
+  return (
+    <CSSection className="pkg-hero">
+      <Reveal delay={0.04}>
+        <div className="cs-hero-pills">
+          {(slide.tags || []).map((t) => (
+            <span key={t} className="cs-hero-pill" style={{ background: accent + '18', color: accent, borderColor: accent + '44' }}>{t}</span>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={0.1}>
+        <h1 className="cs-hero-title" style={{ color: dark }}>{slide.label}</h1>
+        <p className="cs-hero-subtitle" style={{ color: dark + '88' }}>{cs.subtitle}</p>
+      </Reveal>
+      <Reveal delay={0.18}>
+        <div className="pkg-hero-visual">
+          {heroSrc && <img src={heroSrc} alt={heroLabel ?? slide.label} className="pkg-hero-img" />}
+        </div>
+      </Reveal>
+      <Reveal delay={0.28}>
+        <div className="cs-hero-status">
+          <span className="cs-status-dot" style={{ background: accent }} />
+          <span className="cs-status-text" style={{ color: dark + 'aa' }}>{cs.status}</span>
+        </div>
+      </Reveal>
+    </CSSection>
+  )
+}
+
+function PkgOverview({ cs, cfg }) {
+  const { accent, dark, specs } = cfg
+  const overview = cs.sections.find((s) => s.id === 'overview')
+  const paras    = overview?.body?.split('\n\n') ?? []
+  return (
+    <CSSection title="Project Overview">
+      <div className="pkg-overview-grid">
+        <Reveal delay={0.08} className="pkg-overview-text">
+          {paras.map((p, i) => <p key={i} style={{ color: dark + 'bb', lineHeight: 1.85, marginBottom: 14 }}>{p}</p>)}
+        </Reveal>
+        <Reveal delay={0.16} className="pkg-spec-stack" style={{ '--pkg-accent': accent }}>
+          {specs.map(({ label, value }) => (
+            <div key={label} className="pkg-spec-row">
+              <span className="pkg-spec-label">{label}</span>
+              <span className="pkg-spec-value" style={{ color: dark }}>{value}</span>
+            </div>
+          ))}
+        </Reveal>
+      </div>
+    </CSSection>
+  )
+}
+
+function PkgGallery({ cfg }) {
+  const { images, galleryLayout = 'two-then-one' } = cfg
+  const [a, b, c] = images
+  return (
+    <CSSection title="The Work">
+      <Reveal delay={0.06} className="pkg-gallery">
+        {galleryLayout === 'two-then-one' ? (
+          <>
+            <div className="pkg-gallery-row">
+              <div className="pkg-gallery-item pkg-gallery-item--half"><img src={a.src} alt={a.alt} /></div>
+              <div className="pkg-gallery-item pkg-gallery-item--half"><img src={b.src} alt={b.alt} /></div>
+            </div>
+            {c && <div className="pkg-gallery-item pkg-gallery-item--full"><img src={c.src} alt={c.alt} /></div>}
+          </>
+        ) : galleryLayout === 'one-then-two' ? (
+          <>
+            <div className="pkg-gallery-item pkg-gallery-item--full"><img src={a.src} alt={a.alt} /></div>
+            <div className="pkg-gallery-row">
+              {b && <div className="pkg-gallery-item pkg-gallery-item--half"><img src={b.src} alt={b.alt} /></div>}
+              {c && <div className="pkg-gallery-item pkg-gallery-item--half"><img src={c.src} alt={c.alt} /></div>}
+            </div>
+          </>
+        ) : (
+          // three equal
+          <div className="pkg-gallery-row pkg-gallery-row--three">
+            {images.map((img) => <div key={img.src} className="pkg-gallery-item pkg-gallery-item--third"><img src={img.src} alt={img.alt} /></div>)}
+          </div>
+        )}
+      </Reveal>
+    </CSSection>
+  )
+}
+
+function PkgHighlights({ cfg }) {
+  const { highlights, highlightsTitle, highlightsBody } = cfg
+  if (!highlights?.length) return null
+  return (
+    <CSSection title={highlightsTitle ?? 'Details'} variant="dark">
+      {highlightsBody && (
+        <Reveal delay={0.06}>
+          <p className="cs-vi-body" style={{ color: 'rgba(255,255,255,0.65)', marginBottom: 24 }}>{highlightsBody}</p>
+        </Reveal>
+      )}
+      <div className="pkg-highlights">
+        {highlights.map(({ name, sub, color }, i) => (
+          <Reveal key={name} delay={0.06 + i * 0.05} className="pkg-hl-card">
+            {color && <div className="pkg-hl-swatch" style={{ background: color }} />}
+            <div className="pkg-hl-info">
+              <span className="pkg-hl-name">{name}</span>
+              {sub && <span className="pkg-hl-sub">{sub}</span>}
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </CSSection>
+  )
+}
+
+function PkgImpact({ cfg }) {
+  const { stats, accent, dark } = cfg
+  return (
+    <CSSection title="Outcome">
+      <div className="pkg-stats">
+        {stats.map(({ value, label }, i) => (
+          <Reveal key={label} delay={0.06 + i * 0.08} className="pkg-stat">
+            <span className="pkg-stat-value" style={{ color: accent }}>{value}</span>
+            <span className="pkg-stat-label" style={{ color: dark + '88' }}>{label}</span>
+          </Reveal>
+        ))}
+      </div>
+    </CSSection>
+  )
+}
+
+function PkgLinks({ cs, cfg }) {
+  const { linksBody } = cfg
+  const links = [
+    cs.behance  && { href: cs.behance,  Icon: BehanceSVG,  label: 'Behance'  },
+    cs.dribbble && { href: cs.dribbble, Icon: DribbbleSVG, label: 'Dribbble' },
+    cs.website  && { href: cs.website,  Icon: GlobeSVG,    label: cs.client ? `${cs.client} Website` : 'Website' },
+    cs.amazon   && { href: cs.amazon,   Icon: AmazonSVG,   label: 'View on Amazon' },
+    cs.article  && { href: cs.article,  Icon: GlobeSVG,    label: 'Read Article' },
+    cs.vimeo    && { href: cs.vimeo,    Icon: VimeoSVG,    label: 'Watch on Vimeo' },
+  ].filter(Boolean)
+  if (!links.length) return null
+  return (
+    <CSSection title="View the Project" variant="dark">
+      {linksBody && (
+        <Reveal delay={0.06}>
+          <p className="cs-vi-body" style={{ color: 'rgba(255,255,255,0.65)', marginBottom: 28 }}>{linksBody}</p>
+        </Reveal>
+      )}
+      <Reveal delay={0.12} className="pkg-links">
+        {links.map(({ href, Icon, label }) => (
+          <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="pkg-link-btn">
+            <span className="pkg-link-icon"><Icon /></span>
+            <span className="pkg-link-label">{label}</span>
+            <span className="pkg-link-arrow">↗</span>
+          </a>
+        ))}
+      </Reveal>
+    </CSSection>
+  )
+}
+
+// ── Per-project configs ───────────────────────────────────────────────
+
+const WOODCO_CFG = {
+  accent: '#C8785A', dark: '#2E2218', light: '#FAF5EE',
+  heroSrc: `${BASE}woodco/woodco3.png`,
+  heroLabel: 'WOODCO candle packaging — all 6 labels',
+  images: [
+    { src: `${BASE}woodco/woodco1.png`, alt: 'Spiced Citrus, Spring Rain and Wild Garden lifestyle shot' },
+    { src: `${BASE}woodco/woodco2.png`, alt: 'Nightlight, Negroni and Waves lifestyle shot' },
+    { src: `${BASE}woodco/woodco3.png`, alt: 'All 6 WOODCO candle labels flat lay' },
+  ],
+  galleryLayout: 'two-then-one',
+  specs: [
+    { label: 'Client',    value: 'WOODCO' },
+    { label: 'Sector',    value: 'Lifestyle / Home' },
+    { label: 'Location',  value: 'Hong Kong' },
+    { label: 'Timeline',  value: 'May 2021' },
+    { label: 'Duration',  value: '2 Weeks' },
+    { label: 'Revisions', value: '4 Rounds' },
+  ],
+  highlights: [
+    { name: 'Spiced Citrus', sub: 'Sandalwood · Ginger Flower · Grapefruit', color: '#C8785A' },
+    { name: 'Spring Rain',   sub: 'Matcha · Guava · Rain',                   color: '#D4948A' },
+    { name: 'Wild Garden',   sub: 'Patchouli · Cypress · Yellow Rose',       color: '#6B8C72' },
+    { name: 'Nightlight',    sub: 'Cedar · Fig · Ylang Ylang',               color: '#2E3D4F' },
+    { name: 'Negroni',       sub: 'Ispahan Wood · Cinnamon · Orange',        color: '#8B2B4A' },
+    { name: 'Waves',         sub: 'Sea Salt · Ocean · Coconut',              color: '#5C7FA8' },
+  ],
+  highlightsTitle: 'The Collection',
+  highlightsBody: 'Six fragrance blends — each with its own visual identity built from the same abstract shape language and contrasting colour palette.',
+  stats: [
+    { value: 6,  label: 'Scent Labels'    },
+    { value: 2,  label: 'Weeks Timeline'  },
+    { value: 4,  label: 'Revision Rounds' },
+    { value: 1,  label: 'Happy Client'    },
+  ],
+  linksBody: 'See the full project on Behance and Dribbble, or visit WOODCO\'s website.',
+}
+
+const LTR_CFG = {
+  accent: '#B86048', dark: '#2E1810', light: '#F5EDE0',
+  heroSrc: `${BASE}la-terra-rossa/laterrarossa3.png`,
+  heroLabel: 'La Terra Rossa coffee packaging spread',
+  images: [
+    { src: `${BASE}la-terra-rossa/laterrarossa1.png`, alt: 'La Terra Rossa Farewell Blend bags — mountain illustration' },
+    { src: `${BASE}la-terra-rossa/laterrarossa2.png`, alt: 'La Terra Rossa Farewell Blend bags — abstract illustration' },
+    { src: `${BASE}la-terra-rossa/laterrarossa3.png`, alt: 'La Terra Rossa full packaging spread' },
+  ],
+  galleryLayout: 'two-then-one',
+  specs: [
+    { label: 'Client',    value: 'La Terra Rossa' },
+    { label: 'Sector',    value: 'Food & Beverage' },
+    { label: 'Location',  value: 'Portland, Oregon' },
+    { label: 'Includes',  value: 'Logo Redesign + Packaging' },
+    { label: 'Duration',  value: '1 Week' },
+    { label: 'Product',   value: 'Coffee Bags' },
+  ],
+  stats: [
+    { value: 2,  label: 'Packaging Designs'  },
+    { value: 1,  label: 'Logo Illustration'  },
+    { value: 1,  label: 'Week Delivered'     },
+    { value: 1,  label: 'Happy Client'       },
+  ],
+  linksBody: 'Visit the La Terra Rossa website.',
+}
+
+const OC_CFG = {
+  accent: '#B89060', dark: '#3C3028', light: '#F8F0E8',
+  heroSrc: `${BASE}oracle-cards/oracle1.png`,
+  heroLabel: 'Self Awakening Oracle Cards — card samples',
+  images: [
+    { src: `${BASE}oracle-cards/oracle1.png`, alt: 'Oracle cards — Protection, Truthfulness, Acceptance, Healing' },
+    { src: `${BASE}oracle-cards/oracle2.png`, alt: 'Oracle cards — Perseverance, Balance, Resilience, Sorrow' },
+    { src: `${BASE}oracle-cards/oracle3.png`, alt: 'Oracle cards — Self-Awakening, Judgement, Frustration, Rituals' },
+  ],
+  galleryLayout: 'one-then-two',
+  specs: [
+    { label: 'Client',    value: 'Annalisa Brizzante' },
+    { label: 'Sector',    value: 'Publishing / Wellness' },
+    { label: 'Format',    value: 'Book Illustrations' },
+    { label: 'Cards',     value: '41 Unique Illustrations' },
+    { label: 'Duration',  value: '2 Months' },
+    { label: 'Style',     value: 'Mixed Media' },
+  ],
+  stats: [
+    { value: 41, label: 'Unique Illustrations' },
+    { value: 2,  label: 'Months of Work'       },
+    { value: 1,  label: 'Published Book'       },
+    { value: '∞', label: 'Revisions Given'     },
+  ],
+  linksBody: 'Find the book on Amazon.',
+}
+
+const SB_CFG = {
+  accent: '#2A7070', dark: '#1A3838', light: '#EEF5F5',
+  heroSrc: `${BASE}signature-balm/southshorn1.png`,
+  heroLabel: 'Signature Balm piercing care tin packaging',
+  images: [
+    { src: `${BASE}signature-balm/southshorn1.png`, alt: 'Signature Balm single tin — angled view' },
+    { src: `${BASE}signature-balm/southshorn2.png`, alt: 'Signature Balm — multiple tins' },
+    { src: `${BASE}signature-balm/southshorn3.png`, alt: 'Signature Balm tin — top view' },
+  ],
+  galleryLayout: 'one-then-two',
+  specs: [
+    { label: 'Client',    value: 'SouthShore Adornments' },
+    { label: 'Sector',    value: 'Wellness / Body Jewellery' },
+    { label: 'Location',  value: 'United Kingdom' },
+    { label: 'Product',   value: 'Signature Balm 20ml' },
+    { label: 'Duration',  value: '2 Weeks' },
+    { label: 'Format',    value: 'Tin Packaging' },
+  ],
+  stats: [
+    { value: 1,  label: 'Tin Packaging Design' },
+    { value: 2,  label: 'Weeks Delivered'      },
+    { value: 1,  label: 'Pattern System'       },
+    { value: 1,  label: 'Happy Client'         },
+  ],
+  linksBody: 'Visit SouthShore Adornments to see the product.',
+}
+
+const SPURGEONS_CFG = {
+  accent: '#E07848', dark: '#2C1A10', light: '#FDF5EE',
+  heroSrc: null,
+  specs: [
+    { label: 'Client',    value: 'Spurgeons' },
+    { label: 'Sector',    value: 'Charity / Children' },
+    { label: 'Location',  value: 'United Kingdom' },
+    { label: 'Videos',    value: '5 Explainer Videos' },
+    { label: 'Duration',  value: '4 Months' },
+    { label: 'Campaign',  value: 'ED Awareness Week' },
+  ],
+  stats: [
+    { value: 5,    label: 'Explainer Videos'  },
+    { value: 60,   label: 'Illustrations Made' },
+    { value: 4,    label: 'Month Timeline'     },
+    { value: '2-3', label: 'Min per Video'     },
+  ],
+  linksBody: 'Read the full article on the Spurgeons website or watch the videos on their Vimeo channel.',
+}
+
+// ── Per-project case study views ──────────────────────────────────────
+
+function SpurgeonsEDCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <PkgHero cs={cs} slide={slide} cfg={SPURGEONS_CFG} />
+      <PkgOverview cs={cs} cfg={SPURGEONS_CFG} />
+      <PkgImpact cfg={SPURGEONS_CFG} />
+      <PkgLinks cs={cs} cfg={SPURGEONS_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+function WoodcoCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <PkgHero cs={cs} slide={slide} cfg={WOODCO_CFG} />
+      <PkgOverview cs={cs} cfg={WOODCO_CFG} />
+      <PkgGallery cfg={WOODCO_CFG} />
+      <PkgHighlights cfg={WOODCO_CFG} />
+      <PkgImpact cfg={WOODCO_CFG} />
+      <PkgLinks cs={cs} cfg={WOODCO_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+function LTRCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <PkgHero cs={cs} slide={slide} cfg={LTR_CFG} />
+      <PkgOverview cs={cs} cfg={LTR_CFG} />
+      <PkgGallery cfg={LTR_CFG} />
+      <PkgImpact cfg={LTR_CFG} />
+      <PkgLinks cs={cs} cfg={LTR_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+function OCCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <PkgHero cs={cs} slide={slide} cfg={OC_CFG} />
+      <PkgOverview cs={cs} cfg={OC_CFG} />
+      <PkgGallery cfg={OC_CFG} />
+      <PkgImpact cfg={OC_CFG} />
+      <PkgLinks cs={cs} cfg={OC_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+function SBCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <PkgHero cs={cs} slide={slide} cfg={SB_CFG} />
+      <PkgOverview cs={cs} cfg={SB_CFG} />
+      <PkgGallery cfg={SB_CFG} />
+      <PkgImpact cfg={SB_CFG} />
+      <PkgLinks cs={cs} cfg={SB_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 //  CASE STUDY VIEWS — routes to CBS or PGM based on slide.id
 // ═══════════════════════════════════════════════════════════════════════
+
+const CBS_ILLUS_IMAGES = [1, 2, 3, 4, 5, 6].map(
+  (n) => `${BASE}cbs/illustrations/Illustration${n}.webp`
+)
 
 function CBSCaseStudyView({ cat, cs, slide }) {
   return (
     <div className="cs-wrap">
       <CSHero           cs={cs} slide={slide} />
+      <CSFlipbook />
       <CSOverview       cs={cs} />
       <CSBrief          cs={cs} />
+      <CSTimeline />
       <CSStrategy       cs={cs} />
       <CSVisualIdentity cs={cs} />
-      <CSTimeline />
-      <CSGallery />
+      <IllustrationsSection images={CBS_ILLUS_IMAGES} colors={CBS_GALLERY_COLORS} />
       <CSImpact />
-      <CSFlipbook />
-      <CSApplications   cs={cs} />
-      <CSOutcome        cs={cs} />
-      <CSReflection     cs={cs} />
       <CSCTA            cat={cat} />
     </div>
   )
 }
 
+const PGM_ILLUS_IMAGES = [1, 2, 3, 4, 5, 6].map(
+  (n) => `${BASE}pgm/illustrations/Illustration${n}.webp`
+)
+
 function PGMCaseStudyView({ cat, cs, slide }) {
   return (
     <div className="cs-wrap pgm-case-study">
       <PGMHero           cs={cs} slide={slide} />
+      <PGMFlipbook />
       <PGMOverview       cs={cs} />
       <PGMBrief          cs={cs} />
+      <PGMProcess />
       <PGMStrategy       cs={cs} />
       <PGMVisualIdentity cs={cs} />
-      <PGMTimeline />
-      <PGMGallery />
+      <IllustrationsSection images={PGM_ILLUS_IMAGES} colors={PGM_GALLERY_COLORS} />
       <PGMImpact />
-      <PGMFlipbook />
-      <PGMApplications   cs={cs} />
-      <PGMOutcome        cs={cs} />
-      <PGMReflection     cs={cs} />
       <CSCTA             cat={cat} />
     </div>
   )
@@ -1266,7 +1813,16 @@ function PGMCaseStudyView({ cat, cs, slide }) {
 
 function CaseStudyView({ cat, slide }) {
   const cs = slide.caseStudy
-  if (slide.id === 2) return <PGMCaseStudyView cat={cat} cs={cs} slide={slide} />
+  if (cat.id === 'packaging') {
+    if (slide.id === 1) return <WoodcoCaseStudyView    cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 2) return <LTRCaseStudyView       cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 3) return <OCCaseStudyView        cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 4) return <SBCaseStudyView        cat={cat} cs={cs} slide={slide} />
+  }
+  if (cat.id === 'motion') {
+    if (slide.id === 2) return <SpurgeonsEDCaseStudyView cat={cat} cs={cs} slide={slide} />
+  }
+  if (cat.id === 'branding' && slide.id === 2) return <PGMCaseStudyView cat={cat} cs={cs} slide={slide} />
   return <CBSCaseStudyView cat={cat} cs={cs} slide={slide} />
 }
 

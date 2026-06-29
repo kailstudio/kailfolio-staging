@@ -43,7 +43,7 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
   const [totalPages,  setTotalPages]  = useState(totalHint ?? 0)
   const [status,      setStatus]      = useState('loading') // loading | ready | error | rendering
   const [dir,         setDir]         = useState(1)
-  const [zoom,        setZoom]        = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const canvasRef    = useRef(null)
   const renderTask   = useRef(null)
@@ -114,10 +114,42 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
       if (!inView) return
       if (e.key === 'ArrowLeft')  go(-1)
       if (e.key === 'ArrowRight') go(1)
+      if (e.key === 'Escape' && isFullscreen) exitFullscreen()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go])
+  }, [go, isFullscreen])
+
+  // Fullscreen API
+  const enterFullscreen = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen
+    if (req) req.call(el).catch(() => {})
+  }, [])
+
+  const exitFullscreen = useCallback(() => {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen
+    if (exit) exit.call(document).catch(() => {})
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) exitFullscreen()
+    else enterFullscreen()
+  }, [isFullscreen, enterFullscreen, exitFullscreen])
+
+  useEffect(() => {
+    const onChange = () => {
+      const fsEl = document.fullscreenElement || document.webkitFullscreenElement
+      setIsFullscreen(!!fsEl && fsEl === containerRef.current)
+    }
+    document.addEventListener('fullscreenchange', onChange)
+    document.addEventListener('webkitfullscreenchange', onChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange)
+      document.removeEventListener('webkitfullscreenchange', onChange)
+    }
+  }, [])
 
   // Thumbnail dots — clamped to max 17 dots
   const DOT_MAX   = 17
@@ -131,17 +163,35 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
   const isRendering = status === 'rendering'
 
   return (
-    <div className="pdff" ref={containerRef}>
+    <div className={`pdff${isFullscreen ? ' pdff--fullscreen' : ''}`} ref={containerRef}>
       {/* Header */}
       <div className="pdff-header">
-        <span className="pdff-title">{title}</span>
-        <span className="pdff-count" style={{ color: accentColor }}>
-          {isLoading ? '…' : `${pageNum} / ${totalPages}`}
-        </span>
+        {title && <span className="pdff-title">{title}</span>}
+        <div className="pdff-header-right">
+          <span className="pdff-count" style={{ color: accentColor }}>
+            {isLoading ? '…' : `${pageNum} / ${totalPages}`}
+          </span>
+          <button
+            className="pdff-fullscreen-btn"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'View fullscreen'}
+            title={isFullscreen ? 'Exit fullscreen' : 'View fullscreen'}
+          >
+            {isFullscreen ? (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M5.5 0v1.5H2.56L6 4.94 4.94 6 1.5 2.56V5.5H0V0h5.5zM10.5 0H16v5.5h-1.5V2.56L11.06 6 10 4.94l3.44-3.44H10.5V0zM6 11.06l-3.44 3.44H5.5V16H0v-5.5h1.5v2.94L4.94 10 6 11.06zM10 11.06l1.06-1.06 3.44 3.44V10.5H16V16h-5.5v-1.5h2.94L10 11.06z"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M1.5 1h4V0H0v5.5h1.5V1zM14.5 1v4.5H16V0h-5.5v1.5h4zM14.5 15h-4v1.5H16V11h-1.5v4zM1.5 11H0v5h5.5v-1.5h-4V11z"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Viewer */}
-      <div className={`pdff-viewer${zoom ? ' pdff-viewer--zoom' : ''}`}>
+      <div className="pdff-viewer">
         {isLoading && (
           <div className="pdff-state">
             <div className="pdff-spinner" style={{ borderTopColor: accentColor }} />
@@ -157,7 +207,7 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
         )}
 
         {!isLoading && !isError && (
-          <div className="pdff-canvas-wrap" onClick={() => setZoom((z) => !z)}>
+          <div className="pdff-canvas-wrap">
             {isRendering && <div className="pdff-rendering" style={{ borderTopColor: accentColor }} />}
             <canvas ref={canvasRef} className="pdff-canvas" />
           </div>
@@ -166,23 +216,32 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
         {/* Nav arrows */}
         <button
           className="pdff-arrow pdff-arrow--prev"
-          style={{ background: accentColor }}
           onClick={() => go(-1)}
           disabled={pageNum <= 1}
           aria-label="Previous page"
-        >&#8249;</button>
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="10 12 6 8 10 4" />
+          </svg>
+        </button>
         <button
           className="pdff-arrow pdff-arrow--next"
-          style={{ background: accentColor }}
           onClick={() => go(1)}
           disabled={pageNum >= totalPages}
           aria-label="Next page"
-        >&#8250;</button>
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 4 10 8 6 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Footer — dot strip */}
       <div className="pdff-footer">
-        <button className="pdff-nav-btn" onClick={() => go(-1)} disabled={pageNum <= 1}>← Prev</button>
+        <button className="pdff-nav-btn" onClick={() => go(-1)} disabled={pageNum <= 1}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="10 12 6 8 10 4" /></svg>
+          Prev
+        </button>
         <div className="pdff-dots" role="tablist">
           {dotPages.map((p, i) => {
             const active = Math.abs(p - pageNum) <= (totalPages <= DOT_MAX ? 0 : Math.floor(totalPages / DOT_MAX / 2))
@@ -199,10 +258,11 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
             )
           })}
         </div>
-        <button className="pdff-nav-btn" onClick={() => go(1)} disabled={pageNum >= totalPages}>Next →</button>
+        <button className="pdff-nav-btn" onClick={() => go(1)} disabled={pageNum >= totalPages}>
+          Next
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 4 10 8 6 12" /></svg>
+        </button>
       </div>
-
-      <p className="pdff-hint">Click page to zoom · Arrow keys to navigate</p>
     </div>
   )
 }
