@@ -7,22 +7,12 @@ import SiteHeader from './components/SiteHeader.jsx'
 import LoadingScreen from './components/LoadingScreen.jsx'
 import Footer from './components/Footer.jsx'
 import VideoSection from './components/VideoSection.jsx'
-import ScrollExpandMedia from './components/ScrollExpandMedia.jsx'
 import './styles.css'
-
-// ── ScrollExpandMedia asset paths ─────────────────────────────────────
-// Drop your files into /public/ and update these paths.
-// bgImageSrc:  background image visible before scrolling
-// mediaSrc:    the expanding video (or image if mediaType="image")
-// posterSrc:   video poster frame (optional)
-const BASE = import.meta.env.BASE_URL
-const SEM_MEDIA = `${BASE}scroll-hero-video.mp4`
-const SEM_POSTER= `${BASE}scroll-hero-poster.png`
 
 export default function App() {
   const [siteReady,    setSiteReady]    = useState(false)
   const [loaderExited, setLoaderExited] = useState(false)
-  const [detailCat,    setDetailCat]    = useState(null)
+  const [detailProject, setDetailProject] = useState(null) // { cat, slide }
 
   const handleReady      = useCallback(() => setSiteReady(true),    [])
   const handleLoaderDone = useCallback(() => setLoaderExited(true), [])
@@ -83,18 +73,6 @@ export default function App() {
       {/* HeroSequence mounts only after loader fully exits */}
       {loaderExited && <HeroSequence />}
 
-      {/* Scroll-expand intro section — add assets to /public/ before enabling */}
-      {loaderExited && (
-        <ScrollExpandMedia
-          mediaType="video"
-          mediaSrc={SEM_MEDIA}
-          posterSrc={SEM_POSTER}
-          date="2024"
-          scrollToExpand="Scroll to expand"
-          textBlend={false}
-        />
-      )}
-
       {/* Page content fades in once loader has exited */}
       <motion.div
         className="site-split"
@@ -103,7 +81,7 @@ export default function App() {
         transition={{ duration: 0.72, ease }}
       >
         <div className="split-left">
-          <PortfolioSection onProjectOpen={setDetailCat} />
+          <PortfolioSection onProjectOpen={(cat, slide) => setDetailProject({ cat, slide })} />
         </div>
         <div className="split-right" aria-hidden="true" />
       </motion.div>
@@ -116,11 +94,12 @@ export default function App() {
 
       {/* Project detail panel */}
       <AnimatePresence>
-        {detailCat && (
+        {detailProject && (
           <ProjectDetail
-            key={detailCat.id}
-            cat={detailCat}
-            onClose={() => setDetailCat(null)}
+            key={`${detailProject.cat.id}-${detailProject.slide?.id ?? 'cat'}`}
+            cat={detailProject.cat}
+            slide={detailProject.slide}
+            onClose={() => setDetailProject(null)}
           />
         )}
       </AnimatePresence>
