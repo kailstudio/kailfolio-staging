@@ -250,7 +250,7 @@ function CtaCard({ cat }) {
 // ── 01 Hero ─────────────────────────────────────────────────────────
 function CSHero({ cs, slide }) {
   return (
-    <div className="cs-hero">
+    <CSSection variant="dark" className="cs-hero">
       <Reveal delay={0.04}>
         <div className="cs-hero-pills">
           {(slide.tags || []).map((t) => (
@@ -297,7 +297,7 @@ function CSHero({ cs, slide }) {
           <span className="cs-status-text">{cs.status}</span>
         </div>
       </Reveal>
-    </div>
+    </CSSection>
   )
 }
 
@@ -896,7 +896,7 @@ function CSReflection({ cs }) {
 // ── 13 Final CTA ─────────────────────────────────────────────────────
 function CSCTA({ cat }) {
   return (
-    <div className="cs-end-cta">
+    <CSSection className="cs-end-cta">
       <Reveal delay={0.06} className="cs-end-cta-inner">
         <SunburstSVG size={52} color={cat.accentDark} />
         <h3 className="cs-cta-heading">Working on something that matters? Let's talk.</h3>
@@ -904,7 +904,7 @@ function CSCTA({ cat }) {
           Get in touch ↗
         </a>
       </Reveal>
-    </div>
+    </CSSection>
   )
 }
 
@@ -972,7 +972,7 @@ function PGMLogoImg({ size = 120 }) {
 // ── PGM 01 Hero ──────────────────────────────────────────────────────
 function PGMHero({ cs, slide }) {
   return (
-    <div className="cs-hero pgm-hero">
+    <CSSection variant="dark" className="cs-hero pgm-hero">
       <Reveal delay={0.04}>
         <div className="cs-hero-pills">
           {(slide.tags || []).map((t) => (
@@ -1012,7 +1012,7 @@ function PGMHero({ cs, slide }) {
           <span className="cs-status-text">{cs.status}</span>
         </div>
       </Reveal>
-    </div>
+    </CSSection>
   )
 }
 
@@ -1830,19 +1830,31 @@ function CaseStudyView({ cat, slide }) {
 //  MAIN OVERLAY EXPORT
 // ═══════════════════════════════════════════════════════════════════════
 
-export default function ProjectDetail({ cat, slide, onClose }) {
-  const hasCaseStudy = Boolean(slide?.caseStudy)
+export default function ProjectDetail({ cat, slide: initialSlide, onClose }) {
+  const csSlides = cat.slides.filter(s => s.caseStudy)
+  const [currentSlide, setCurrentSlide] = useState(initialSlide)
+  const hasCaseStudy = Boolean(currentSlide?.caseStudy)
+  const sheetRef = useRef(null)
+
+  const currentIdx = csSlides.findIndex(s => s.id === currentSlide?.id)
+  const prevSlide  = currentIdx > 0                   ? csSlides[currentIdx - 1] : null
+  const nextSlide  = currentIdx < csSlides.length - 1 ? csSlides[currentIdx + 1] : null
+
+  const navigate = (slide) => {
+    setCurrentSlide(slide)
+    sheetRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
     <motion.div
       className="pd-overlay"
       role="dialog"
       aria-modal="true"
-      aria-label={slide?.label ?? cat.name}
+      aria-label={currentSlide?.label ?? cat.name}
       {...OVERLAY}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <motion.div className="pd-sheet" {...CONTENT}>
+      <motion.div className="pd-sheet" ref={sheetRef} {...CONTENT}>
 
         <header className="pd-header">
           <button className="pd-back" onClick={onClose} aria-label="Close">&#8592; Back</button>
@@ -1858,7 +1870,7 @@ export default function ProjectDetail({ cat, slide, onClose }) {
         )}
 
         {hasCaseStudy ? (
-          <CaseStudyView cat={cat} slide={slide} />
+          <CaseStudyView cat={cat} slide={currentSlide} />
         ) : (
           <motion.div className="pd-grid-8" initial="initial" animate="animate" exit="exit">
             <VisualCard       cat={cat} />
@@ -1870,6 +1882,29 @@ export default function ProjectDetail({ cat, slide, onClose }) {
             <StatDarkCard     cat={cat} />
             <CtaCard          cat={cat} />
           </motion.div>
+        )}
+
+        {hasCaseStudy && csSlides.length > 1 && (
+          <div className="pd-project-nav">
+            {prevSlide ? (
+              <button className="pd-pnav-float pd-pnav-float--prev" onClick={() => navigate(prevSlide)} aria-label={`Previous: ${prevSlide.label}`}>
+                <span className="pd-pnav-arrow">&#8592;</span>
+                <span className="pd-pnav-text">
+                  <span className="pd-pnav-eyebrow">Previous</span>
+                  <span className="pd-pnav-label">{prevSlide.label}</span>
+                </span>
+              </button>
+            ) : <span />}
+            {nextSlide ? (
+              <button className="pd-pnav-float pd-pnav-float--next" onClick={() => navigate(nextSlide)} aria-label={`Next: ${nextSlide.label}`}>
+                <span className="pd-pnav-text">
+                  <span className="pd-pnav-eyebrow">Next</span>
+                  <span className="pd-pnav-label">{nextSlide.label}</span>
+                </span>
+                <span className="pd-pnav-arrow">&#8594;</span>
+              </button>
+            ) : <span />}
+          </div>
         )}
 
       </motion.div>
