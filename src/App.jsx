@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Hero from './components/Hero.jsx'
 import HeroSequence from './components/HeroSequence.jsx'
 import PortfolioSection from './components/PortfolioSection.jsx'
+import PortfolioTypes from './components/PortfolioTypes.jsx'
 import ProjectDetail from './components/ProjectDetail.jsx'
 import SiteHeader from './components/SiteHeader.jsx'
 import LoadingScreen from './components/LoadingScreen.jsx'
@@ -104,6 +105,15 @@ export default function App() {
 
       {/* HeroSequence mounts only after loader fully exits */}
       {loaderExited && <HeroSequence />}
+
+      {/* Portfolio types — stacked pinned story panels (Brand / Motion /
+          Packaging / Web), directly below Hero, before the portfolio links
+          section. Always mounted (same reasoning as Hero above: it's real,
+          tall document flow, so mounting it late would shove everything
+          below it down after the fact). Naturally hidden below the fold
+          during loading either way, and its own reveal is scroll-triggered
+          per panel. */}
+      <PortfolioTypes />
 
       {/* Page content fades in once loader has exited */}
       <motion.div

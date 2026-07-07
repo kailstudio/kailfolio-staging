@@ -193,7 +193,13 @@ body {
 
   .split-right { display: none; }
 
-  /* Character animation — smaller on mobile, centred at bottom */
+  /* Character animation — smaller on mobile, centred at bottom. Now starts
+     much earlier on mobile (as soon as PortfolioTypes' 2nd card arrives —
+     see HeroSequence.jsx), while .ptypes-section is still on screen, so
+     z-index:0 here matters more than before: it must stay below
+     .ptypes-section (z:1) and .site-split's .split-left/.pf-section
+     (z:2/4) so the animation only ever shows as a background layer behind
+     the cards and portfolio links, never covering their content. */
   .hero-char-track {
     left: 0;
     right: 0;
@@ -2180,6 +2186,157 @@ body {
 
 /* ── Overlay ────────────────────────────────────────────────────── */
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   PORTFOLIO TYPES — hand-shuffled card deck (intro + Brand / Motion /
+   Packaging / Web), sitting directly below Hero. See PortfolioTypes.jsx
+   for the full mechanics writeup; short version: every card is pinned in
+   the SAME sticky viewport slot from the start, overlapping in a loose
+   scatter (.ptypes-card's resting x/y/rotate, set inline per card since
+   it depends on index). Scrolling drives the front-most card's exit
+   (translate/rotate away + fade, via framer-motion useScroll/useTransform
+   in the component) which reveals the card that was already sitting
+   behind it — nothing about the "reveal" is separately animated, it was
+   just there the whole time.
+
+   Glass tint per card is mixed from that category's own accent/accentDark
+   colours (same ones already used in the carousel below), so this reads
+   as a continuation of the portfolio section rather than a new palette.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ptypes-section {
+  position: relative;
+  z-index: 1;   /* own stacking context — keeps cards' z-index from ever
+                   being compared against unrelated fixed elements
+                   elsewhere on the page (header, cursor, footer, etc.) */
+}
+
+.ptypes-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: var(--header-h);
+  overflow: hidden;   /* clips exiting cards to the viewport as they slide/rotate away */
+}
+
+/* The "frame" all cards share — sized/centred once here rather than on
+   each individual card, which then just fills it via inset:0. Keeps each
+   card's own transform (x/y/rotate/scale/opacity, all JS-driven) as the
+   only thing touching its box, instead of fighting a duplicated
+   width/centring calc on every card. Smaller than a full-bleed panel —
+   plenty of aurora shows around the edges. */
+.ptypes-stage {
+  position: relative;
+  width: min(760px, calc(100% - clamp(32px, 8vw, 80px)));
+  height: min(440px, calc(100% - clamp(60px, 12vh, 140px)));
+}
+
+.ptypes-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(18px, 3vw, 32px);
+  padding: clamp(22px, 3vw, 36px);
+  border-radius: clamp(20px, 2.4vw, 32px);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(36px) saturate(1.7);
+  -webkit-backdrop-filter: blur(36px) saturate(1.7);
+  box-shadow:
+    0 30px 80px rgba(50, 40, 120, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  will-change: transform, opacity;
+  overflow: hidden;
+}
+
+.ptypes-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vw, 14px);
+}
+
+.ptypes-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ptypes-eyebrow {
+  font-size: clamp(0.66rem, 0.9vw, 0.76rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+.ptypes-heading {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
+  line-height: 1.12;
+  color: var(--text-dark);
+  max-width: 18ch;
+}
+
+.ptypes-tagline {
+  font-size: clamp(0.85rem, 1.1vw, 0.98rem);
+  font-style: italic;
+  color: var(--text-mid);
+  max-width: 34ch;
+}
+
+/* Placeholder image — same dashed-glass-box language used by the footer's
+   placeholder cards and the hero orbit's chips. */
+.ptypes-image-slot {
+  flex: 0 0 auto;
+  width: clamp(120px, 26%, 200px);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: clamp(12px, 1.6vw, 18px);
+  background: rgba(255, 255, 255, 0.30);
+  border: 1.5px dashed rgba(90, 70, 160, 0.32);
+  color: rgba(90, 70, 160, 0.42);
+}
+.ptypes-image-slot-icon svg {
+  width: clamp(20px, 2.4vw, 28px);
+  height: clamp(20px, 2.4vw, 28px);
+}
+
+/* Below this width (matching the site's main .site-split collapse
+   breakpoint), the pin + overlapping-deck + scroll-reveal mechanic stays
+   ON — only the stage/card sizing shrinks and each card's own content
+   switches from a row (text | image) to a column (text above image) so it
+   fits a narrow viewport. The sticky pin, absolute stacking, and JS-driven
+   x/y/rotate/opacity/scale are untouched here (PortfolioTypes.jsx no
+   longer forces those to resting values on mobile). */
+@media (max-width: 900px) {
+  .ptypes-sticky {
+    padding-top: calc(var(--header-h) + clamp(8px, 3vw, 20px));
+  }
+  .ptypes-stage {
+    width: min(340px, calc(100% - 40px));
+    height: min(430px, calc(100% - clamp(40px, 10vh, 90px)));
+  }
+  .ptypes-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: clamp(18px, 5vw, 26px);
+    gap: clamp(12px, 3vw, 18px);
+  }
+  .ptypes-image-slot {
+    width: 100%;
+    height: clamp(90px, 24vw, 140px);
+  }
+}
 
 /* ══════════════════════════════════════════════════════════════════════
    VIDEO SECTION — contained showreel with glassmorphism controls

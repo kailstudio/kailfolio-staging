@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
+import { PANEL_COUNT } from './PortfolioTypes.jsx'
 
 // ── Frame config ─────────────────────────────────────────────────────
 const FRAME_COUNT  = 121
@@ -99,21 +100,47 @@ export default function HeroSequence() {
   const { scrollY } = useScroll()
   const [scrollRange, setScrollRange] = useState(MOBILE_SPACER)
 
-  // Don't start the character animation until the user has scrolled past
-  // Hero.jsx's intro section entirely — otherwise the two scroll-driven
-  // sequences play simultaneously over the same first ~1000px of scroll,
-  // fighting for attention. Read .hero-intro's real rendered height rather
-  // than hardcoding its 170vh/150vh CSS values, so this stays correct if
-  // that ever changes.
-  const [heroIntroOffset, setHeroIntroOffset] = useState(0)
+  // Don't start the character animation until a target PortfolioTypes card
+  // starts arriving on screen — i.e. once the PREVIOUS card begins its exit
+  // and the target one peeks out from behind it. PortfolioTypes.jsx pins
+  // the whole deck over .ptypes-section (height = PANEL_COUNT × 100vh) and
+  // slices that pinned scroll range into (PANEL_COUNT − 1) equal exit
+  // windows, one per card transition; window i spans deck-progress
+  // [i/(N-1), (i+1)/(N-1)]. Card k's window starts at (k-1)/(N-1) — that's
+  // the moment card k begins to show. Converting that deck-progress
+  // fraction to an absolute scrollY offset: sectionTop + fraction ×
+  // (sectionHeight − viewportHeight), since the pinned scroll range covers
+  // exactly (sectionHeight − viewportHeight) px for a sticky
+  // ['start start','end end'] target. Reading .ptypes-section directly
+  // (not summing whatever precedes it) keeps this correct no matter what
+  // gets added/reordered above it later — height-summing broke twice in a
+  // row the other way for earlier versions of this same offset.
+  //
+  // Target card differs by breakpoint: desktop waits for the LAST card
+  // (index PANEL_COUNT-1, "web") so the animation plays alongside the
+  // portfolio links section as before. Mobile starts much earlier — as
+  // soon as the SECOND card (index 1, "brand strategy") arrives — so the
+  // character is already animating, low z-index, in the background well
+  // before the portfolio links appear (.hero-char-track's mobile z-index
+  // of 0 keeps it behind .ptypes-section's z:1 and .site-split's z:2/4,
+  // so it only ever reads as a background layer, never covering content).
+  const [charStartOffset, setCharStartOffset] = useState(0)
 
   useEffect(() => {
     const update = () => {
       const mobile = window.innerWidth <= MOBILE_BREAKPT
       setIsMobile(mobile)
 
-      const introEl = document.querySelector('.hero-intro')
-      setHeroIntroOffset(introEl ? introEl.offsetHeight : 0)
+      const ptypesEl = document.querySelector('.ptypes-section')
+      let offset = 0
+      if (ptypesEl) {
+        const sectionTop   = ptypesEl.getBoundingClientRect().top + window.scrollY
+        const pinRange      = Math.max(ptypesEl.offsetHeight - window.innerHeight, 0)
+        const targetCard    = mobile ? 1 : PANEL_COUNT - 1
+        const targetFrac    = PANEL_COUNT > 1 ? (targetCard - 1) / (PANEL_COUNT - 1) : 0
+        offset = sectionTop + pinRange * targetFrac
+      }
+      setCharStartOffset(offset)
 
       if (mobile) {
         setScrollRange(MOBILE_SPACER)
@@ -131,14 +158,19 @@ export default function HeroSequence() {
 
   const animProgress = useTransform(
     scrollY,
-    [heroIntroOffset, heroIntroOffset + scrollRange],
+    [charStartOffset, charStartOffset + scrollRange],
     [0, 1],
     { clamp: true }
   )
 
-  // Mobile: freeze on frame 0 — no scroll-driven animation
+  // Frame-cycling now plays on mobile too (it was previously hard-frozen
+  // on frame 0 there). animProgress is clamped, so frameIndex naturally
+  // sits at 0 for any scrollY below charStartOffset — the character shows
+  // up immediately (same fade-in as desktop, see JSX below) but holds on
+  // its first frame until scroll actually reaches the trigger card, then
+  // starts cycling through frames as you keep scrolling.
   useMotionValueEvent(animProgress, 'change', (p) => {
-    if (!isMobile) setFrameIndex(Math.round(p * (FRAME_COUNT - 1)))
+    setFrameIndex(Math.round(p * (FRAME_COUNT - 1)))
   })
 
   // Wait for frame 0 to decode before revealing — prevents flash
@@ -189,7 +221,11 @@ export default function HeroSequence() {
         ))}
       </motion.div>
 
-      {/* Character animation */}
+      {/* Character animation — fades in as soon as frame 0 is decoded, same
+          on mobile as desktop. It holds on that first frame until scroll
+          reaches charStartOffset (see animProgress above), so it reads as
+          "present in the background from the start, starts walking once
+          you reach the target card" rather than popping in mid-scroll. */}
       <motion.div
         ref={charTrackRef}
         className="hero-char-track"
