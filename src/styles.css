@@ -39,7 +39,9 @@
   background: #ffffff;
   pointer-events: none;
   z-index: 99999;
-  /* translate is updated every RAF frame (no transition — locks to cursor) */
+  /* translate is updated every RAF frame from JS, which itself lerps
+     toward the pointer — no CSS transition here, the easing is already
+     baked into the position JS writes each frame. */
   translate: -60px -60px;
   /* scale is CSS-transitioned for smooth easing on hover */
   scale: 1;
@@ -2207,7 +2209,11 @@ body {
   position: relative;
   z-index: 10;
   width: 100%;
-  overflow: hidden;
+  /* No overflow clip here (deliberately) — the card stack is positioned to
+     protrude up past this element's own top edge, like design boards
+     pinned above the footer. The only child that ever needs clipping
+     (.footer-wordmark-wrap, for its bottom bleed) carries its own
+     overflow:hidden instead. */
   /* Same dark glass as site-header */
   background: rgba(18, 10, 60, 0.32);
   backdrop-filter: blur(28px) saturate(1.6);
@@ -2243,7 +2249,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: clamp(20px, 3vw, 36px) clamp(20px, 4vw, 56px);
+  padding: clamp(16px, 2.2vw, 28px) clamp(20px, 4vw, 56px) 0;
 }
 
 /* "Studio KAIL" label — top left */
@@ -2256,21 +2262,114 @@ body {
   color: rgba(255, 255, 255, 0.55);
 }
 
-/* ── Socials ── */
-.footer-socials {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* ── Socials / Portfolios / Contact — hand-scattered stack of tall,
+   portrait "design board" cards. Pinned to the footer's top-right corner
+   and deliberately protruding up past the footer's own top edge (negative
+   `top`), like presentation boards pinned above a desk rather than sitting
+   flush inside it. Placement + hover motion are driven entirely by
+   Footer.jsx (framer-motion, transform-only); this stylesheet only
+   supplies size, glass surface, and the shadow crossfade on hover (the one
+   non-transform property here — cheap enough for a single hovered element
+   and not worth fighting for GPU compositing). ── */
+.footer-card-stack {
+  position: absolute;
+  top: clamp(-110px, -8vw, -60px);
+  right: clamp(20px, 4vw, 56px);
+  width: 380px;
+  height: 260px;
+  z-index: 6;
+  pointer-events: none;   /* only the cards themselves (and their contents) should catch input */
 }
 
-.footer-social-btn {
+/* Scroll-linked entrance wrapper — one per card, sized to exactly match
+   .footer-card-stack so a card's own `top:0; left:0` placement below means
+   the same thing whether or not this wrapper currently has a transform
+   applied. useCardsReveal (Footer.jsx) writes `transform: translateY(...)`
+   here directly every scroll frame; z-index (React-controlled, separate
+   from that rAF loop) lives here too since the transform makes this the
+   stacking-context boundary that hover's "bring to front" needs to act on. */
+.footer-card-reveal {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.footer-stack-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 148px;
+  height: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 15px 16px;
+  border-radius: 20px;
+  text-align: center;
+  transform-origin: 50% 50%;
+  pointer-events: auto;
+  will-change: transform;
+  cursor: default;
+  /* glassmorphism — same white-tinted treatment as the rest of the footer */
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 8px 26px rgba(0, 0, 0, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transition: box-shadow 0.3s ease;
+}
+.footer-stack-card:hover {
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.34),
+    0 8px 20px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.footer-card-title {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Placeholder glyph — dashed glass slot standing in for real artwork/icon.
+   Fills the remaining height of the card (flex: 1) so the card reads as a
+   poster/board with a title caption and a large art area, rather than a
+   small icon with padding around it. */
+.footer-card-glyph {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  /* glassmorphism — white-tinted to read on dark footer */
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px dashed rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.35);
+}
+.footer-card-glyph svg {
+  width: 22px;
+  height: 22px;
+}
+
+.footer-card-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.footer-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(12px) saturate(1.6);
   -webkit-backdrop-filter: blur(12px) saturate(1.6);
@@ -2288,14 +2387,25 @@ body {
     transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.footer-social-btn svg {
-  width: 16px;
-  height: 16px;
+.footer-card-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
-.footer-social-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.40);
+.footer-card-btn-mono {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.footer-card-btn--placeholder {
+  border-style: dashed;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.footer-card-btn:hover {
+  background: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.42);
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.40);
@@ -2303,24 +2413,105 @@ body {
   transform: translateY(-2px) scale(1.08);
 }
 
-/* ── Full-bleed logo graphic ── */
-.footer-wordmark-wrap {
-  overflow: hidden;   /* clips logo at footer bottom edge */
-  line-height: 0;
-  padding: 0;
+/* Below this width the stack collapses into a plain wrapped row (matches
+   Footer.jsx's useIsStackMobile breakpoint) — JS also flattens each card's
+   x/y/rotate to 0 and disables whileHover at this size, so this media
+   query just needs to take positioning back into normal flow (no more
+   protruding above the footer edge, which only makes sense in the
+   pinned-corner desktop layout) and reflow the reveal wrapper accordingly.
+   The scroll-linked rise-in itself still runs — it's just a translateY on
+   an in-flow element instead of an absolutely-positioned one. ── */
+@media (max-width: 820px) {
+  .footer-card-stack {
+    position: static;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    padding: 4px clamp(20px, 6vw, 40px) 28px;
+  }
+  .footer-card-reveal {
+    position: static;
+    inset: auto;
+  }
+  .footer-stack-card {
+    position: static;
+    width: 150px;
+    height: 196px;
+  }
 }
 
-.footer-wordmark-logo {
-  display: block;
-  /* Logo spans the full viewport width */
+/* Stack is back in normal flow below 700px, so it already pushes the
+   wordmark down on its own — the reserved-space margin above is only
+   needed for the pinned-corner desktop layout. */
+@media (max-width: 820px) {
+  .footer-wordmark-wrap { margin-top: 0; }
+}
+
+/* ── Full-bleed logo graphic — back at the bottom of the footer.
+   .footer-wordmark-wrap's own (fixed-height, untransformed) box is the
+   clip boundary — the letters render at full page width (naturally taller
+   than this box) and simply run off the bottom edge. JS applies only a
+   parallax-lag translateY on top of that (see useWordmarkScroll in
+   Footer.jsx), easing to 0 as the group settles into its top-aligned rest
+   position, plus each individual letter's own reveal rise. Nothing here
+   sets `transform` directly on .footer-wordmark-letters or the letters —
+   JS owns that entirely so its inline styles are never fighting a CSS
+   value. ── */
+.footer-wordmark-wrap {
+  overflow: hidden;   /* clips the letters group at the wrap's own (fixed-height) edge */
+  line-height: 0;
+  padding: 0;
+  /* Full page width again, but height is now set explicitly rather than
+     following the aspect-ratio'd letters — at full width those letters are
+     naturally taller than we want this box to be, so the wrap shows the
+     top ~75% of the logo and clips the rest off at the bottom (deliberate:
+     a full-bleed wordmark that's allowed to run off the edge, same idea as
+     the horizontal bleed but vertical).
+     The letters render at width:100% of this wrap with a fixed 1590:460
+     aspect ratio, so their natural height is exactly (460/1590) of
+     whatever width they're given. Since this wrap is also 100% width, a
+     plain vw-based height keeps that same width reference — 75% of
+     (460/1590 × 100) ≈ 21.7vw stays pinned to "75% of the logo" at every
+     viewport size, rather than a fixed px value that would drift off that
+     ratio as the page gets wider or narrower. */
   width: 100%;
-  height: auto;
-  /* Shift down so the lower portion bleeds off the footer edge */
-  transform: translateY(22%);
-  /* Logo SVG is white — show as white on the dark glass footer */
-  opacity: 0.12;
+  height: 21.7vw;
+  min-height: 70px; /* floor for very narrow viewports */
+  /* The card stack is position:absolute (out of flow) protruding up past
+     the footer's top edge, so without this the wordmark — now flowing
+     directly after the short .footer-top bar — would slide up underneath
+     it. Reserves enough room for the stack's lowest extent (negative top
+     offset + height, see .footer-card-stack, plus a little slop for
+     rotation). Note the required clearance actually shrinks as the
+     viewport widens (the card stack's negative top offset grows more
+     negative, lifting it further from the footer edge), so this is
+     sized for the tightest case — just above the 820px mobile breakpoint
+     — rather than scaling up with vw. */
+  margin-top: clamp(165px, 12vw, 180px);
+}
+
+.footer-wordmark-letters {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1590 / 460;
   pointer-events: none;
   user-select: none;
+  will-change: transform;
+}
+
+.footer-wordmark-letter {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Logo is white — show as white on the dark glass footer */
+  color: #ffffff;
+  opacity: 0.12;
+  will-change: transform;
 }
 
 /* ── Mobile animation scroll scaffold ──────────────────────────────── */
@@ -2876,7 +3067,7 @@ body {
 .pgm-hero-title { font-size: clamp(2.4rem, 6vw, 5rem) !important; line-height: 1.05 !important; }
 .pgm-hero .cs-hero-subtitle { color: #EBB363; }
 .pgm-pill { background: #4F8C8C33 !important; color: #EBB363 !important; border-color: #4F8C8C55 !important; }
-.pgm-hero-visual { background: #2C365E !important; }
+.pgm-hero-visual { background: #2C365E !important; border-radius: 24px; }
 .pgm-hero-img { background: transparent !important; }
 .pgm-hero-img-bg {
   background: linear-gradient(145deg, #4F8C8C44 0%, #2C365E88 60%, #E7623522 100%) !important;
@@ -3347,6 +3538,168 @@ body {
   .pdff-arrow--next { right: 8px; }
 }
 
+/* ── Mobile "View Full Screen" button label (icon-only on tablet/desktop) ── */
+.pdff-fullscreen-btn--mobile {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 14px 0 10px;
+  gap: 6px;
+}
+.pdff-fullscreen-btn-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE FULLSCREEN PDF VIEWER — forced-landscape overlay
+   Portaled to <body>. Only ever opened on mobile breakpoints (JS-gated),
+   with a CSS safety net below in case the viewport grows while it's open.
+   ═══════════════════════════════════════════════════════════════════ */
+.pdff-mfs {
+  position: fixed;
+  inset: 0;
+  z-index: 10500;
+  background: #0b0a14;
+  overflow: hidden;
+  touch-action: pinch-zoom pan-x pan-y;
+}
+@media (min-width: 621px) {
+  .pdff-mfs { display: none !important; }
+}
+
+.pdff-mfs-close {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 10510;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+/* Rotator: sized so its rotated bounding box exactly fills the viewport.
+   Portrait phone → box is drawn landscape-shaped (100vh × 100vw) then
+   rotated 90°, landing back inside the portrait viewport but reading
+   sideways — physically rotating the phone brings it upright and huge. */
+.pdff-mfs-rotator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  transform: translate(-50%, -50%);
+}
+@media (orientation: portrait) {
+  .pdff-mfs-rotator {
+    width: 100vh;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+}
+
+.pdff-mfs-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pdff-mfs-hint {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+  animation: pdff-mfs-hint-fade 5s ease forwards;
+}
+@keyframes pdff-mfs-hint-fade {
+  0%, 60%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100%     { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+}
+/* Once the phone is actually turned to landscape, the hint has done its job */
+@media (orientation: landscape) {
+  .pdff-mfs-hint { display: none; }
+}
+
+.pdff-mfs-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 20px 8px;
+}
+
+.pdff-mfs-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
+  touch-action: pinch-zoom pan-x pan-y;
+  display: block;
+}
+
+.pdff-mfs-nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 0 18px;
+}
+.pdff-mfs-arrow {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.pdff-mfs-arrow:hover:not(:disabled) { background: rgba(255, 255, 255, 0.22); }
+.pdff-mfs-arrow:disabled { opacity: 0.25; cursor: default; }
+.pdff-mfs-count {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 54px;
+  text-align: center;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    PREMIUM CASE STUDY — Base styles (.cs-*)
    CBS palette: espresso #332824 · cream #F9F0E6 · blue #86A3B3
@@ -3428,8 +3781,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   padding: 32px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .cs-ph-label {
@@ -4437,7 +4794,10 @@ body {
 }
 
 @media (max-width: 600px) {
-  .cs-hero-visual     { margin: 0 24px; }
+  .cs-hero-visual     { width: auto; margin: 0 24px 32px; }
+  .cs-hero-img        { aspect-ratio: auto; padding: 32px 0; }
+  .cs-hero-img-bg      { padding: 0 20px; }
+  .cs-hero-img-bg img { width: min(180px, 42vw); height: min(180px, 42vw); max-width: 100%; }
   .cs-float           { display: none; }
   .cs-palette         { grid-template-columns: repeat(2, 1fr); }
   .cs-impact-grid     { grid-template-columns: 1fr; }

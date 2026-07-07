@@ -1822,7 +1822,7 @@ function CaseStudyView({ cat, slide }) {
   if (cat.id === 'motion') {
     if (slide.id === 2) return <SpurgeonsEDCaseStudyView cat={cat} cs={cs} slide={slide} />
   }
-  if (cat.id === 'branding' && slide.id === 2) return <PGMCaseStudyView cat={cat} cs={cs} slide={slide} />
+  if (cat.id === 'brand' && slide.id === 2) return <PGMCaseStudyView cat={cat} cs={cs} slide={slide} />
   return <CBSCaseStudyView cat={cat} cs={cs} slide={slide} />
 }
 

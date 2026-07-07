@@ -10,9 +10,28 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174'
+
+// Matches the .pdff mobile breakpoint used in styles.css (max-width: 620px)
+const MOBILE_MQ = '(max-width: 620px)'
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_MQ).matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ)
+    const onChange = (e) => setIsMobile(e.matches)
+    mq.addEventListener ? mq.addEventListener('change', onChange) : mq.addListener(onChange)
+    return () => {
+      mq.removeEventListener ? mq.removeEventListener('change', onChange) : mq.removeListener(onChange)
+    }
+  }, [])
+  return isMobile
+}
 
 // Load PDF.js once and cache the promise
 let pdfJsPromise = null
@@ -44,10 +63,19 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
   const [status,      setStatus]      = useState('loading') // loading | ready | error | rendering
   const [dir,         setDir]         = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [mobileFullscreen, setMobileFullscreen] = useState(false)
 
   const canvasRef    = useRef(null)
   const renderTask   = useRef(null)
   const containerRef = useRef(null)
+
+  const isMobile = useIsMobile()
+
+  // Mobile fullscreen viewer — separate canvas + container so it can be
+  // sized independently of the embedded viewer (and rendered via portal).
+  const mfsCanvasRef      = useRef(null)
+  const mfsContainerRef   = useRef(null)
+  const mfsRenderTask     = useRef(null)
 
   // Load PDF.js + open document
   useEffect(() => {
@@ -96,6 +124,61 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
     if (pdf) renderPage(pageNum, pdf)
   }, [pageNum, pdf, renderPage])
 
+  // Render a page onto the mobile fullscreen canvas — fits within both the
+  // width AND height of its container (which swaps between portrait/landscape
+  // shapes via CSS), so the page never overflows or gets clipped.
+  const renderMobilePage = useCallback(async (num, pdfDoc) => {
+    if (!pdfDoc || !mfsCanvasRef.current || !mfsContainerRef.current) return
+    if (mfsRenderTask.current) {
+      try { mfsRenderTask.current.cancel() } catch (_) {}
+    }
+    try {
+      const page      = await pdfDoc.getPage(num)
+      const canvas    = mfsCanvasRef.current
+      const ctx       = canvas.getContext('2d')
+      const container = mfsContainerRef.current
+      const maxW      = Math.max(container.clientWidth - 32, 100)
+      const maxH      = Math.max(container.clientHeight - 32, 100)
+      const baseVP    = page.getViewport({ scale: 1 })
+      const scale     = Math.min(3, maxW / baseVP.width, maxH / baseVP.height)
+      const vp        = page.getViewport({ scale })
+
+      canvas.width  = vp.width
+      canvas.height = vp.height
+      mfsRenderTask.current = page.render({ canvasContext: ctx, viewport: vp })
+      await mfsRenderTask.current.promise
+    } catch (e) {
+      if (e?.name !== 'RenderingCancelledException') { /* leave last good frame on screen */ }
+    }
+  }, [])
+
+  // Re-render the mobile page whenever it's open, the page changes, or the
+  // device is rotated (container swaps orientation, so scale must be recomputed).
+  useEffect(() => {
+    if (!mobileFullscreen || !pdf) return
+    renderMobilePage(pageNum, pdf)
+    const onResize = () => renderMobilePage(pageNum, pdf)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+    }
+  }, [mobileFullscreen, pageNum, pdf, renderMobilePage])
+
+  // Lock background scroll while the mobile fullscreen viewer is open
+  useEffect(() => {
+    if (!mobileFullscreen) return
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prevOverflow }
+  }, [mobileFullscreen])
+
+  // If the viewport grows past the mobile breakpoint while open, close it
+  useEffect(() => {
+    if (mobileFullscreen && !isMobile) setMobileFullscreen(false)
+  }, [isMobile, mobileFullscreen])
+
   const go = useCallback((d) => {
     setPageNum((p) => {
       const next = p + d
@@ -105,9 +188,17 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
     })
   }, [totalPages])
 
-  // Keyboard navigation (only when viewer is in view)
+  // Keyboard navigation (only when viewer is in view — or always, while
+  // either fullscreen mode is open, since the embedded container may be
+  // scrolled out of view behind an overlay)
   useEffect(() => {
     const onKey = (e) => {
+      if (mobileFullscreen) {
+        if (e.key === 'ArrowLeft')  go(-1)
+        if (e.key === 'ArrowRight') go(1)
+        if (e.key === 'Escape') setMobileFullscreen(false)
+        return
+      }
       if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
       const inView = rect.top < window.innerHeight && rect.bottom > 0
@@ -118,7 +209,7 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go, isFullscreen])
+  }, [go, isFullscreen, mobileFullscreen])
 
   // Fullscreen API
   const enterFullscreen = useCallback(() => {
@@ -133,10 +224,17 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
     if (exit) exit.call(document).catch(() => {})
   }, [])
 
+  // On mobile, the native Fullscreen API is unreliable (iOS Safari doesn't
+  // support it for non-video elements at all), so use a custom full-viewport
+  // overlay instead. Desktop/tablet keep the original native-fullscreen behaviour.
   const toggleFullscreen = useCallback(() => {
+    if (isMobile) {
+      setMobileFullscreen((v) => !v)
+      return
+    }
     if (isFullscreen) exitFullscreen()
     else enterFullscreen()
-  }, [isFullscreen, enterFullscreen, exitFullscreen])
+  }, [isMobile, isFullscreen, enterFullscreen, exitFullscreen])
 
   useEffect(() => {
     const onChange = () => {
@@ -163,6 +261,7 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
   const isRendering = status === 'rendering'
 
   return (
+    <>
     <div className={`pdff${isFullscreen ? ' pdff--fullscreen' : ''}`} ref={containerRef}>
       {/* Header */}
       <div className="pdff-header">
@@ -172,12 +271,12 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
             {isLoading ? '…' : `${pageNum} / ${totalPages}`}
           </span>
           <button
-            className="pdff-fullscreen-btn"
+            className={`pdff-fullscreen-btn${isMobile ? ' pdff-fullscreen-btn--mobile' : ''}`}
             onClick={toggleFullscreen}
-            aria-label={isFullscreen ? 'Exit fullscreen' : 'View fullscreen'}
-            title={isFullscreen ? 'Exit fullscreen' : 'View fullscreen'}
+            aria-label={(isFullscreen || mobileFullscreen) ? 'Exit fullscreen' : 'View full screen'}
+            title={(isFullscreen || mobileFullscreen) ? 'Exit fullscreen' : 'View full screen'}
           >
-            {isFullscreen ? (
+            {(isFullscreen || mobileFullscreen) ? (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M5.5 0v1.5H2.56L6 4.94 4.94 6 1.5 2.56V5.5H0V0h5.5zM10.5 0H16v5.5h-1.5V2.56L11.06 6 10 4.94l3.44-3.44H10.5V0zM6 11.06l-3.44 3.44H5.5V16H0v-5.5h1.5v2.94L4.94 10 6 11.06zM10 11.06l1.06-1.06 3.44 3.44V10.5H16V16h-5.5v-1.5h2.94L10 11.06z"/>
               </svg>
@@ -185,6 +284,9 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M1.5 1h4V0H0v5.5h1.5V1zM14.5 1v4.5H16V0h-5.5v1.5h4zM14.5 15h-4v1.5H16V11h-1.5v4zM1.5 11H0v5h5.5v-1.5h-4V11z"/>
               </svg>
+            )}
+            {isMobile && !mobileFullscreen && (
+              <span className="pdff-fullscreen-btn-label">View Full Screen</span>
             )}
           </button>
         </div>
@@ -264,5 +366,82 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
         </button>
       </div>
     </div>
+
+    {/* Mobile fullscreen viewer — portaled to <body> so it truly covers the
+        viewport regardless of any transformed ancestors, and rotated 90°
+        via CSS so a quick physical turn of the phone yields a large
+        landscape reading view. */}
+    {typeof document !== 'undefined' && createPortal(
+      <AnimatePresence>
+        {mobileFullscreen && (
+          <motion.div
+            className="pdff-mfs"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${title} — full screen`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.button
+              className="pdff-mfs-close"
+              onClick={() => setMobileFullscreen(false)}
+              aria-label="Close full screen"
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.08 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="2" y1="2" x2="14" y2="14" />
+                <line x1="14" y1="2" x2="2" y2="14" />
+              </svg>
+            </motion.button>
+
+            <div className="pdff-mfs-rotator">
+              <div className="pdff-mfs-inner">
+                <div className="pdff-mfs-hint">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 8a6 6 0 1 1 2.2 4.65" />
+                    <polyline points="2 12 2 15 5 15" />
+                  </svg>
+                  <span>Rotate your device for the best viewing experience</span>
+                </div>
+
+                <div className="pdff-mfs-canvas-wrap" ref={mfsContainerRef}>
+                  <canvas ref={mfsCanvasRef} className="pdff-mfs-canvas" />
+                </div>
+
+                <div className="pdff-mfs-nav">
+                  <button
+                    className="pdff-mfs-arrow"
+                    onClick={() => go(-1)}
+                    disabled={pageNum <= 1}
+                    aria-label="Previous page"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="10 12 6 8 10 4" />
+                    </svg>
+                  </button>
+                  <span className="pdff-mfs-count">{pageNum} / {totalPages}</span>
+                  <button
+                    className="pdff-mfs-arrow"
+                    onClick={() => go(1)}
+                    disabled={pageNum >= totalPages}
+                    aria-label="Next page"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 4 10 8 6 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>,
+      document.body
+    )}
+    </>
   )
 }

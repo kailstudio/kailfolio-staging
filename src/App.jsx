@@ -20,30 +20,51 @@ export default function App() {
   const ease = [0.16, 1, 0.3, 1]
 
   // ── Custom cursor ──────────────────────────────────────────────────
+  // Floats toward the pointer with time-based exponential smoothing rather
+  // than snapping straight to it — gives the dot a light sense of weight/
+  // inertia. Using elapsed-time (not a fixed per-frame factor) keeps the
+  // easing feeling identical on 60Hz and 120Hz+ displays alike, and an
+  // exponential approach never overshoots or jitters — it just settles.
   const cursorRef = useRef(null)
   useEffect(() => {
     const el = cursorRef.current
     if (!el || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
 
+    // Target = real pointer position. Rendered = eased position that chases it.
+    let tx = -60, ty = -60
     let cx = -60, cy = -60
+    let lastTime = null
     let rafId
 
-    // Position via CSS `translate` (no transition — stays locked to cursor).
-    // Scale via CSS `scale` property + class toggle — CSS handles the easing.
-    const onMove = (e) => { cx = e.clientX; cy = e.clientY }
+    // Smoothing "time constant" in ms — roughly how long the cursor takes
+    // to close most of the gap to the pointer. Higher = softer/laggier,
+    // lower = snappier. 100ms reads as a subtle, premium float rather than
+    // a sluggish trail.
+    const EASE_TAU = 100
 
-    const tick = () => {
+    // Scale via CSS `scale` property + class toggle — CSS handles that easing.
+    const onMove = (e) => { tx = e.clientX; ty = e.clientY }
+
+    const tick = (now) => {
+      if (lastTime === null) lastTime = now
+      const dt = Math.min(now - lastTime, 100) // clamp to avoid a big jump after a tab is backgrounded
+      lastTime = now
+
+      const t = 1 - Math.exp(-dt / EASE_TAU)
+      cx += (tx - cx) * t
+      cy += (ty - cy) * t
+
       el.style.translate = `${cx - 15}px ${cy - 15}px`
       rafId = requestAnimationFrame(tick)
     }
     rafId = requestAnimationFrame(tick)
 
     const onOver = (e) => {
-      if (e.target.closest('a, button, [role="button"], .pj-card, .pf-pill, .footer-social-btn'))
+      if (e.target.closest('a, button, [role="button"], .pj-card, .pf-pill, .footer-card-btn'))
         el.classList.add('is-hover')
     }
     const onOut = (e) => {
-      if (e.target.closest('a, button, [role="button"], .pj-card, .pf-pill, .footer-social-btn'))
+      if (e.target.closest('a, button, [role="button"], .pj-card, .pf-pill, .footer-card-btn'))
         el.classList.remove('is-hover')
     }
 
