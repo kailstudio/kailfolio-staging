@@ -341,6 +341,158 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   HERO INTRO — first thing shown after the loading screen. Concentric
+   glass rings + gradient core, with placeholder image chips that fan
+   outward as the user scrolls, revealing a headline once the centre
+   clears. Sits directly on the aurora background (no panel of its own,
+   same "floats on the gradient" language as the ambient bubbles below).
+
+   Tall scroll scaffold (.hero-intro) + position:sticky pinned view
+   (.hero-intro-sticky), same pattern as .split-left / ScrollAnimation.jsx.
+   z-index sits above the ambient .hero-bubbles-panel (z:1) so the orbit
+   reads clearly, but below .site-header (z:100) and HeroSequence's
+   .hero-char-track (z:9999, fixed, bottom-pinned) — the character
+   animation is a persistent ambient layer across the whole page and may
+   peek in at the edges here, same as it already does over the portfolio
+   section further down.
+═══════════════════════════════════════════════════════════════════ */
+
+.hero-intro {
+  position: relative;
+  height: 170vh;   /* ~70vh of scroll room for the fan-out before it releases */
+  z-index: 2;
+}
+
+.hero-intro-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 3vw, 34px);
+  padding-top: var(--header-h);
+  overflow: hidden;   /* safety clip — nothing should travel this far, but just in case */
+}
+
+.hero-intro-orbit {
+  position: relative;
+  width: clamp(420px, 62vw, 740px);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.hero-intro-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.70);
+  box-shadow:
+    0 0 0 1px rgba(90, 70, 160, 0.07),
+    0 10px 34px rgba(80, 90, 200, 0.10);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.hero-intro-ring--outer { inset: 0; }
+.hero-intro-ring--inner { inset: 11%; }
+
+/* Central gradient orb — same "premium glass orb" language as
+   .bubble-visual elsewhere on the page, scaled up and softened. */
+.hero-intro-core-orb {
+  position: absolute;
+  inset: 21%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 26%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(216, 204, 255, 0.55) 30%,
+    rgba(196, 184, 240, 0.30) 58%,
+    rgba(122, 143, 255, 0.14) 100%
+  );
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 0 50px rgba(255, 255, 255, 0.55),
+    inset 0 -20px 40px rgba(150, 160, 255, 0.22),
+    0 20px 60px rgba(90, 100, 210, 0.16);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Placeholder image chip — dashed glass box, fanned outward from centre
+   by Hero.jsx via a JS-driven transform (x/y only, written by framer-
+   motion's useTransform chain, never fought by a CSS transform here). */
+.hero-intro-chip {
+  position: absolute;
+  top: calc(50% - 43px);
+  left: calc(50% - 43px);
+  width: 86px;
+  height: 86px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-white);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1.5px dashed rgba(90, 70, 160, 0.32);
+  box-shadow: var(--glass-shadow);
+  color: rgba(90, 70, 160, 0.45);
+  pointer-events: none;
+  will-change: transform;
+}
+.hero-intro-chip-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* No background chrome — just centres the logo over the core orb. A soft
+   drop-shadow on the image itself (below) keeps the white mark legible
+   against that near-white gradient without a hard geometric backing shape. */
+.hero-intro-logo-badge {
+  position: absolute;
+  inset: 24%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hero-intro-logo-img {
+  width: 72%;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter:
+    drop-shadow(0 2px 10px rgba(20, 10, 60, 0.35))
+    drop-shadow(0 0 26px rgba(20, 10, 60, 0.20));
+}
+
+.hero-intro-hint {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+
+@media (max-width: 640px) {
+  .hero-intro { height: 150vh; }
+
+  .hero-intro-orbit { width: clamp(340px, 92vw, 460px); }
+
+  .hero-intro-chip {
+    top: calc(50% - 32px);
+    left: calc(50% - 32px);
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+  }
+  .hero-intro-chip-icon svg { width: 22px; height: 22px; }
+
+  .hero-intro-hint { font-size: 0.7rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    HERO SEQUENCE  — fixed right-panel elements only (no left scaffold)
 ═══════════════════════════════════════════════════════════════════ */
 

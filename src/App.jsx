@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Hero from './components/Hero.jsx'
 import HeroSequence from './components/HeroSequence.jsx'
 import PortfolioSection from './components/PortfolioSection.jsx'
 import ProjectDetail from './components/ProjectDetail.jsx'
@@ -90,6 +91,16 @@ export default function App() {
 
       {/* Fixed glass header */}
       <SiteHeader />
+
+      {/* Hero — first thing shown once the loader exits. Always mounted
+          (like .site-split below) rather than conditionally rendered, so
+          its 170vh of real document height is accounted for from the very
+          first layout pass — mounting it late caused .site-split to jump
+          down by that same amount right as the loader exited, which
+          framer-motion's `layout` prop on the portfolio's rotating-word
+          chip visibly animated as a "starts at the top, slides down" glitch.
+          Visibility itself is just an opacity fade via the `visible` prop. */}
+      <Hero visible={loaderExited} />
 
       {/* HeroSequence mounts only after loader fully exits */}
       {loaderExited && <HeroSequence />}

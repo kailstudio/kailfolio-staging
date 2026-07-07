@@ -36,31 +36,45 @@ const MOBILE_SPACER  = 2500
 const MOBILE_BREAKPT = 900
 
 // ── Bubble data ──────────────────────────────────────────────────────
+// parallax/drift are the px each bubble has travelled once the user has
+// scrolled BUBBLE_PARALLAX_RANGE px — a fixed, fairly short distance
+// (not "the whole document"), so the effect reads clearly within the
+// first page or so of scrolling rather than smearing out across a very
+// long page. Values bumped up from the original full-page-progress
+// version for a more noticeable effect either way.
+const BUBBLE_PARALLAX_RANGE = 1400
+
 const BUBBLES = [
   // Background — large, slow
-  { id:  1, size: 320, x:  9, baseY: 33, parallax:  -28, drift:   6, blur: 0, speed: 24 },
-  { id:  2, size: 300, x: 77, baseY: 46, parallax:  -32, drift:  10, blur: 0, speed: 26 },
-  { id:  3, size: 265, x: 88, baseY: 16, parallax:  -44, drift:  -7, blur: 1, speed: 29 },
-  { id:  4, size: 240, x: 30, baseY: 74, parallax:  -38, drift:   9, blur: 0, speed: 21 },
+  { id:  1, size: 320, x:  9, baseY: 33, parallax:  -38, drift:   8, blur: 0, speed: 24 },
+  { id:  2, size: 300, x: 77, baseY: 46, parallax:  -43, drift:  13, blur: 0, speed: 26 },
+  { id:  3, size: 265, x: 88, baseY: 16, parallax:  -59, drift:  -9, blur: 1, speed: 29 },
+  { id:  4, size: 240, x: 30, baseY: 74, parallax:  -51, drift:  12, blur: 0, speed: 21 },
   // Midground
-  { id:  5, size: 188, x: 20, baseY: 54, parallax:  -95, drift: -11, blur: 2, speed: 22 },
-  { id:  6, size: 168, x: 44, baseY: 19, parallax: -108, drift:  14, blur: 2, speed: 25 },
-  { id:  7, size: 200, x: 82, baseY: 62, parallax:  -98, drift: -13, blur: 2, speed: 22 },
-  { id:  8, size: 172, x: 66, baseY: 27, parallax: -112, drift:  16, blur: 3, speed: 25 },
-  { id:  9, size: 185, x: 55, baseY: 82, parallax: -120, drift:  11, blur: 2, speed: 27 },
+  { id:  5, size: 188, x: 20, baseY: 54, parallax: -128, drift: -14, blur: 2, speed: 22 },
+  { id:  6, size: 168, x: 44, baseY: 19, parallax: -146, drift:  18, blur: 2, speed: 25 },
+  { id:  7, size: 200, x: 82, baseY: 62, parallax: -132, drift: -17, blur: 2, speed: 22 },
+  { id:  8, size: 172, x: 66, baseY: 27, parallax: -151, drift:  21, blur: 3, speed: 25 },
+  { id:  9, size: 185, x: 55, baseY: 82, parallax: -162, drift:  14, blur: 2, speed: 27 },
   // Foreground — small, fast
-  { id: 10, size:  88, x: 12, baseY: 78, parallax: -200, drift:  18, blur: 5, speed: 18 },
-  { id: 11, size:  72, x: 37, baseY: 46, parallax: -232, drift: -13, blur: 6, speed: 24 },
-  { id: 12, size: 104, x: 50, baseY: 14, parallax: -178, drift:   9, blur: 4, speed: 20 },
-  { id: 13, size:  96, x: 72, baseY: 51, parallax: -190, drift:  20, blur: 5, speed: 18 },
-  { id: 14, size:  74, x: 82, baseY: 12, parallax: -238, drift: -16, blur: 7, speed: 24 },
-  { id: 15, size: 110, x: 88, baseY: 38, parallax: -170, drift:  12, blur: 4, speed: 21 },
-  { id: 16, size:  60, x: 62, baseY: 91, parallax: -260, drift: -18, blur: 8, speed: 26 },
+  { id: 10, size:  88, x: 12, baseY: 78, parallax: -270, drift:  23, blur: 5, speed: 18 },
+  { id: 11, size:  72, x: 37, baseY: 46, parallax: -313, drift: -17, blur: 6, speed: 24 },
+  { id: 12, size: 104, x: 50, baseY: 14, parallax: -240, drift:  12, blur: 4, speed: 20 },
+  { id: 13, size:  96, x: 72, baseY: 51, parallax: -257, drift:  26, blur: 5, speed: 18 },
+  { id: 14, size:  74, x: 82, baseY: 12, parallax: -321, drift: -21, blur: 7, speed: 24 },
+  { id: 15, size: 110, x: 88, baseY: 38, parallax: -230, drift:  16, blur: 4, speed: 21 },
+  { id: 16, size:  60, x: 62, baseY: 91, parallax: -351, drift: -23, blur: 8, speed: 26 },
 ]
 
-function ParallaxBubble({ size, x, baseY, blur, speed, parallax, drift = 0, scrollYProgress }) {
-  const y  = useTransform(scrollYProgress, [0, 1], [0, parallax])
-  const dx = useTransform(scrollYProgress, [0, 1], [0, drift])
+function ParallaxBubble({ size, x, baseY, blur, speed, parallax, drift = 0, scrollY }) {
+  // Fixed pixel range + clamp, NOT whole-page scrollYProgress — a bubble's
+  // full travel now happens within the first ~1400px of scroll and holds
+  // from there, so the movement rate stays constant (and noticeable)
+  // regardless of how long the overall page is, rather than the original
+  // version where the same total travel got diluted across the entire
+  // document height.
+  const y  = useTransform(scrollY, [0, BUBBLE_PARALLAX_RANGE], [0, parallax], { clamp: true })
+  const dx = useTransform(scrollY, [0, BUBBLE_PARALLAX_RANGE], [0, drift],    { clamp: true })
   return (
     <div style={{ position: 'absolute', left: `${x}%`, top: `${baseY}%`,
       transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}>
@@ -82,13 +96,25 @@ export default function HeroSequence() {
   const [isMobile,   setIsMobile]   = useState(() => window.innerWidth <= MOBILE_BREAKPT)
   const charTrackRef = useRef(null)
 
-  const { scrollY, scrollYProgress } = useScroll()
+  const { scrollY } = useScroll()
   const [scrollRange, setScrollRange] = useState(MOBILE_SPACER)
+
+  // Don't start the character animation until the user has scrolled past
+  // Hero.jsx's intro section entirely — otherwise the two scroll-driven
+  // sequences play simultaneously over the same first ~1000px of scroll,
+  // fighting for attention. Read .hero-intro's real rendered height rather
+  // than hardcoding its 170vh/150vh CSS values, so this stays correct if
+  // that ever changes.
+  const [heroIntroOffset, setHeroIntroOffset] = useState(0)
 
   useEffect(() => {
     const update = () => {
       const mobile = window.innerWidth <= MOBILE_BREAKPT
       setIsMobile(mobile)
+
+      const introEl = document.querySelector('.hero-intro')
+      setHeroIntroOffset(introEl ? introEl.offsetHeight : 0)
+
       if (mobile) {
         setScrollRange(MOBILE_SPACER)
       } else {
@@ -103,7 +129,12 @@ export default function HeroSequence() {
     return () => window.removeEventListener('resize', update)
   }, [])
 
-  const animProgress = useTransform(scrollY, [0, scrollRange], [0, 1], { clamp: true })
+  const animProgress = useTransform(
+    scrollY,
+    [heroIntroOffset, heroIntroOffset + scrollRange],
+    [0, 1],
+    { clamp: true }
+  )
 
   // Mobile: freeze on frame 0 — no scroll-driven animation
   useMotionValueEvent(animProgress, 'change', (p) => {
@@ -154,7 +185,7 @@ export default function HeroSequence() {
         transition={{ duration: 1.0, ease: 'easeOut', delay: 0.2 }}
       >
         {BUBBLES.map((b) => (
-          <ParallaxBubble key={b.id} {...b} scrollYProgress={scrollYProgress} />
+          <ParallaxBubble key={b.id} {...b} scrollY={scrollY} />
         ))}
       </motion.div>
 
