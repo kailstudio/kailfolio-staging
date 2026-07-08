@@ -55,7 +55,7 @@
  */
 
 import { useRef, useState, useEffect } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useMotionValue, animate } from 'framer-motion'
 import { CATEGORIES } from './PortfolioSection.jsx'
 import PTypesBanner from './PTypesBanner.jsx'
 
@@ -64,6 +64,15 @@ const BASE = import.meta.env.BASE_URL
 const MOBILE_MQ   = '(max-width: 900px)'
 const ENTRY_X     = 1400  // px off-screen to the right an arriving card starts from
 const ENTRY_ROTATE = 14   // extra deg an arriving card sheds on its way in
+
+// ── Hover lift/wiggle/enlarge (desktop only — see isMobile checks below) ──
+// Same interaction language as the footer's card stack (STACK_HOVER_LIFT/
+// STACK_HOVER_SCALE/STACK_SPRING in Footer.jsx), scaled down a bit since
+// these are much larger, frame-filling photo cards rather than small
+// "design board" cards with room to visibly lift clear of their neighbours.
+const CARD_HOVER_LIFT   = 14   // px the hovered card rises on hover
+const CARD_HOVER_SCALE  = 1.035
+const CARD_HOVER_SPRING = { type: 'spring', stiffness: 260, damping: 22, mass: 0.7 }
 
 // Real card art, keyed by panel id — public/portfolio-types/*.webp. Falls
 // back to IMAGE_ICON (below) for any panel without an entry here, so a
@@ -74,30 +83,80 @@ const PANEL_IMAGES = {
   motion:    `${BASE}portfolio-types/portfoliotype-motion.webp`,
   packaging: `${BASE}portfolio-types/portfoliotype-packaging.webp`,
   web:       `${BASE}portfolio-types/portfoliotype-web.webp`,
+  outro:     `${BASE}portfolio-types/portfoliotype-final.webp`,
+}
+
+// Animated counterpart to PANEL_IMAGES, keyed the same way — public/
+// portfolio-types/*.webm. Any panel without an entry here just always
+// shows its still PANEL_IMAGES picture instead. See CardMedia below for
+// how the still is also what these videos fall back to (poster while
+// loading, and the actual rendered element if the video errors or is
+// taking too long).
+const PANEL_VIDEOS = {
+  intro:     `${BASE}portfolio-types/portfoliotypes-intro.webm`,
+  brand:     `${BASE}portfolio-types/portfoliotypes-branding.webm`,
+  motion:    `${BASE}portfolio-types/portfoliotypes-motion.webm`,
+  packaging: `${BASE}portfolio-types/portfoliotypes-packaging.webm`,
+  web:       `${BASE}portfolio-types/portfoliotypes-web.webm`,
+  outro:     `${BASE}portfolio-types/portfoliotypes-final.webm`,
 }
 
 // Cover card ahead of the four discipline cards — same shape as a
 // CATEGORIES entry (so PortfolioTypeCard doesn't need special-casing).
 // Colours reuse the site's own blue/lilac aurora tones as a neutral
 // lead-in rather than borrowing any one discipline's accent.
+// `body` is the intro paragraph formerly shown in a .pf-body-glass panel
+// at the top of the portfolio links section (PortfolioSection.jsx) — moved
+// here so it reads as part of the studio's opening pitch, alongside the
+// rest of the deck's story-telling, rather than repeated further down.
 const INTRO_PANEL = {
   id: 'intro',
   eyebrow: 'Portfolio',
   name: 'Four Disciplines, One Studio',
   tagline: 'A closer look at how Studio KAIL works, discipline by discipline.',
+  body: 'We design strategic brand foundations across identity, websites, animation, print, and packaging: building cohesive systems that work seamlessly across digital and physical spaces.',
   accent: '#C4B8F0',
   accentDark: '#3d5cff',
 }
 
+// Closing card after the four discipline cards — a CTA rather than another
+// discipline photo, capping the deck by pointing at the real project list
+// further down the page (PortfolioSection.jsx, id="work"). `cta: true`
+// flags it for PortfolioTypeCard's special-cased render (the button below
+// the usual photo/video). Has real art now (PANEL_IMAGES.outro/
+// PANEL_VIDEOS.outro — see CardMedia), same full-bleed treatment as every
+// other card. accent/accentDark use the site's actual brand lime (#e0f87d
+// — the same paler "KAIL lime" the PTypesBanner ribbon uses, see
+// styles.css), not the more saturated --lime UI-accent token elsewhere on
+// the site — accentDark is a darker shade of that same hue so the card's
+// thin brand-coloured edge (borderTint below) matches its lime fill.
+const OUTRO_PANEL = {
+  id: 'outro',
+  cta: true,
+  eyebrow: 'Explore',
+  name: 'See The Work',
+  tagline: 'Every discipline above, in practice — browse the individual projects.',
+  accent: '#e0f87d',
+  accentDark: '#9aab52',
+}
+
+// Scrolls to the real project list (PortfolioSection.jsx, id="work") —
+// same plain scrollIntoView pattern used site-wide for this kind of jump,
+// no custom transition.
+function scrollToPortfolioLinks() {
+  document.getElementById('work')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 // Combined, normalised list PortfolioTypeCard actually renders — the
-// intro card plus every real category, each given an `eyebrow` label
-// derived from its id.
+// intro card, every real category (each given an `eyebrow` label derived
+// from its id), then the outro CTA card.
 const PANELS = [
   INTRO_PANEL,
   ...CATEGORIES.map((cat) => ({
     ...cat,
     eyebrow: cat.id.charAt(0).toUpperCase() + cat.id.slice(1),
   })),
+  OUTRO_PANEL,
 ]
 
 // Exported so other sections (HeroSequence's "start when the last card
@@ -123,6 +182,58 @@ const IMAGE_ICON = (
     <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
+
+// If a video hasn't fired 'canplay' within this long, treat it as "taking
+// too long to load" and drop back to the plain still — a slow/stalled
+// video (bad connection, etc.) would otherwise just sit frozen on its
+// poster frame indefinitely instead of ever settling on a working image.
+const VIDEO_LOAD_TIMEOUT = 4000
+
+// Card art — plays PANEL_VIDEOS' looping webm when there is one, falling
+// back to the plain PANEL_IMAGES still (poster while it loads, and what
+// actually renders instead if it errors, if the browser can't play webm
+// at all, or if it's taking too long — see VIDEO_LOAD_TIMEOUT above) —
+// or IMAGE_ICON as the last resort if a panel has neither.
+function CardMedia({ video, image }) {
+  const [videoFailed, setVideoFailed] = useState(false)
+  const timeoutRef = useRef(null)
+
+  useEffect(() => {
+    if (!video) return
+    timeoutRef.current = setTimeout(() => setVideoFailed(true), VIDEO_LOAD_TIMEOUT)
+    return () => clearTimeout(timeoutRef.current)
+  }, [video])
+
+  const clearLoadTimeout = () => {
+    if (timeoutRef.current != null) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }
+
+  if (video && !videoFailed) {
+    return (
+      <video
+        className="ptypes-image-slot-img"
+        src={video}
+        poster={image}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onCanPlay={clearLoadTimeout}
+        onError={() => { clearLoadTimeout(); setVideoFailed(true) }}
+      />
+    )
+  }
+
+  if (image) {
+    return <img src={image} alt="" className="ptypes-image-slot-img" draggable={false} />
+  }
+
+  return <span className="ptypes-image-slot-icon">{IMAGE_ICON}</span>
+}
 
 function useIsPTypesMobile() {
   const [isMobile, setIsMobile] = useState(
@@ -181,9 +292,9 @@ function PortfolioTypeCard({ cat, index, total, deckProgress, isMobile }) {
   const segEnd   = isFirst ? 1 : prevCycleStart + CYCLE
   const entryP   = useTransform(deckProgress, [segStart, segEnd], isFirst ? [1, 1] : [0, 1], { clamp: true })
 
-  const x       = useTransform(entryP, (v) => stackX + (1 - v) * ENTRY_X)
-  const rotate  = useTransform(entryP, (v) => stackRotate + (1 - v) * (index % 2 === 0 ? ENTRY_ROTATE : -ENTRY_ROTATE))
-  const scale   = useTransform(entryP, [0, 1], [0.94, 1])
+  const x          = useTransform(entryP, (v) => stackX + (1 - v) * ENTRY_X)
+  const baseRotate = useTransform(entryP, (v) => stackRotate + (1 - v) * (index % 2 === 0 ? ENTRY_ROTATE : -ENTRY_ROTATE))
+  const baseScale  = useTransform(entryP, [0, 1], [0.94, 1])
 
   // Own fade-in as this card arrives (0 while off-screen, 1 once settled).
   const enterOpacity = useTransform(entryP, [0, 0.4, 1], [0, 1, 1])
@@ -216,34 +327,65 @@ function PortfolioTypeCard({ cat, index, total, deckProgress, isMobile }) {
   // tint now, since the photo (not a flat wash) is the card's main visual.
   const borderTint = { borderColor: hexToRgba(cat.accentDark, 0.28) }
 
+  // Hover lift/wiggle/enlarge, layered on top of the scroll-driven base
+  // values above rather than fighting them. x/rotate/scale/y all already
+  // have to be single MotionValues feeding `style` below (same "one owner
+  // per property" rule the rest of this file follows) — framer-motion's
+  // whileHover can't safely target a property that's already being driven
+  // by an externally-created MotionValue like baseRotate/baseScale above,
+  // so instead of a second, competing animation system, these are three
+  // more plain motion values, animated imperatively via animate() on
+  // hover, then combined with the scroll-driven ones via useTransform —
+  // still just one final owner per property, it just now has two inputs.
+  const hoverLift   = useMotionValue(0)  // px, eases toward -CARD_HOVER_LIFT on hover
+  const hoverScale  = useMotionValue(1)  // extra multiplier on top of baseScale
+  const hoverWiggle = useMotionValue(0)  // deg, added on top of baseRotate
+
+  const y      = useTransform(hoverLift, (lift) => stackY + lift)
+  const rotate = useTransform([baseRotate, hoverWiggle], ([r, w]) => r + w)
+  const scale  = useTransform([baseScale, hoverScale], ([s, h]) => s * h)
+
+  const handleHoverStart = () => {
+    if (isMobile) return
+    animate(hoverLift, -CARD_HOVER_LIFT, CARD_HOVER_SPRING)
+    animate(hoverScale, CARD_HOVER_SCALE, CARD_HOVER_SPRING)
+    // Same "settle into a slightly-nudged tilt" wiggle the footer stack
+    // uses (see STACK_HOVER_LIFT's whileHover in Footer.jsx) — a few
+    // keyframes back toward 0 rather than holding a tilt, so it reads as
+    // a physical jostle rather than the card just staying crooked.
+    animate(hoverWiggle, [0, 3, -2.4, 1.4, 0], {
+      duration: 0.5, times: [0, 0.2, 0.4, 0.65, 1], ease: 'easeInOut',
+    })
+  }
+  const handleHoverEnd = () => {
+    if (isMobile) return
+    animate(hoverLift, 0, CARD_HOVER_SPRING)
+    animate(hoverScale, 1, CARD_HOVER_SPRING)
+    animate(hoverWiggle, 0, CARD_HOVER_SPRING)
+  }
+
   return (
     <motion.div
-      className="ptypes-card"
+      className={`ptypes-card${cat.cta ? ' ptypes-card--outro' : ''}`}
+      onHoverStart={handleHoverStart}
+      onHoverEnd={handleHoverEnd}
       style={{
         ...borderTint,
         zIndex: index + 1,
         x,
-        y: stackY,
+        y,
         rotate,
         opacity,
         scale,
       }}
     >
-      {/* Full picture, uncropped by any overlay — real art where available
-          (PANEL_IMAGES), placeholder glyph otherwise. Fills the top of the
-          card; the glass panel below is a separate area, not laid over
-          this one, so nothing ever covers the photo. */}
+      {/* Full picture (or looping animated clip, see CardMedia), uncropped
+          by any overlay — real art where available, placeholder glyph
+          otherwise. Fills the top of the card; the glass panel below is a
+          separate area, not laid over this one, so nothing ever covers
+          the photo. */}
       <div className="ptypes-image-slot" aria-hidden="true">
-        {PANEL_IMAGES[cat.id] ? (
-          <img
-            src={PANEL_IMAGES[cat.id]}
-            alt=""
-            className="ptypes-image-slot-img"
-            draggable={false}
-          />
-        ) : (
-          <span className="ptypes-image-slot-icon">{IMAGE_ICON}</span>
-        )}
+        <CardMedia video={PANEL_VIDEOS[cat.id]} image={PANEL_IMAGES[cat.id]} />
       </div>
 
       <div className="ptypes-content">
@@ -254,6 +396,24 @@ function PortfolioTypeCard({ cat, index, total, deckProgress, isMobile }) {
 
         <h2 className="ptypes-heading">{cat.name}</h2>
         <p className="ptypes-tagline">{cat.tagline}</p>
+
+        {/* Intro-card-only body copy, moved here from the portfolio links
+            section (see INTRO_PANEL's own comment above). */}
+        {cat.body && <p className="ptypes-body">{cat.body}</p>}
+
+        {/* Outro-card-only CTA — jumps down to the real project list
+            (PortfolioSection.jsx, id="work") rather than linking to
+            another discipline. */}
+        {cat.cta && (
+          <button
+            type="button"
+            className="ptypes-cta-btn"
+            onClick={scrollToPortfolioLinks}
+          >
+            View projects
+            <span className="ptypes-cta-btn-arrow" aria-hidden="true">↓</span>
+          </button>
+        )}
       </div>
     </motion.div>
   )

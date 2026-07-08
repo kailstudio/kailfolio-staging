@@ -218,10 +218,6 @@ body {
     overflow: hidden;   /* safety clip for any child overflow */
   }
 
-  .pf-body-glass {
-    padding: clamp(14px, 3.5vw, 20px);
-  }
-
   /* Section padding */
   .pf-section {
     padding: clamp(24px, 4vw, 40px) clamp(16px, 4vw, 28px) clamp(48px, 8vw, 72px);
@@ -725,7 +721,6 @@ body {
  * smear the bubbles that need to be visible through this area.
  * All visual treatments (glass, blur, opacity) live on the inner panels:
  *   .hero-text-glass  — headline + subtitle card
- *   .pf-body-glass    — body copy card
  *   .pf-pill          — category pills (their own glassmorphism)
  * This lets the bubbles flow naturally beneath all content.
  */
@@ -814,16 +809,6 @@ body {
   font-weight: 600;
 }
 
-.pf-body {
-  font-family: 'Raleway', sans-serif;
-  font-size: clamp(0.85rem, 1.2vw, 0.95rem);
-  font-weight: 400;
-  color: #5a5a78;
-  line-height: 1.75;
-  margin-bottom: clamp(32px, 4vw, 48px);
-  max-width: 430px;
-}
-
 /* ── Rotating word strip ──────────────────────────────────────── */
 .pf-rotate-wrap {
   margin-bottom: clamp(14px, 2vw, 20px); /* matches old pf-headline margin */
@@ -910,26 +895,8 @@ body {
   margin-bottom: clamp(18px, 2.2vw, 26px);
 }
 
-/*
- * Body copy glass panel — same depth treatment, slightly less opaque
- * so the headline panel reads as the primary focus.
- */
-.pf-body-glass {
-  background: rgba(255, 255, 255, 0.46);
-  backdrop-filter: blur(16px) saturate(1.3);
-  -webkit-backdrop-filter: blur(16px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 18px;
-  padding: clamp(16px, 2vw, 22px) clamp(18px, 2.2vw, 28px);
-  box-shadow:
-    0 5px 24px rgba(100, 80, 200, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  margin-bottom: clamp(22px, 3vw, 36px);
-}
-
 /* Strip margins from elements now managed by the glass panel's padding */
 .hero-text-glass .pf-rotate-wrap { margin-bottom: 0; }
-.pf-body-glass   .pf-body        { margin-bottom: 0; }
 
 /* "and everything in between" — generous space above and below so it
    reads as a distinct second beat after the headline, not a tight caption */
@@ -2378,13 +2345,34 @@ body {
   transform: translateY(-50%) rotate(6deg);
 }
 
+/* Wraps .ptypes-banner-track (below) with its OWN independent transform,
+   driven purely by pointer drag (see handlePointerDown in the component) —
+   left completely untouched otherwise, so it never fights with the
+   track's own always-running CSS marquee. Transforms on nested elements
+   compose, so the ribbon's visible position is simply "wherever the
+   ambient loop is" plus "wherever the user last dragged it": dragging
+   lets it cover far more ground, far faster, than the slow ambient crawl
+   alone, without the ambient animation ever needing to be paused,
+   restarted, or reimplemented in JS. */
+.ptypes-banner-drag-layer {
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+}
+
 .ptypes-banner-track {
   position: relative;
   width: 100%;
   height: 100%;
   pointer-events: auto;
   /* Duration matches PERIOD (820px, see the component) at the same
-     ~26px/s pace this has always scrolled at. */
+     ~26px/s pace this has always scrolled at. Untouched by dragging — see
+     .ptypes-banner-drag-layer above. */
   animation: ptypesBannerScroll 31.5s linear infinite;
   will-change: transform;
 }
@@ -2448,6 +2436,15 @@ body {
   font-size: var(--ptypes-banner-font, 34px);
 }
 
+/* Each word is its own <tspan> (see WORD_SEGMENTS in PTypesBanner.jsx) so
+   this can target exactly the one the cursor is over — ordinary CSS
+   :hover, no JS hit-testing needed. Font-weight itself can't be
+   transitioned smoothly (Raleway isn't loaded as a variable font here), so
+   this is an intentional snappy toggle rather than an eased one. */
+.ptypes-banner-word:hover {
+  font-weight: 600;
+}
+
 /* The "frame" all cards share — sized/centred once here rather than on
    each individual card, which then just fills it via inset:0. Keeps each
    card's own transform (x/y/rotate/scale/opacity, all JS-driven) as the
@@ -2481,16 +2478,20 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: clamp(20px, 2.4vw, 32px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.44);
   /* Soft glass wash on the outer frame itself now, not just the panel —
      the sliver of frame visible around the floating .ptypes-content tile
      below (see its own comment) reads as part of one cohesive glass card
-     instead of a bare gap. */
-  background: rgba(255, 255, 255, 0.12);
+     instead of a bare gap. Bumped up from 0.12 — against the light aurora
+     background these cards read as too washed-out/hard to read at the
+     old, near-transparent value; a bit more opacity plus a slightly
+     deeper shadow below gives the frame more visual weight and contrast
+     without losing the glass look. */
+  background: rgba(255, 255, 255, 0.6);
   /* Spread pinned to 2px (was 0/unset, relying on the 80px blur alone,
      which read as too diffuse/"spread out" across the fanned stack). */
   box-shadow:
-    0 30px 80px 2px rgba(50, 40, 120, 0.16),
+    0 30px 80px 2px rgba(40, 30, 100, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   will-change: transform, opacity;
   overflow: hidden;
@@ -2512,7 +2513,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: clamp(16px, 2vw, 26px);
-  background: rgba(255, 255, 255, 0.30);
+  background: rgba(255, 255, 255, 0.6);
   color: rgba(90, 70, 160, 0.42);
   overflow: hidden;
 }
@@ -2530,6 +2531,21 @@ body {
   user-select: none;
 }
 
+/* Outro card's art (see PANEL_IMAGES.outro/PANEL_VIDEOS.outro in
+   PortfolioTypes.jsx) doesn't share the other cards' aspect ratio, so the
+   default edge-to-edge object-fit:cover was cropping into it. Sized down
+   to ~65% and switched to contain instead — no longer absolutely
+   positioned, so it drops out of the way of .ptypes-image-slot's own
+   flex centring (align-items/justify-content: center, set above) rather
+   than needing its own margin/centring math. */
+.ptypes-card--outro .ptypes-image-slot-img {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* Bottom region — a floating glass tile below the photo (NOT laid over
    it), inset from the card's own edges with a visible gap rather than
    flush/full-width. That gap + its own rounded corners, border and shadow
@@ -2545,12 +2561,12 @@ body {
   margin: clamp(10px, 1.6vw, 16px) clamp(12px, 2.4vw, 20px) clamp(12px, 2.4vw, 20px);
   padding: clamp(18px, 2.6vw, 28px);
   border-radius: clamp(14px, 1.8vw, 22px);
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(34px) saturate(1.8);
   -webkit-backdrop-filter: blur(34px) saturate(1.8);
   border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow:
-    0 14px 38px rgba(40, 30, 90, 0.16),
+    0 14px 38px rgba(30, 20, 70, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -2590,6 +2606,71 @@ body {
   font-style: italic;
   color: var(--text-mid);
   max-width: 34ch;
+}
+
+/* Intro-card-only body paragraph (moved here from the portfolio links
+   section's old .pf-body-glass panel — see INTRO_PANEL in
+   PortfolioTypes.jsx). Sits below .ptypes-tagline in the same glass tile,
+   so it's styled plainer/smaller than .pf-body used to be — this card
+   already carries an eyebrow, heading and italic tagline above it. */
+.ptypes-body {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  font-weight: 400;
+  color: var(--text-mid);
+  line-height: 1.65;
+  max-width: 40ch;
+}
+
+/* Outro/CTA card — closes the deck out with a lime-green "go see the
+   work" card, same full-bleed photo/video treatment as every other card
+   (see PANEL_IMAGES.outro/PANEL_VIDEOS.outro in PortfolioTypes.jsx) plus
+   a button below instead of just a tagline. Frame + content tile swap the
+   shared white glass for a lime tint — the site's actual brand lime
+   (#e0f87d, same paler "KAIL lime" the PTypesBanner ribbon uses), not the
+   more saturated --lime UI-accent token, which read as too bright/toxic a
+   green here. The image slot itself is deliberately left off this list —
+   the photo/video should render at its own natural colours like every
+   other card's, not tinted lime along with the frame around it. */
+.ptypes-card--outro,
+.ptypes-card--outro .ptypes-content {
+  background: rgba(224, 248, 125, 0.6);
+}
+
+/* Outro card's "go look at the projects" button — a solid pill sitting in
+   the same glass content tile as the heading/tagline above it. */
+.ptypes-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: clamp(2px, 0.6vw, 6px);
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 26, 46, 0.22);
+  background: rgba(255, 255, 255, 0.55);
+  color: #1a1a2e;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.82rem, 1vw, 0.92rem);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.22s ease,
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s ease;
+}
+.ptypes-cta-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20, 15, 50, 0.18);
+}
+.ptypes-cta-btn-arrow {
+  display: inline-block;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ptypes-cta-btn:hover .ptypes-cta-btn-arrow {
+  transform: translateY(3px);
 }
 
 /* Below this width (matching the site's main .site-split collapse
@@ -2758,9 +2839,13 @@ body {
   transition: left 0.1s linear;
 }
 
-/* Mobile — tighter padding (border-radius stays pill) */
+/* Mobile — tighter padding (border-radius stays pill). Bottom padding is
+   its own, larger value (not just the same 48px as the other sides) so
+   the footer stack immediately below — pinned to protrude up above the
+   footer's own top edge by design — gets some breathing room above it
+   rather than crowding straight into the showreel. */
 @media (max-width: 900px) {
-  .video-section         { padding: 48px 20px; }
+  .video-section         { padding: 48px 20px 96px; }
   .video-controls        { top: 16px; }
   .video-btn             { width: 44px; height: 44px; }
   .video-btn svg         { width: 16px; height: 16px; }
@@ -3067,11 +3152,17 @@ body {
   }
 }
 
-/* ── Mobile tap-to-expand overlay ─────────────────────────────────────
-   The scaled-down mobile stack (see above) is legible but small — tapping
-   a card reopens it here, full-size and centered, via a <body> portal (see
-   FooterCardExpanded in Footer.jsx). Sits well above everything else on
-   the page; backdrop click (or Escape, or the close button) dismisses it. */
+/* ── Click/tap-to-expand overlay ──────────────────────────────────────
+   Clicking any footer card (mobile tap or desktop click — see
+   FooterStackCard's onClick in Footer.jsx) reopens it here, full-size and
+   centered, via a <body> portal (see FooterCardExpanded). No dimmed/
+   blurred scrim behind it any more — just a transparent, full-viewport
+   click-catcher so a backdrop click (or Escape, or the close button)
+   still dismisses it. Sits well above everything else on the page. Width
+   is min(78vw, 300px) — on mobile that's genuinely ~78% of a narrow
+   viewport, but the 300px cap is what actually governs it on any wider
+   (tablet/desktop) screen, so this one rule already serves both without
+   needing a separate desktop size. */
 .footer-card-expand-overlay {
   position: fixed;
   inset: 0;
@@ -3080,9 +3171,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(8, 8, 12, 0.64);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
 }
 
 /* Overrides the base .footer-stack-card's absolute pinned-stack positioning
@@ -3099,10 +3188,46 @@ body {
   padding: 30px 24px 26px;
   gap: 20px;
   cursor: default;
+  /* Base .footer-stack-card's glass tint (background: rgba(255,255,255,
+     0.08), a dark glass meant to sit on .site-footer's own dark navy
+     background) reads as flat, dull grey once centred over THIS overlay's
+     near-black blurred scrim instead — nothing bright behind it for the
+     frost to catch. Rather than just brightening that same dark-glass
+     recipe, this switches to the site's actual light glassmorphism
+     instead (same whitish-background language as .hero-text-glass /
+     .ptypes-content elsewhere), so the expanded card reads as one of the
+     site's normal glass panels rather than a one-off dark variant. Text/
+     icon colours below are switched to dark-on-light to match.
+     Opacity itself is lower than .ptypes-content's own 0.6 (not equal to
+     it) quite deliberately — this card's backdrop is the overlay's dark,
+     heavily-blurred scrim rather than the colourful, largely-unblurred
+     aurora .ptypes-content sits over, so matching that exact number read
+     as noticeably more opaque/solid here than it does there. Lower
+     opacity is what actually gets the two reading as "the same kind of
+     glass" given their different backdrops. */
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 24px 60px rgba(20, 15, 50, 0.30),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.55);
 }
 .footer-stack-card--expanded .footer-card-title {
   font-size: 1.05rem;
   letter-spacing: 0.05em;
+  /* Already dark (#333333 from the base rule) — no override needed, it
+     was only ever hard to read against the small stack's own dark card;
+     against this light glass it has plenty of contrast already. */
+}
+/* Placeholder glyph (no real image) re-tinted to match — same light
+   violet-glass language .ptypes-image-slot uses elsewhere, rather than
+   the base rule's white-on-dark tint. Doesn't affect the real-artwork
+   case (the :has() rule further down already makes that transparent). */
+.footer-stack-card--expanded .footer-card-glyph {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(90, 70, 160, 0.22);
+  color: rgba(90, 70, 160, 0.45);
 }
 .footer-stack-card--expanded .footer-card-glyph svg {
   width: 34px;
@@ -3115,6 +3240,23 @@ body {
   width: 46px;
   height: 46px;
   border-radius: 14px;
+  /* Dark glass pill — white icon on a dark, translucent tint — kept dark
+     regardless of the card's own lilac/lime accent, rather than switching
+     to a light pill the way the card background/glyph do above. Blur
+     comes from the base .footer-card-btn rule already; this only swaps
+     the tint/border/icon colour so it still reads as the same
+     glassmorphism recipe used everywhere else, just darker. */
+  background: rgba(20, 18, 35, 0.35);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 4px 16px rgba(20, 15, 50, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+}
+.footer-stack-card--expanded .footer-card-btn:hover {
+  background: rgba(20, 18, 35, 0.55);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
 }
 .footer-stack-card--expanded .footer-card-btn svg {
   width: 20px;
@@ -3142,6 +3284,44 @@ body {
 .footer-card-expand-close svg {
   width: 14px;
   height: 14px;
+}
+/* A near-white circle with a near-white icon (the base rule above) reads
+   fine sitting directly over the overlay's own dark scrim, but disappears
+   against .footer-stack-card--expanded's now-light glass card underneath
+   it — dark-on-light instead, to stay visible in that context. */
+.footer-stack-card--expanded .footer-card-expand-close {
+  background: rgba(26, 26, 46, 0.10);
+  border-color: rgba(26, 26, 46, 0.20);
+  color: rgba(26, 26, 46, 0.75);
+}
+.footer-stack-card--expanded .footer-card-expand-close:hover {
+  background: rgba(26, 26, 46, 0.18);
+  border-color: rgba(26, 26, 46, 0.32);
+}
+
+/* All three cards, centred — brand lime green at true 35% alpha
+   transparency. Now that .footer-card-expand-overlay no longer dims the
+   backdrop behind it, this can go back to genuine rgba() transparency
+   (rather than the color-mix-toward-white workaround from when a dark
+   scrim sat behind the card and dragged the blend down to a murky olive)
+   — whatever's actually behind the card now shows through instead. */
+.footer-stack-card--expanded-lilac,
+.footer-stack-card--expanded-lime {
+  background: rgba(200, 255, 0, 0.35);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: none;
+  box-shadow: 0 24px 60px rgba(20, 15, 50, 0.30);
+}
+
+/* Icon sits flush on the solid surface with no frame or tinted box behind
+   it — the general .footer-stack-card--expanded .footer-card-glyph rule
+   above re-adds a light-glass background/border, which these opt back
+   out of. */
+.footer-stack-card--expanded-lilac .footer-card-glyph,
+.footer-stack-card--expanded-lime .footer-card-glyph {
+  background: transparent;
+  border: none;
 }
 
 /* ── Full-bleed logo graphic — back at the bottom of the footer.

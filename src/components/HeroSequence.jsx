@@ -100,36 +100,23 @@ export default function HeroSequence() {
   const [scrollRange, setScrollRange] = useState(MOBILE_SPACER)
 
   // Don't start the character animation until a scroll-trigger point is
-  // reached — different one per breakpoint.
+  // reached — same trigger condition on both breakpoints now: the instant
+  // the portfolio LINKS section (PortfolioSection.jsx, id="work" /
+  // .pf-section) starts entering the viewport from the bottom while
+  // scrolling. Converted to an absolute scrollY offset by subtracting the
+  // viewport height from that section's own page position, so
+  // charStartOffset is exactly the scrollY at which its top edge lines up
+  // with the bottom edge of the screen.
   //
-  // Mobile: as soon as a target PortfolioTypes card starts arriving on
-  // screen — i.e. once the PREVIOUS card begins its exit and the target one
-  // peeks out from behind it. PortfolioTypes.jsx pins the whole deck over
-  // .ptypes-section (height = PANEL_COUNT × 100vh) and slices that pinned
-  // scroll range into (PANEL_COUNT − 1) equal exit windows, one per card
-  // transition; window i spans deck-progress [i/(N-1), (i+1)/(N-1)]. Card
-  // k's window starts at (k-1)/(N-1) — that's the moment card k begins to
-  // show. Converting that deck-progress fraction to an absolute scrollY
-  // offset: sectionTop + fraction × (sectionHeight − viewportHeight), since
-  // the pinned scroll range covers exactly (sectionHeight − viewportHeight)
-  // px for a sticky ['start start','end end'] target. Reading
-  // .ptypes-section directly (not summing whatever precedes it) keeps this
-  // correct no matter what gets added/reordered above it later —
-  // height-summing broke twice in a row the other way for earlier versions
-  // of this same offset. Mobile targets the SECOND card (index 1, "brand
-  // strategy") — the character is already animating, low z-index, in the
-  // background well before the portfolio links appear (.hero-char-track's
-  // mobile z-index of 0 keeps it behind .ptypes-section's z:1 and
-  // .site-split's z:2/4, so it only ever reads as a background layer, never
-  // covering content).
-  //
-  // Desktop: the moment the "From spark to screen…" headline (.pf-rotate-line,
-  // in PortfolioSection further down the page) reaches the screen while
-  // scrolling — later than the old PortfolioTypes-deck trigger, so the
-  // character now starts alongside that headline rather than mid-deck.
-  // "Reaches the screen" = the instant its top edge crosses into the
-  // viewport from the bottom, converted to an absolute scrollY by
-  // subtracting the viewport height from its page position.
+  // This used to trigger mobile off .ptypes-section (the PortfolioTypes
+  // card deck, well ABOVE the portfolio links section) instead — which is
+  // exactly why the character used to start walking too early on mobile,
+  // mid-deck, well before the portfolio links actually appeared. Desktop
+  // read .pf-rotate-line specifically (a headline inside .pf-section)
+  // rather than the section itself; using the section directly here avoids
+  // depending on a child element that has its own mount-time
+  // opacity/y entrance animation (a transform-based motion value that
+  // could skew a getBoundingClientRect read taken before it settles).
   const [charStartOffset, setCharStartOffset] = useState(0)
 
   useEffect(() => {
@@ -138,21 +125,10 @@ export default function HeroSequence() {
       setIsMobile(mobile)
 
       let offset = 0
-      if (mobile) {
-        // Card index 1's window starts at (1-1)/(N-1) = 0 in the deck-
-        // progress formula described above, i.e. right as .ptypes-section
-        // itself reaches the top of the viewport — so this is just that
-        // section's own page offset, no pinRange/fraction math needed.
-        const ptypesEl = document.querySelector('.ptypes-section')
-        if (ptypesEl) {
-          offset = ptypesEl.getBoundingClientRect().top + window.scrollY
-        }
-      } else {
-        const headlineEl = document.querySelector('.pf-rotate-line')
-        if (headlineEl) {
-          const headlineTop = headlineEl.getBoundingClientRect().top + window.scrollY
-          offset = Math.max(headlineTop - window.innerHeight, 0)
-        }
+      const workEl = document.querySelector('.pf-section')
+      if (workEl) {
+        const workTop = workEl.getBoundingClientRect().top + window.scrollY
+        offset = Math.max(workTop - window.innerHeight, 0)
       }
       setCharStartOffset(offset)
 

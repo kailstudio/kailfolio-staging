@@ -233,11 +233,95 @@ const UPWORK = {
 // `image` — real artwork from public/footer/*.webp, labelled to match each
 // card. Falls back to the dashed placeholder glyph (see CardBody) for any
 // card without one, so a future card added without art yet doesn't break.
+// `accent` — which of the site's two brand colours (see --lime/--lilac in
+// styles.css) this card turns solid to when expanded/centred (see
+// FooterCardExpanded); alternating lilac/lime/lilac matches the same
+// "alternating accent" language the project cards use elsewhere.
+//
+// `video` — looping webm counterpart to `image` (see FooterCardMedia
+// below), used where one exists in public/footer/*.webm; `image` then
+// doubles as its poster frame and fallback.
 const CARDS = [
-  { id: 'socials',    title: 'Socials',    items: [YOUTUBE, INSTAGRAM], image: `${BASE}footer/footer-socials.webp` },
-  { id: 'portfolios', title: 'Portfolios', items: [BEHANCE, DRIBBBLE],  image: `${BASE}footer/footer-portfolio.webp` },
-  { id: 'contact',    title: 'Contact',    items: [UPWORK, MAIL],       image: `${BASE}footer/footer-contact.webp` },
+  { id: 'socials',    title: 'Socials',    items: [YOUTUBE, INSTAGRAM], image: `${BASE}footer/footer-socials.webp`,  video: `${BASE}footer/footercard-socials.webm`,  accent: 'lilac' },
+  { id: 'portfolios', title: 'Portfolios', items: [BEHANCE, DRIBBBLE],  image: `${BASE}footer/footer-portfolio.webp`, video: `${BASE}footer/footercard-portfolio.webm`, accent: 'lime' },
+  { id: 'contact',    title: 'Contact',    items: [UPWORK, MAIL],       image: `${BASE}footer/footer-contact.webp`,  video: `${BASE}footer/footercard-contact.webm`,   accent: 'lilac' },
 ]
+
+// How long to go with NO load progress before giving up and dropping back
+// to the plain still. This is a stall detector, not a flat "must finish by
+// X" deadline (see armLoadTimeout below) — all three stack cards mount and
+// start downloading their video at once, at page load, competing with
+// everything else on the page (hero video/images, the portfolio-type clips,
+// etc.) for bandwidth. A flat from-mount deadline meant the bigger of these
+// files (footercard-contact.webm, ~2.8MB vs. portfolio's ~1.2MB) was the
+// one most likely to still be genuinely, healthily downloading — just
+// slower, not stuck — when the timer fired, so it got locked onto its still
+// frame forever even though the video was fine and would've finished a
+// moment later. Resetting the timer on every `progress` tick means a slow
+// download that keeps making progress is never penalised, only one that
+// truly stalls.
+const VIDEO_LOAD_TIMEOUT = 6000
+
+// Card art — plays `video`'s looping webm when there is one, falling back
+// to the plain still `image` (used as the video's poster while it loads,
+// and what actually renders instead if the video errors, if the browser
+// can't play webm at all, or if its download genuinely stalls) — or the
+// dashed placeholder glyph as the last resort if a card has neither.
+function FooterCardMedia({ video, image }) {
+  const [videoFailed, setVideoFailed] = useState(false)
+  const timeoutRef = useRef(null)
+
+  const clearLoadTimeout = () => {
+    if (timeoutRef.current != null) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }
+
+  // (Re)arms the stall detector — called on mount and again on every
+  // `progress` event, so the deadline keeps sliding forward as long as
+  // bytes are still actually arriving.
+  const armLoadTimeout = () => {
+    clearLoadTimeout()
+    timeoutRef.current = setTimeout(() => setVideoFailed(true), VIDEO_LOAD_TIMEOUT)
+  }
+
+  useEffect(() => {
+    if (!video) return
+    armLoadTimeout()
+    return clearLoadTimeout
+  }, [video])
+
+  if (video && !videoFailed) {
+    return (
+      <video
+        className="footer-card-glyph-img"
+        src={video}
+        poster={image}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onProgress={armLoadTimeout}
+        onCanPlay={clearLoadTimeout}
+        onError={() => { clearLoadTimeout(); setVideoFailed(true) }}
+      />
+    )
+  }
+
+  if (image) {
+    return <img src={image} alt="" className="footer-card-glyph-img" draggable={false} />
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <circle cx="9" cy="9.5" r="1.8" />
+      <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 // ── Card stack — loose, hand-scattered pile of tall "design board" cards,
 // pinned to the footer's top-right corner and protruding up past the
@@ -367,23 +451,15 @@ function useIsStackMobile() {
 // the two stay visually identical without duplicating the markup.
 // Links stop propagation so tapping an actual social/mail icon just
 // navigates rather than also toggling the card's own expand/close handler.
-function CardBody({ title, items, image }) {
+function CardBody({ title, items, image, video }) {
   return (
     <>
       <span className="footer-card-title">{title}</span>
 
-      {/* Real artwork where available (CARDS' `image`), dashed
-          glassmorphism placeholder otherwise. */}
+      {/* Real artwork where available (CARDS' `image`/`video`), dashed
+          glassmorphism placeholder otherwise — see FooterCardMedia. */}
       <div className="footer-card-glyph" aria-hidden="true">
-        {image ? (
-          <img src={image} alt="" className="footer-card-glyph-img" draggable={false} />
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
-            <rect x="3" y="3" width="18" height="18" rx="3" />
-            <circle cx="9" cy="9.5" r="1.8" />
-            <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        <FooterCardMedia video={video} image={image} />
       </div>
 
       <div className="footer-card-row">
@@ -406,7 +482,7 @@ function CardBody({ title, items, image }) {
   )
 }
 
-function FooterStackCard({ title, items, image, place, index, hoveredIndex, isMobile, onHoverStart, onHoverEnd, onExpand }) {
+function FooterStackCard({ title, items, image, video, place, index, hoveredIndex, isMobile, onHoverStart, onHoverEnd, onExpand }) {
   const hasSibling  = hoveredIndex !== null && hoveredIndex !== index
   const nudge       = hasSibling ? (index < hoveredIndex ? -STACK_NEIGHBOR_NUDGE : STACK_NEIGHBOR_NUDGE) : 0
 
@@ -438,25 +514,30 @@ function FooterStackCard({ title, items, image, place, index, hoveredIndex, isMo
       transition={STACK_SPRING}
       onHoverStart={onHoverStart}
       onHoverEnd={onHoverEnd}
-      // Tap-to-expand only makes sense on touch (no hover to reveal the
-      // card clearly) — see FooterCardExpanded for the enlarged, centered
-      // overlay this opens.
-      onClick={isMobile ? () => onExpand(index) : undefined}
+      // Click-to-expand — same enlarged, centered, dimmed-background
+      // overlay on every breakpoint now (see FooterCardExpanded). Used to
+      // be mobile-only (tap was the only way to see a card clearly there,
+      // with no hover), but desktop gets the same "select a card" moment
+      // on click too, on top of its existing hover lift/wiggle.
+      onClick={() => onExpand(index)}
     >
-      <CardBody title={title} items={items} image={image} />
+      <CardBody title={title} items={items} image={image} video={video} />
     </motion.div>
   )
 }
 
-// Mobile-only: renders the tapped card again, much larger and centered in
-// the viewport, in a portal on <body>. A portal (rather than repositioning
-// the card in place) is necessary because .footer-card-stack is scaled down
-// via CSS `transform` on mobile (see styles.css), and a transformed ancestor
-// becomes the containing block for any `position: fixed` descendant — so a
-// fixed-position element left inside it would be pinned to that shrunken
-// stack instead of the real viewport. Escaping to <body> sidesteps that
-// entirely and keeps true fixed/centered behaviour regardless of the
-// stack's own transform.
+// Renders whichever card was clicked again, much larger and centered in
+// the viewport over a dimmed backdrop, in a portal on <body> — on every
+// breakpoint now (used to be mobile-only, since tap was the only way to
+// see a card clearly there with no hover; desktop now gets the same
+// "select a card" moment on click, on top of its existing hover). A portal
+// (rather than repositioning the card in place) is necessary because
+// .footer-card-stack is scaled down via CSS `transform` on mobile (see
+// styles.css), and a transformed ancestor becomes the containing block for
+// any `position: fixed` descendant — so a fixed-position element left
+// inside it would be pinned to that shrunken stack instead of the real
+// viewport. Escaping to <body> sidesteps that entirely and keeps true
+// fixed/centered behaviour regardless of the stack's own transform.
 function FooterCardExpanded({ card, onClose }) {
   useEffect(() => {
     if (!card) return
@@ -484,7 +565,7 @@ function FooterCardExpanded({ card, onClose }) {
           onClick={onClose}
         >
           <motion.div
-            className="footer-stack-card footer-stack-card--expanded"
+            className={`footer-stack-card footer-stack-card--expanded footer-stack-card--expanded-${card.accent}`}
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, scale: 0.7, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -501,7 +582,7 @@ function FooterCardExpanded({ card, onClose }) {
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
-            <CardBody title={card.title} items={card.items} image={card.image} />
+            <CardBody title={card.title} items={card.items} image={card.image} video={card.video} />
           </motion.div>
         </motion.div>
       )}
@@ -517,12 +598,6 @@ function FooterCardStack() {
   const stackRef   = useRef(null)
   const revealRefs = useRef([])
   useCardsReveal(stackRef, revealRefs)
-
-  // Tap-to-expand is mobile-only — if the viewport grows past the
-  // breakpoint while a card is open, drop back to the plain hover stack.
-  useEffect(() => {
-    if (!isMobile) setExpandedIndex(null)
-  }, [isMobile])
 
   return (
     <div className="footer-card-stack" ref={stackRef}>
@@ -543,6 +618,7 @@ function FooterCardStack() {
             title={card.title}
             items={card.items}
             image={card.image}
+            video={card.video}
             place={STACK_PLACEMENT[i]}
             index={i}
             hoveredIndex={isMobile ? null : hoveredIndex}
@@ -554,12 +630,10 @@ function FooterCardStack() {
         </div>
       ))}
 
-      {isMobile && (
-        <FooterCardExpanded
-          card={expandedIndex !== null ? CARDS[expandedIndex] : null}
-          onClose={() => setExpandedIndex(null)}
-        />
-      )}
+      <FooterCardExpanded
+        card={expandedIndex !== null ? CARDS[expandedIndex] : null}
+        onClose={() => setExpandedIndex(null)}
+      />
     </div>
   )
 }

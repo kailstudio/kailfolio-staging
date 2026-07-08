@@ -636,20 +636,9 @@ export default function PortfolioSection({ onProjectOpen }) {
             </motion.p>
           </motion.div>
 
-          {/* ── Body copy glass panel ── */}
-          <motion.div
-            className="pf-body-glass"
-            initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
-            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            viewport={{ once: true, margin: '-8%' }}
-            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
-          >
-            <p className="pf-body">
-              We design strategic brand foundations across identity, websites,
-              animation, print, and packaging: building cohesive systems that
-              work seamlessly across digital and physical spaces.
-            </p>
-          </motion.div>
+          {/* Body copy paragraph formerly lived here (.pf-body-glass) — now
+              moved to the intro card in PortfolioTypes.jsx, see that
+              component's INTRO_PANEL. */}
 
           <div className="pf-cats">
             {CATEGORIES.map((cat, i) => (
