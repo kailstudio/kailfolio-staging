@@ -3063,6 +3063,16 @@ body {
   border: none;
   background: transparent;
 }
+/* Wraps FooterCardMedia's actual rendered element (video/img/placeholder
+   svg) — exists purely so an IntersectionObserver has a stable node to
+   watch regardless of which of those three is currently rendered (see
+   useNearViewport in Footer.jsx), gating a card's video download until
+   it's actually about to be on screen. Sized to fill exactly like the
+   media element itself used to when it was the direct child here. */
+.footer-card-media-wrap {
+  width: 100%;
+  height: 100%;
+}
 .footer-card-glyph-img {
   width: 100%;
   height: 100%;

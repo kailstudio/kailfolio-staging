@@ -262,6 +262,39 @@ const CARDS = [
 // truly stalls.
 const VIDEO_LOAD_TIMEOUT = 6000
 
+// Only actually start downloading a card's video once it's about to be on
+// screen (rootMargin gives it a head start before it's literally visible),
+// rather than the moment it mounts. All three stack cards mount at page
+// load, together with the hero video/images, the portfolio-type clips,
+// etc. — with every card's video requesting eagerly at once, the bigger
+// files were the ones most likely to still be genuinely downloading (not
+// stuck, just slow due to that contention) when the small card's own
+// stall-timeout fired, permanently locking it onto its still frame even
+// though the file was fine. The expanded/centred view never had this
+// problem, since it only ever mounts on demand, well after page load, once
+// most other above-the-fold requests are long finished — gating the small
+// cards' load the same way (start only once actually approaching view)
+// gives them the same real-world reliability instead of racing everything
+// else on the page.
+function useNearViewport(ref, enabled) {
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    if (!enabled || inView) return
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setInView(true) // no IO support — just fall back to loading eagerly
+      return
+    }
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting) setInView(true) },
+      { rootMargin: '600px 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [enabled, inView, ref])
+  return inView
+}
+
 // Card art — plays `video`'s looping webm when there is one, falling back
 // to the plain still `image` (used as the video's poster while it loads,
 // and what actually renders instead if the video errors, if the browser
@@ -270,6 +303,8 @@ const VIDEO_LOAD_TIMEOUT = 6000
 function FooterCardMedia({ video, image }) {
   const [videoFailed, setVideoFailed] = useState(false)
   const timeoutRef = useRef(null)
+  const wrapRef = useRef(null)
+  const canLoadVideo = useNearViewport(wrapRef, !!video)
 
   const clearLoadTimeout = () => {
     if (timeoutRef.current != null) {
@@ -287,39 +322,37 @@ function FooterCardMedia({ video, image }) {
   }
 
   useEffect(() => {
-    if (!video) return
+    if (!video || !canLoadVideo) return
     armLoadTimeout()
     return clearLoadTimeout
-  }, [video])
-
-  if (video && !videoFailed) {
-    return (
-      <video
-        className="footer-card-glyph-img"
-        src={video}
-        poster={image}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        onProgress={armLoadTimeout}
-        onCanPlay={clearLoadTimeout}
-        onError={() => { clearLoadTimeout(); setVideoFailed(true) }}
-      />
-    )
-  }
-
-  if (image) {
-    return <img src={image} alt="" className="footer-card-glyph-img" draggable={false} />
-  }
+  }, [video, canLoadVideo])
 
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="3" />
-      <circle cx="9" cy="9.5" r="1.8" />
-      <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div ref={wrapRef} className="footer-card-media-wrap">
+      {video && canLoadVideo && !videoFailed ? (
+        <video
+          className="footer-card-glyph-img"
+          src={video}
+          poster={image}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onProgress={armLoadTimeout}
+          onCanPlay={clearLoadTimeout}
+          onError={() => { clearLoadTimeout(); setVideoFailed(true) }}
+        />
+      ) : image ? (
+        <img src={image} alt="" className="footer-card-glyph-img" draggable={false} />
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <circle cx="9" cy="9.5" r="1.8" />
+          <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </div>
   )
 }
 
