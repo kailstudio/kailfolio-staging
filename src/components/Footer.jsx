@@ -11,8 +11,11 @@
  *             nudge. Each card also rises into place independently as the
  *             footer scrolls into view, on its own staggered slice of
  *             scroll progress (see useCardsReveal) rather than all at once.
- *             Collapses to a plain flattened, non-protruding wrapped row
- *             below 820px, where hover doesn't apply.
+ *             Stays the same protruding, overlapping stack at every
+ *             breakpoint — CSS just scales the whole stack down for
+ *             narrower viewports (see the scale steps in styles.css).
+ *             Below 820px the hover wiggle simply doesn't apply, since
+ *             taps replace hover on touch.
  *   Wordmark: KAIL logo, at the bottom (full-bleed, bottom-bled), letter by
  *             letter. Parallax-lags behind normal scroll and each letter
  *             rises into place left-to-right as you approach the bottom of
@@ -34,7 +37,10 @@
  */
 
 import { useRef, useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+
+const BASE = import.meta.env.BASE_URL
 
 // ── Wordmark scroll behaviour ────────────────────────────────────────
 // Hand-rolled scroll listener (same technique as LogoSequence/HeroSequence
@@ -224,10 +230,13 @@ const UPWORK = {
 }
 
 // ── Card groups shown in the footer ────────────────────────────────
+// `image` — real artwork from public/footer/*.webp, labelled to match each
+// card. Falls back to the dashed placeholder glyph (see CardBody) for any
+// card without one, so a future card added without art yet doesn't break.
 const CARDS = [
-  { id: 'socials',    title: 'Socials',    items: [YOUTUBE, INSTAGRAM] },
-  { id: 'portfolios', title: 'Portfolios', items: [BEHANCE, DRIBBBLE] },
-  { id: 'contact',    title: 'Contact',    items: [UPWORK, MAIL] },
+  { id: 'socials',    title: 'Socials',    items: [YOUTUBE, INSTAGRAM], image: `${BASE}footer/footer-socials.webp` },
+  { id: 'portfolios', title: 'Portfolios', items: [BEHANCE, DRIBBBLE],  image: `${BASE}footer/footer-portfolio.webp` },
+  { id: 'contact',    title: 'Contact',    items: [UPWORK, MAIL],       image: `${BASE}footer/footer-contact.webp` },
 ]
 
 // ── Card stack — loose, hand-scattered pile of tall "design board" cards,
@@ -241,15 +250,14 @@ const CARDS = [
 // x-offsets are ~68% of the card width apart so each card's title (top of
 // the card) always clears the one in front of it.
 const STACK_PLACEMENT = [
-  { x: 0,   y: 18, rotate: -7 },
-  { x: 96,  y: -8, rotate: 6 },
-  { x: 192, y: 22, rotate: -4 },
+  { x: 0,   y: 31, rotate: -7 },
+  { x: 163, y: -14, rotate: 6 },
+  { x: 326, y: 37, rotate: -4 },
 ]
-const FLAT_PLACEMENT = { x: 0, y: 0, rotate: 0 }
 
-const STACK_HOVER_LIFT     = 14  // px the hovered card rises on hover
+const STACK_HOVER_LIFT     = 24  // px the hovered card rises on hover
 const STACK_HOVER_SCALE    = 1.1
-const STACK_NEIGHBOR_NUDGE = 7   // px neighbouring cards shift away from the hovered one
+const STACK_NEIGHBOR_NUDGE = 12  // px neighbouring cards shift away from the hovered one
 
 // Spring used for the "resting" states (initial placement, neighbour nudge,
 // and the graceful return once the cursor leaves) — soft, no overshoot-y
@@ -257,10 +265,9 @@ const STACK_NEIGHBOR_NUDGE = 7   // px neighbouring cards shift away from the ho
 // inside `whileHover` below, so it doesn't replay on the way back out.
 const STACK_SPRING = { type: 'spring', stiffness: 260, damping: 22, mass: 0.7 }
 
-// Below this width the stack collapses into a plain wrapped row — hover
-// choreography (and protruding above the footer edge) doesn't mean much on
-// touch, and a rotated overlapping stack gets cramped/unreadable on narrow
-// phones.
+// Below this width the stack keeps its overlapping/rotated layout (CSS
+// scales the whole thing down to fit — see styles.css) but drops the hover
+// wiggle/lift/neighbour-nudge choreography, which doesn't mean much on touch.
 const STACK_MOBILE_MQ = '(max-width: 820px)'
 
 // ── Scroll-driven staggered reveal ───────────────────────────────────
@@ -355,7 +362,51 @@ function useIsStackMobile() {
   return isMobile
 }
 
-function FooterStackCard({ title, items, place, index, hoveredIndex, isMobile, onHoverStart, onHoverEnd }) {
+// Shared innards (title / glyph / link row) for a card — used both by the
+// small in-stack card and its blown-up mobile tap-to-expand twin below, so
+// the two stay visually identical without duplicating the markup.
+// Links stop propagation so tapping an actual social/mail icon just
+// navigates rather than also toggling the card's own expand/close handler.
+function CardBody({ title, items, image }) {
+  return (
+    <>
+      <span className="footer-card-title">{title}</span>
+
+      {/* Real artwork where available (CARDS' `image`), dashed
+          glassmorphism placeholder otherwise. */}
+      <div className="footer-card-glyph" aria-hidden="true">
+        {image ? (
+          <img src={image} alt="" className="footer-card-glyph-img" draggable={false} />
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="3" />
+            <circle cx="9" cy="9.5" r="1.8" />
+            <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </div>
+
+      <div className="footer-card-row">
+        {items.map(({ name, href, icon, placeholder }) => (
+          <a
+            key={name}
+            href={href}
+            target={href.startsWith('http') ? '_blank' : undefined}
+            rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+            className={`footer-card-btn${placeholder ? ' footer-card-btn--placeholder' : ''}`}
+            aria-label={name}
+            title={name}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {icon}
+          </a>
+        ))}
+      </div>
+    </>
+  )
+}
+
+function FooterStackCard({ title, items, image, place, index, hoveredIndex, isMobile, onHoverStart, onHoverEnd, onExpand }) {
   const hasSibling  = hoveredIndex !== null && hoveredIndex !== index
   const nudge       = hasSibling ? (index < hoveredIndex ? -STACK_NEIGHBOR_NUDGE : STACK_NEIGHBOR_NUDGE) : 0
 
@@ -387,43 +438,91 @@ function FooterStackCard({ title, items, place, index, hoveredIndex, isMobile, o
       transition={STACK_SPRING}
       onHoverStart={onHoverStart}
       onHoverEnd={onHoverEnd}
+      // Tap-to-expand only makes sense on touch (no hover to reveal the
+      // card clearly) — see FooterCardExpanded for the enlarged, centered
+      // overlay this opens.
+      onClick={isMobile ? () => onExpand(index) : undefined}
     >
-      <span className="footer-card-title">{title}</span>
-
-      {/* Glassmorphism placeholder — swap for real artwork/icon later */}
-      <div className="footer-card-glyph" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
-          <rect x="3" y="3" width="18" height="18" rx="3" />
-          <circle cx="9" cy="9.5" r="1.8" />
-          <path d="M21 15.5 15.5 10 6 19" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-
-      <div className="footer-card-row">
-        {items.map(({ name, href, icon, placeholder }) => (
-          <a
-            key={name}
-            href={href}
-            target={href.startsWith('http') ? '_blank' : undefined}
-            rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-            className={`footer-card-btn${placeholder ? ' footer-card-btn--placeholder' : ''}`}
-            aria-label={name}
-            title={name}
-          >
-            {icon}
-          </a>
-        ))}
-      </div>
+      <CardBody title={title} items={items} image={image} />
     </motion.div>
   )
 }
 
+// Mobile-only: renders the tapped card again, much larger and centered in
+// the viewport, in a portal on <body>. A portal (rather than repositioning
+// the card in place) is necessary because .footer-card-stack is scaled down
+// via CSS `transform` on mobile (see styles.css), and a transformed ancestor
+// becomes the containing block for any `position: fixed` descendant — so a
+// fixed-position element left inside it would be pinned to that shrunken
+// stack instead of the real viewport. Escaping to <body> sidesteps that
+// entirely and keeps true fixed/centered behaviour regardless of the
+// stack's own transform.
+function FooterCardExpanded({ card, onClose }) {
+  useEffect(() => {
+    if (!card) return
+    const onKeyDown = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKeyDown)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [card, onClose])
+
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <AnimatePresence>
+      {card && (
+        <motion.div
+          className="footer-card-expand-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="footer-stack-card footer-stack-card--expanded"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.7, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.82, y: 8 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+          >
+            <button
+              type="button"
+              className="footer-card-expand-close"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+            <CardBody title={card.title} items={card.items} image={card.image} />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  )
+}
+
 function FooterCardStack() {
-  const [hoveredIndex, setHoveredIndex] = useState(null)
+  const [hoveredIndex, setHoveredIndex]   = useState(null)
+  const [expandedIndex, setExpandedIndex] = useState(null)
   const isMobile   = useIsStackMobile()
   const stackRef   = useRef(null)
   const revealRefs = useRef([])
   useCardsReveal(stackRef, revealRefs)
+
+  // Tap-to-expand is mobile-only — if the viewport grows past the
+  // breakpoint while a card is open, drop back to the plain hover stack.
+  useEffect(() => {
+    if (!isMobile) setExpandedIndex(null)
+  }, [isMobile])
 
   return (
     <div className="footer-card-stack" ref={stackRef}>
@@ -443,15 +542,24 @@ function FooterCardStack() {
           <FooterStackCard
             title={card.title}
             items={card.items}
-            place={isMobile ? FLAT_PLACEMENT : STACK_PLACEMENT[i]}
+            image={card.image}
+            place={STACK_PLACEMENT[i]}
             index={i}
             hoveredIndex={isMobile ? null : hoveredIndex}
             isMobile={isMobile}
             onHoverStart={() => setHoveredIndex(i)}
             onHoverEnd={() => setHoveredIndex((h) => (h === i ? null : h))}
+            onExpand={setExpandedIndex}
           />
         </div>
       ))}
+
+      {isMobile && (
+        <FooterCardExpanded
+          card={expandedIndex !== null ? CARDS[expandedIndex] : null}
+          onClose={() => setExpandedIndex(null)}
+        />
+      )}
     </div>
   )
 }

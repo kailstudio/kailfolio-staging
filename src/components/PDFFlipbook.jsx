@@ -15,19 +15,36 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174'
 
-// Matches the .pdff mobile breakpoint used in styles.css (max-width: 620px)
-const MOBILE_MQ = '(max-width: 620px)'
+// "Is this a phone" — checked against the LARGER of the two viewport
+// dimensions rather than plain width. A plain `max-width: 620px` match
+// media query flips false the moment a phone is rotated to landscape
+// (most phones land somewhere around 660–930px wide in landscape), which
+// used to be a real bug here: the mobile fullscreen viewer explicitly
+// prompts "Rotate your device for the best viewing experience", and the
+// moment you did, isMobile went false and the safety-net effect below
+// (`if (mobileFullscreen && !isMobile) setMobileFullscreen(false)`) slammed
+// the fullscreen viewer shut and dumped you back into the small embedded
+// view — i.e. exactly the "not full screen on mobile" complaint, and it
+// fired on the one interaction the UI itself was telling you to do.
+// 960px comfortably covers the widest phones in landscape (~930px on the
+// largest current models) while still excluding tablets, whose shortest
+// side alone already exceeds that.
+const MOBILE_MAX_DIMENSION = 960
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_MQ).matches
-  )
+  const getIsMobile = () =>
+    typeof window !== 'undefined' &&
+    Math.max(window.innerWidth, window.innerHeight) <= MOBILE_MAX_DIMENSION
+
+  const [isMobile, setIsMobile] = useState(getIsMobile)
   useEffect(() => {
-    const mq = window.matchMedia(MOBILE_MQ)
-    const onChange = (e) => setIsMobile(e.matches)
-    mq.addEventListener ? mq.addEventListener('change', onChange) : mq.addListener(onChange)
+    const onChange = () => setIsMobile(getIsMobile())
+    window.addEventListener('resize', onChange)
+    window.addEventListener('orientationchange', onChange)
+    onChange() // re-check immediately (covers the resize/orientation race on some browsers)
     return () => {
-      mq.removeEventListener ? mq.removeEventListener('change', onChange) : mq.removeListener(onChange)
+      window.removeEventListener('resize', onChange)
+      window.removeEventListener('orientationchange', onChange)
     }
   }, [])
   return isMobile

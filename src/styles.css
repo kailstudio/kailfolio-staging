@@ -288,7 +288,12 @@ body {
 .split-right {
   position: sticky;
   top: 0;
+  /* Same mobile-Chrome `100vh` sizing trap fixed elsewhere on this page —
+     see .ptypes-sticky/.hero-intro-sticky. Currently empty/transparent so
+     it's not visibly cut off today, but keeping it consistent avoids the
+     same bug resurfacing the moment anything is ever placed in here. */
   height: 100vh;
+  height: 100dvh;
   pointer-events: none;
 }
 
@@ -316,6 +321,20 @@ body {
 .app-bg {
   position: fixed;
   inset: 0;
+  /* `inset:0` alone sizes this against the fixed-position containing block,
+     which mobile browsers can compute from the *layout* viewport rather
+     than the *visual* one. Scrolling triggers the address-bar collapse,
+     which grows the visual viewport without this element growing to
+     match — for the length of that toolbar animation there's a sliver at
+     the bottom where this fixed background falls short, revealing the
+     plain `body` background (`#ddd5ff`, the purple flash) underneath.
+     `dvh`/`dvw` track the real, currently-visible viewport as the toolbar
+     animates, closing that gap; the plain vh/vw lines are just a fallback
+     for browsers without dvh support. */
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
   z-index: -1;
   /*
    * Studio KAIL brand gradient — blue / lilac / lime at background-safe
@@ -372,7 +391,17 @@ body {
 .hero-intro-sticky {
   position: sticky;
   top: 0;
+  /* `100vh` alone is the same mobile-Chrome trap fixed elsewhere on this
+     page (see .app-bg and .pdff-mfs): Chrome can size it against the
+     *large* viewport (as if the address bar were permanently hidden), so
+     on screens where the toolbar is actually showing, the sticky frame —
+     and everything centered inside it, including the last ptypes card's
+     counterpart here — ends up taller than what's really visible, with
+     its bottom edge tucked under the toolbar. `dvh` tracks the real,
+     currently-visible viewport instead; the plain `vh` line is just a
+     fallback for browsers without dvh support. */
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -384,7 +413,17 @@ body {
 
 .hero-intro-orbit {
   position: relative;
-  width: clamp(420px, 62vw, 740px);
+  /* Was pure `62vw` — sized off viewport WIDTH only, with no regard for
+     how tall the viewport actually is. On a wide-but-short window (a
+     laptop with a shallow browser viewport, common in Chrome once you
+     count its tab strip/bookmarks bar/etc.), 62vw could ask for a bigger
+     square than .hero-intro-sticky (100dvh, minus the header and the hint
+     text below it) had room for — and since that sticky wrapper clips
+     overflow, the bottom of the orbit got cut off. `min(62vw, ...)` adds a
+     second cap computed from the real available height, so the orbit only
+     ever grows as large as whichever axis is tighter. */
+  width: clamp(420px, min(62vw, calc(100vh - var(--header-h) - 110px)), 740px);
+  width: clamp(420px, min(62vw, calc(100dvh - var(--header-h) - 110px)), 740px);
   aspect-ratio: 1;
   flex-shrink: 0;
 }
@@ -424,31 +463,57 @@ body {
   pointer-events: none;
 }
 
-/* Placeholder image chip — dashed glass box, fanned outward from centre
-   by Hero.jsx via a JS-driven transform (x/y only, written by framer-
-   motion's useTransform chain, never fought by a CSS transform here). */
+/* Mascot image chip — no box chrome, just the character itself, fanned
+   outward from centre by Hero.jsx via a JS-driven transform. Both the
+   fan-out (x/y) AND self-centering (-size/2, since size is now solved
+   dynamically rather than a fixed constant — see chipSize in Hero.jsx)
+   are baked into that same transform, so this just anchors at the
+   orbit's centre point and lets JS do the rest — width/height are also
+   set inline per chip from that same dynamic size. object-fit:contain
+   (not cover) since there's no framed tile to crop to — the whole figure
+   shows, floating free. */
 .hero-intro-chip {
   position: absolute;
-  top: calc(50% - 43px);
-  left: calc(50% - 43px);
-  width: 86px;
-  height: 86px;
-  border-radius: 22px;
+  top: 50%;
+  left: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--glass-white);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1.5px dashed rgba(90, 70, 160, 0.32);
-  box-shadow: var(--glass-shadow);
-  color: rgba(90, 70, 160, 0.45);
+  background: transparent;
   pointer-events: none;
   will-change: transform;
 }
-.hero-intro-chip-icon svg {
-  width: 30px;
-  height: 30px;
+.hero-intro-chip-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+/* Centre badge — herointrostart.webp, visible at rest before any
+   scrolling, fading/scaling away early (see startOpacity/startScale in
+   Hero.jsx) to hand off to the KAIL logo badge below. Same footprint as
+   .hero-intro-core-orb so it sits centred over it; clipped to a circle to
+   match the orb's own shape rather than showing a square photo edge over
+   a round glass sphere. */
+.hero-intro-start-badge {
+  position: absolute;
+  inset: 21%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.hero-intro-start-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 12%;
+  display: block;
+  pointer-events: none;
 }
 
 /* No background chrome — just centres the logo over the core orb. A soft
@@ -482,18 +547,23 @@ body {
 }
 
 @media (max-width: 640px) {
-  .hero-intro { height: 150vh; }
+  /* This is a scroll-distance scaffold, not a visually-filling box, but
+     plain `vh` still isn't safe here: on mobile Chrome it can resolve
+     against the *large* viewport (address bar hidden), making the
+     scaffold taller in real terms than the `dvh`-based sticky content
+     inside it (.hero-intro-sticky, the orbit sizing above, etc.) actually
+     needs to finish its animation and release — which meant extra,
+     seemingly-dead scrolling after the reveal completed and before the
+     next section (PortfolioTypes) appeared. `dvh` keeps the scaffold's
+     real length matched to what the content inside actually needs. */
+  .hero-intro { height: 150vh; height: 150dvh; }
 
-  .hero-intro-orbit { width: clamp(340px, 92vw, 460px); }
-
-  .hero-intro-chip {
-    top: calc(50% - 32px);
-    left: calc(50% - 32px);
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+  /* Same dvh-anchored cap as the desktop rule above — 92vw alone doesn't
+     know how tall the viewport actually is. */
+  .hero-intro-orbit {
+    width: clamp(340px, min(92vw, calc(100vh - var(--header-h) - 90px)), 460px);
+    width: clamp(340px, min(92vw, calc(100dvh - var(--header-h) - 90px)), 460px);
   }
-  .hero-intro-chip-icon svg { width: 22px; height: 22px; }
 
   .hero-intro-hint { font-size: 0.7rem; }
 }
@@ -669,25 +739,6 @@ body {
   padding: clamp(36px, 5vw, 64px) clamp(24px, 5vw, 60px) clamp(72px, 10vw, 120px);
   position: relative;
   z-index: 4;
-}
-
-/* Subtle glowing lip at the very top of the glass panel */
-.pf-glass-lip {
-  position: absolute;
-  top: 0;
-  left: 8%;
-  right: 8%;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.90) 25%,
-    rgba(255, 255, 255, 0.95) 50%,
-    rgba(255, 255, 255, 0.90) 75%,
-    transparent 100%
-  );
-  border-radius: 999px;
-  pointer-events: none;
 }
 
 /*
@@ -2188,20 +2239,23 @@ body {
 
 
 /* ══════════════════════════════════════════════════════════════════════
-   PORTFOLIO TYPES — hand-shuffled card deck (intro + Brand / Motion /
-   Packaging / Web), sitting directly below Hero. See PortfolioTypes.jsx
-   for the full mechanics writeup; short version: every card is pinned in
-   the SAME sticky viewport slot from the start, overlapping in a loose
-   scatter (.ptypes-card's resting x/y/rotate, set inline per card since
-   it depends on index). Scrolling drives the front-most card's exit
-   (translate/rotate away + fade, via framer-motion useScroll/useTransform
-   in the component) which reveals the card that was already sitting
-   behind it — nothing about the "reveal" is separately animated, it was
-   just there the whole time.
+   PORTFOLIO TYPES — fanned card deck (intro + Brand / Motion / Packaging /
+   Web), sitting directly below Hero. See PortfolioTypes.jsx for the full
+   mechanics writeup; short version: every card is pinned in the SAME
+   sticky viewport slot. The intro card rests there from the start;
+   scrolling drives each following card sliding in from off-screen right
+   (translate/rotate/scale + fade in, via framer-motion useScroll/
+   useTransform in the component) to settle into a loose fanned stack in
+   front of the ones already there — repeats until all cards have arrived,
+   then continued scrolling releases the pin and carries on to the next
+   section.
 
-   Glass tint per card is mixed from that category's own accent/accentDark
-   colours (same ones already used in the carousel below), so this reads
-   as a continuation of the portfolio section rather than a new palette.
+   Each card is a tall photo-on-top/glass-panel-below shape — see
+   .ptypes-image-slot/.ptypes-content below — rather than a flat tinted
+   card, so the border is the only per-card colour now (mixed from that
+   category's own accent/accentDark, same colours the carousel further
+   down uses, so it still reads as a continuation of the portfolio section
+   rather than a new palette).
    ══════════════════════════════════════════════════════════════════════ */
 
 .ptypes-section {
@@ -2211,15 +2265,187 @@ body {
                    elsewhere on the page (header, cursor, footer, etc.) */
 }
 
+/* White gradient glow line at the very bottom of this section — same
+   treatment as .site-footer::before (matching header/footer's own
+   boundary line elsewhere in the app). .ptypes-section's bottom edge is
+   exactly where .ptypes-sticky's pin releases and the page continues into
+   PortfolioSection below, which otherwise reads as a hard, unstyled cut;
+   this makes the handoff look like an intentional seam instead. Sits on
+   the section itself (not the sticky child), so it scrolls into view
+   normally right as the pin lets go, rather than being pinned itself. */
+.ptypes-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent             0%,
+    rgba(255, 255, 255, 0.45) 25%,
+    rgba(255, 255, 255, 0.90) 50%,
+    rgba(255, 255, 255, 0.45) 75%,
+    transparent             100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
 .ptypes-sticky {
   position: sticky;
   top: 0;
+  /* Same mobile-Chrome `100vh` trap as .hero-intro-sticky above (see that
+     comment) — the sticky frame can size itself against a taller "large"
+     viewport than what's actually visible when Chrome's toolbar is
+     showing, leaving the final card (centred inside .ptypes-stage, inside
+     this) with its bottom edge cut off under the toolbar. `dvh` tracks the
+     real visible viewport; the plain `vh` line is just a fallback. */
   height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding-top: var(--header-h);
   overflow: hidden;   /* clips exiting cards to the viewport as they slide/rotate away */
+}
+
+/* ── Background ribbon (PTypesBanner.jsx) ──────────────────────────────
+   Sits behind .ptypes-stage (see the render-order comment in the
+   component), filling in what used to be plain empty space around the
+   card fan. .ptypes-banner itself just spans the full sticky viewport
+   slot as a positioning frame — the actual ribbon is a single
+   .ptypes-banner-ribbon-slot band inside it (see further down), centred
+   and tilted slightly. A second band once sat below it (removed — see
+   the component's doc comment) and a fancier full-height "harmonograph
+   loop" shape was also tried before that (reverted, it read as too
+   tangled/busy) — this plain flat sine-wave band is the shape that's
+   actually stuck. */
+.ptypes-banner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  pointer-events: none;   /* only .ptypes-banner-track (below) needs to receive the hover/push */
+  z-index: 0;
+}
+
+/* One ribbon's own band — sized/positioned/tilted independently per
+   instance (--one / --two below), each clipped via clip-path (not
+   overflow-x/overflow-y — that was tried first and still cut the wave off
+   top/bottom, because of a genuine CSS spec quirk: when overflow-x and
+   overflow-y are set to different keyword "categories" (one visible, one
+   not) on the SAME element, the visible one's COMPUTED value silently
+   becomes `auto` instead — which still clips. clip-path has no such
+   interaction; inset(-9999px 0) clips left/right at this element's own
+   edges while top/bottom are pushed far out of reach, so the wave's
+   amplitude + the cursor-push displacement can swing freely without ever
+   being cut off. .ptypes-sticky (the actual ancestor that matters,
+   spanning nearly the full viewport) still bounds it long before it could
+   reach anything else on the page.
+
+   left/right extend PAST the viewport (not a flush 0/0) because clip-path
+   and transform interact in a way that matters once this band is rotated
+   (see --one below): clip-path cuts a mask using this element's own
+   border box in its LOCAL, pre-rotation coordinate space, and only THEN
+   does the rotation spin that already-cut shape as one rigid piece. A
+   flush left:0/right:0 box, once rotated, has its corners lift away from
+   the real screen edges — leaving a wedge-shaped gap at the left (and
+   right) where the ribbon doesn't reach. Oversizing the box first means
+   the rotated shape still comfortably covers the actual viewport edges,
+   with .ptypes-sticky's own overflow:hidden still the thing that stops
+   any of this spilling into neighbouring sections. */
+.ptypes-banner-ribbon-slot {
+  position: absolute;
+  left: -80px;
+  right: -80px;
+  height: clamp(110px, 14vw, 180px);
+  clip-path: inset(-9999px 0);
+  pointer-events: none;
+}
+.ptypes-banner-ribbon-slot--one {
+  /* Centred now that this is the only ribbon (was offset to 34% to leave
+     room for a second band below it, since removed) — see the
+     component's doc comment. */
+  top: 50%;
+  transform: translateY(-50%) rotate(-7deg);
+}
+/* --two is unused now (see the component's doc comment) but left defined
+   so a second ribbon is a one-line addition again if it's ever wanted. */
+.ptypes-banner-ribbon-slot--two {
+  top: 68%;
+  transform: translateY(-50%) rotate(6deg);
+}
+
+.ptypes-banner-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  /* Duration matches PERIOD (820px, see the component) at the same
+     ~26px/s pace this has always scrolled at. */
+  animation: ptypesBannerScroll 31.5s linear infinite;
+  will-change: transform;
+}
+/* Second ribbon's words read the opposite way (see the component's doc
+   comment) — its scroll should visibly flow the opposite way too, rather
+   than just displaying mirrored text moving in the same direction as the
+   first ribbon. Reusing the SAME keyframes with the direction reversed
+   is enough: for a seamlessly-tiling linear loop like this, playing it
+   backwards looks identical to a hand-authored mirror-image animation. */
+.ptypes-banner-track--reverse {
+  animation-direction: reverse;
+}
+
+@keyframes ptypesBannerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-1 * var(--ptypes-period, 820px))); }
+}
+
+.ptypes-banner-svg {
+  position: absolute;
+  top: 0;
+  /* Lines the SVG's viewBox origin (min-x = -PERIOD, set in the
+     component) up with this track's own left edge — see the component's
+     doc comment for the coordinate-space reasoning. Without this offset
+     the geometry's negative-x portion would just be clipped by the SVG's
+     own default viewport instead of scrolling in from off-screen. */
+  left: calc(-1 * var(--ptypes-period, 820px));
+  display: block;
+  /* The outermost <svg> element clips to its own viewBox by default
+     (UA stylesheet sets overflow:hidden on it, independent of anything
+     set on ancestors) — .ptypes-banner-ribbon-slot's own clip-path above
+     doesn't reach through that. This override is what actually lets the
+     wave/push swing past the svg's own height without being cut off. */
+  overflow: visible;
+  /* Hover enlarge — a plain CSS scale, independent of the track's own
+     animated translateX (a separate element, so no transform conflict)
+     and independent of the JS-driven push (that only ever touches the
+     path's `d`, never this element's transform). */
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ptypes-banner-track:hover .ptypes-banner-svg {
+  transform: scale(1.08);
+}
+
+/* KAIL lime — a distinct, brighter/paler shade from the site's existing
+   --lime variable (used elsewhere for UI accents), specifically the shade
+   requested for this banner. Scoped to this component rather than
+   overloading the existing token. */
+.ptypes-banner-ribbon {
+  stroke: #e0f87d;
+}
+
+.ptypes-banner-text {
+  fill: #333333;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: var(--ptypes-banner-font, 34px);
 }
 
 /* The "frame" all cards share — sized/centred once here rather than on
@@ -2230,36 +2456,102 @@ body {
    plenty of aurora shows around the edges. */
 .ptypes-stage {
   position: relative;
-  width: min(760px, calc(100% - clamp(32px, 8vw, 80px)));
-  height: min(440px, calc(100% - clamp(60px, 12vh, 140px)));
+  width: min(640px, calc(100% - clamp(32px, 8vw, 80px)));
+  /* Percentage heights through flexbox-in-sticky are a notoriously
+     fragile chain across Chrome versions, so this anchors directly to
+     `dvh` instead (matching .hero-intro-orbit's fix above) — capped
+     against the *real* available height rather than trusting an indirect
+     percentage to carry it through correctly. The plain `vh` line is just
+     a fallback for browsers without dvh support.
+
+     Floor and ceiling were raised well beyond the old 280–520px range —
+     cards are now a tall photo-on-top/text-below shape rather than a
+     short text+square-thumbnail row, so they need substantially more
+     height for the photo to actually read as "prominent" rather than a
+     sliver. Still bounded by the real viewport (the min() clause) so a
+     short screen never forces a card taller than what's actually visible
+     — same reasoning as the old range, just scaled up for the new shape. */
+  height: clamp(460px, min(720px, calc(100vh - var(--header-h) - 40px)), 720px);
+  height: clamp(460px, min(720px, calc(100dvh - var(--header-h) - 40px)), 720px);
 }
 
 .ptypes-card {
   position: absolute;
   inset: 0;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(18px, 3vw, 32px);
-  padding: clamp(22px, 3vw, 36px);
+  flex-direction: column;
   border-radius: clamp(20px, 2.4vw, 32px);
-  border: 1.5px solid rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(36px) saturate(1.7);
-  -webkit-backdrop-filter: blur(36px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  /* Soft glass wash on the outer frame itself now, not just the panel —
+     the sliver of frame visible around the floating .ptypes-content tile
+     below (see its own comment) reads as part of one cohesive glass card
+     instead of a bare gap. */
+  background: rgba(255, 255, 255, 0.12);
+  /* Spread pinned to 2px (was 0/unset, relying on the 80px blur alone,
+     which read as too diffuse/"spread out" across the fanned stack). */
   box-shadow:
-    0 30px 80px rgba(50, 40, 120, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    0 30px 80px 2px rgba(50, 40, 120, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
   will-change: transform, opacity;
   overflow: hidden;
 }
 
-.ptypes-content {
+/* Top region — the full picture, uncropped by any overlay. flex:1 so it
+   claims all the height .ptypes-content (below) doesn't need, which is
+   the whole point: a taller card now means more visible photo, not a
+   bigger overlay. Rounded on its own (not just relying on the outer
+   card's clip) since the floating panel below no longer sits flush against
+   it — its bottom corners are genuinely visible now, not tucked under
+   another element. Still doubles as the placeholder-glyph container for
+   any panel without real art yet (IMAGE_ICON, centred). */
+.ptypes-image-slot {
+  position: relative;
   flex: 1 1 auto;
-  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: clamp(16px, 2vw, 26px);
+  background: rgba(255, 255, 255, 0.30);
+  color: rgba(90, 70, 160, 0.42);
+  overflow: hidden;
+}
+.ptypes-image-slot-icon svg {
+  width: clamp(28px, 3.4vw, 40px);
+  height: clamp(28px, 3.4vw, 40px);
+}
+.ptypes-image-slot-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+}
+
+/* Bottom region — a floating glass tile below the photo (NOT laid over
+   it), inset from the card's own edges with a visible gap rather than
+   flush/full-width. That gap + its own rounded corners, border and shadow
+   is what actually reads as "glassmorphism" (a distinct frosted panel)
+   instead of the flat, edge-to-edge bar this used to be — a hard
+   full-width strip with just a top border reads more like a plain toolbar
+   than a glass surface. Sized to its own text content via flex:0 0 auto. */
+.ptypes-content {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: clamp(8px, 1.2vw, 14px);
+  margin: clamp(10px, 1.6vw, 16px) clamp(12px, 2.4vw, 20px) clamp(12px, 2.4vw, 20px);
+  padding: clamp(18px, 2.6vw, 28px);
+  border-radius: clamp(14px, 1.8vw, 22px);
+  background: rgba(255, 255, 255, 0.32);
+  backdrop-filter: blur(34px) saturate(1.8);
+  -webkit-backdrop-filter: blur(34px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 14px 38px rgba(40, 30, 90, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .ptypes-eyebrow-row {
@@ -2282,7 +2574,15 @@ body {
   font-size: clamp(1.3rem, 2.6vw, 1.9rem);
   line-height: 1.12;
   color: var(--text-dark);
-  max-width: 18ch;
+  /* Every category name here is long ("Web, Digital & UX Design",
+     "Packaging, Print & Physical Design", ...) — at the old 18ch cap
+     every single one wrapped to 2+ lines regardless of how much width was
+     actually available, which is what was really driving the card's
+     minimum height (and, on a short viewport, what was pushing past it
+     and getting clipped) — not the viewport itself. Widening this to 22ch
+     still wraps the longest names but shaves a line off most of them,
+     taking real pressure off the card's vertical space. */
+  max-width: 22ch;
 }
 
 .ptypes-tagline {
@@ -2292,49 +2592,37 @@ body {
   max-width: 34ch;
 }
 
-/* Placeholder image — same dashed-glass-box language used by the footer's
-   placeholder cards and the hero orbit's chips. */
-.ptypes-image-slot {
-  flex: 0 0 auto;
-  width: clamp(120px, 26%, 200px);
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: clamp(12px, 1.6vw, 18px);
-  background: rgba(255, 255, 255, 0.30);
-  border: 1.5px dashed rgba(90, 70, 160, 0.32);
-  color: rgba(90, 70, 160, 0.42);
-}
-.ptypes-image-slot-icon svg {
-  width: clamp(20px, 2.4vw, 28px);
-  height: clamp(20px, 2.4vw, 28px);
-}
-
 /* Below this width (matching the site's main .site-split collapse
-   breakpoint), the pin + overlapping-deck + scroll-reveal mechanic stays
-   ON — only the stage/card sizing shrinks and each card's own content
-   switches from a row (text | image) to a column (text above image) so it
-   fits a narrow viewport. The sticky pin, absolute stacking, and JS-driven
-   x/y/rotate/opacity/scale are untouched here (PortfolioTypes.jsx no
-   longer forces those to resting values on mobile). */
+   breakpoint), the pin + fanned-entrance mechanic stays ON — only the
+   stage sizing and the glass panel's own padding shrink for a narrow
+   viewport. The photo-on-top/panel-below layout (see .ptypes-image-slot/
+   .ptypes-content above) needs no row/column flip here — it already
+   stacks vertically within each card at any width. The sticky pin,
+   absolute stacking, and JS-driven x/y/rotate/opacity/scale are untouched
+   here (PortfolioTypes.jsx only tightens the resting fan offsets for
+   mobile, in JS). */
 @media (max-width: 900px) {
   .ptypes-sticky {
     padding-top: calc(var(--header-h) + clamp(8px, 3vw, 20px));
   }
   .ptypes-stage {
-    width: min(340px, calc(100% - 40px));
-    height: min(430px, calc(100% - clamp(40px, 10vh, 90px)));
+    width: min(320px, calc(100% - 40px));
+    /* Same dvh-anchored fix as the desktop rule above, mirroring this
+       breakpoint's own taller padding-top (header + clamp(8-20px)). Raised
+       well past the old 300–460px range for the same reason as desktop —
+       the photo now needs real room above the text panel to read as
+       prominent rather than a sliver, still capped against the real
+       visible viewport via the min() clause. */
+    height: clamp(440px, min(640px, calc(100vh - var(--header-h) - clamp(8px, 3vw, 20px) - 30px)), 640px);
+    height: clamp(440px, min(640px, calc(100dvh - var(--header-h) - clamp(8px, 3vw, 20px) - 30px)), 640px);
   }
-  .ptypes-card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: clamp(18px, 5vw, 26px);
-    gap: clamp(12px, 3vw, 18px);
+  .ptypes-content {
+    margin: clamp(8px, 2.4vw, 12px) clamp(10px, 3vw, 14px) clamp(10px, 3vw, 14px);
+    padding: clamp(16px, 5vw, 24px);
+    gap: clamp(6px, 2vw, 10px);
   }
-  .ptypes-image-slot {
-    width: 100%;
-    height: clamp(90px, 24vw, 140px);
+  .ptypes-banner-ribbon-slot {
+    height: clamp(78px, 20vw, 120px);
   }
 }
 
@@ -2478,6 +2766,21 @@ body {
   .video-btn svg         { width: 16px; height: 16px; }
   .video-progress-wrap   { bottom: 32px; width: min(320px, 80%); padding: 8px 14px; }
   .video-progress-thumb  { width: 10px; height: 10px; }
+
+  /* .footer-card-stack (below) is pinned to deliberately protrude above
+     the footer's own top edge — by design on every breakpoint (see its
+     own comment). Its `top` offset clamps to a MINIMUM of 102px of
+     protrusion on any mobile-width viewport (clamp(-187px, -13.6vw,
+     -102px) — the scale-down media queries on the stack itself only
+     shrink the cards visually, they don't reduce this offset, since
+     their transform-origin is the top-right corner the offset is
+     measured from). .site-footer's own desktop margin-top (12px) plus
+     this section's own reduced mobile padding-bottom (48px, just above)
+     isn't enough clearance for that — the stack ends up overlapping the
+     video element itself. Extra margin here pushes the footer (and so
+     the whole stack) down far enough that the protrusion clears the
+     video component with room to spare, on every mobile width. */
+  .site-footer { margin-top: 100px; }
 }
 
 /* ── Fullscreen mode ────────────────────────────────────────────────── */
@@ -2582,10 +2885,10 @@ body {
    and not worth fighting for GPU compositing). ── */
 .footer-card-stack {
   position: absolute;
-  top: clamp(-110px, -8vw, -60px);
+  top: clamp(-187px, -13.6vw, -102px);
   right: clamp(20px, 4vw, 56px);
-  width: 380px;
-  height: 260px;
+  width: 646px;
+  height: 442px;
   z-index: 6;
   pointer-events: none;   /* only the cards themselves (and their contents) should catch input */
 }
@@ -2607,14 +2910,14 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 148px;
-  height: 210px;
+  width: 252px;
+  height: 357px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 18px 15px 16px;
-  border-radius: 20px;
+  gap: 20px;
+  padding: 31px 26px 27px;
+  border-radius: 34px;
   text-align: center;
   transform-origin: 50% 50%;
   pointer-events: auto;
@@ -2639,13 +2942,15 @@ body {
 
 .footer-card-title {
   font-family: 'Raleway', sans-serif;
-  font-weight: 500;
-  font-size: 0.78rem;
+  font-weight: 300;
+  font-size: 1.33rem;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  color: #333333;
 }
 
-/* Placeholder glyph — dashed glass slot standing in for real artwork/icon.
+/* Placeholder glyph — dashed glass slot standing in for real artwork/icon,
+   still used as a fallback for any card without an `image` in CARDS.
    Fills the remaining height of the card (flex: 1) so the card reads as a
    poster/board with a title caption and a large art area, rather than a
    small icon with padding around it. */
@@ -2656,29 +2961,44 @@ body {
   flex: 1;
   width: 100%;
   min-height: 0;
-  border-radius: 14px;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.06);
   border: 1.5px dashed rgba(255, 255, 255, 0.28);
   color: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
 }
 .footer-card-glyph svg {
-  width: 22px;
-  height: 22px;
+  width: 37px;
+  height: 37px;
+}
+/* Real artwork (CardBody's `image`) — fills the slot edge to edge with no
+   frame at all, so the art reads as the card's own surface rather than a
+   bordered inset. */
+.footer-card-glyph:has(.footer-card-glyph-img) {
+  border: none;
+  background: transparent;
+}
+.footer-card-glyph-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
 }
 
 .footer-card-row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 12px;
 }
 
 .footer-card-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
   background: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(12px) saturate(1.6);
   -webkit-backdrop-filter: blur(12px) saturate(1.6);
@@ -2697,12 +3017,12 @@ body {
 }
 
 .footer-card-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 24px;
+  height: 24px;
 }
 
 .footer-card-btn-mono {
-  font-size: 10px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -2722,41 +3042,106 @@ body {
   transform: translateY(-2px) scale(1.08);
 }
 
-/* Below this width the stack collapses into a plain wrapped row (matches
-   Footer.jsx's useIsStackMobile breakpoint) — JS also flattens each card's
-   x/y/rotate to 0 and disables whileHover at this size, so this media
-   query just needs to take positioning back into normal flow (no more
-   protruding above the footer edge, which only makes sense in the
-   pinned-corner desktop layout) and reflow the reveal wrapper accordingly.
-   The scroll-linked rise-in itself still runs — it's just a translateY on
-   an in-flow element instead of an absolutely-positioned one. ── */
+/* Below this width the stack keeps the exact same pinned-corner, protruding,
+   overlapping layout as desktop (matches Footer.jsx's useIsStackMobile
+   breakpoint, which just drops the hover choreography at this size) — it's
+   simply scaled down as a whole so it keeps fitting comfortably within
+   narrower viewports. `scale` is used rather than shrinking width/height/
+   font-sizes individually so every card, offset and rotation stays in the
+   same proportion as desktop with a single knob per breakpoint. Origin is
+   top-right to match where the stack is pinned. */
 @media (max-width: 820px) {
   .footer-card-stack {
-    position: static;
-    width: auto;
-    height: auto;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 14px;
-    padding: 4px clamp(20px, 6vw, 40px) 28px;
+    transform: scale(0.82);
+    transform-origin: top right;
   }
-  .footer-card-reveal {
-    position: static;
-    inset: auto;
+}
+@media (max-width: 600px) {
+  .footer-card-stack {
+    transform: scale(0.64);
   }
-  .footer-stack-card {
-    position: static;
-    width: 150px;
-    height: 196px;
+}
+@media (max-width: 420px) {
+  .footer-card-stack {
+    transform: scale(0.52);
   }
 }
 
-/* Stack is back in normal flow below 700px, so it already pushes the
-   wordmark down on its own — the reserved-space margin above is only
-   needed for the pinned-corner desktop layout. */
-@media (max-width: 820px) {
-  .footer-wordmark-wrap { margin-top: 0; }
+/* ── Mobile tap-to-expand overlay ─────────────────────────────────────
+   The scaled-down mobile stack (see above) is legible but small — tapping
+   a card reopens it here, full-size and centered, via a <body> portal (see
+   FooterCardExpanded in Footer.jsx). Sits well above everything else on
+   the page; backdrop click (or Escape, or the close button) dismisses it. */
+.footer-card-expand-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 8, 12, 0.64);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Overrides the base .footer-stack-card's absolute pinned-stack positioning
+   so it instead sits as a normal flex item, centered by the overlay above —
+   framer-motion's enter/exit transform (scale/translateY) layers cleanly on
+   top of that since it no longer has to double as the centering mechanism. */
+.footer-stack-card--expanded {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(78vw, 300px);
+  height: auto;
+  aspect-ratio: 148 / 210;
+  padding: 30px 24px 26px;
+  gap: 20px;
+  cursor: default;
+}
+.footer-stack-card--expanded .footer-card-title {
+  font-size: 1.05rem;
+  letter-spacing: 0.05em;
+}
+.footer-stack-card--expanded .footer-card-glyph svg {
+  width: 34px;
+  height: 34px;
+}
+.footer-stack-card--expanded .footer-card-row {
+  gap: 12px;
+}
+.footer-stack-card--expanded .footer-card-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+.footer-stack-card--expanded .footer-card-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.footer-stack-card--expanded .footer-card-btn-mono {
+  font-size: 14px;
+}
+
+.footer-card-expand-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+.footer-card-expand-close svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ── Full-bleed logo graphic — back at the bottom of the footer.
@@ -3869,12 +4254,30 @@ body {
 .pdff-mfs {
   position: fixed;
   inset: 0;
+  /* `inset:0` alone sizes this against the fixed-position containing block,
+     which on mobile Safari/Chrome can be the *large* viewport (as if the
+     address bar were hidden) rather than what's actually visible — leaving
+     the bottom of the overlay (nav arrows, close button) tucked underneath
+     the browser's own toolbar when it's showing, which reads as "not
+     actually full screen". `dvh` tracks the real, currently-visible
+     viewport as that toolbar shows/hides, so it's set explicitly here as
+     the source of truth; the plain `vh` line first is just a fallback for
+     browsers without dvh support. */
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   z-index: 10500;
   background: #0b0a14;
   overflow: hidden;
   touch-action: pinch-zoom pan-x pan-y;
 }
-@media (min-width: 621px) {
+/* CSS-side safety net matching PDFFlipbook.jsx's useIsMobile (which checks
+   the LARGER of width/height, not just width, so this stays open through a
+   portrait→landscape rotation — the exact interaction its own "rotate your
+   device" hint asks for). Hide only once *either* dimension clears the same
+   960px phone/tablet cutoff the JS uses; a plain `min-width` alone would
+   hide this again the moment a wide phone landscape width crossed it. */
+@media (min-width: 961px), (min-height: 961px) {
   .pdff-mfs { display: none !important; }
 }
 
@@ -3906,12 +4309,20 @@ body {
   top: 50%;
   left: 50%;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   transform: translate(-50%, -50%);
 }
 @media (orientation: portrait) {
   .pdff-mfs-rotator {
+    /* Swapped for the 90° rotation below — this box's `width` becomes the
+       visual vertical extent post-rotation, so it's the one that needs to
+       track the dynamic (toolbar-aware) viewport height; `height` becomes
+       the visual horizontal extent, which mobile browsers don't resize as
+       chrome shows/hides, so plain `vw` is already accurate there. */
     width: 100vh;
+    width: 100dvh;
     height: 100vw;
     transform: translate(-50%, -50%) rotate(90deg);
   }
@@ -4646,13 +5057,41 @@ body {
   border-radius: 14px;
   overflow: hidden;
   height: 100%;
-  transition: flex-grow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Smooth, gentle-settle easing (matches the curve used elsewhere across
+     the site, e.g. App.jsx's page-fade and the footer card reveal) rather
+     than a generic ease — noticeably smoother for a size change this big. */
+  transition: flex-grow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              flex-basis 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   position: relative;
 }
 
 .img-gallery-item:hover {
   flex-grow: 4;
+}
+
+/* Tap-to-expand — same visual result as :hover above, but toggled via JS
+   (ImageGallery in ProjectDetail.jsx) so it also works on touch, where
+   :hover never fires. flex-basis (not just flex-grow) is bumped too: with
+   6 items in the row, plain flex-grow has nothing to redistribute once the
+   row is already tight (their resting sizes alone can use up nearly all of
+   a phone's width) — flex-grow is only honoured when there's *positive*
+   free space, and there wasn't any, which is why tapping visibly did
+   nothing before. Giving the active item an explicit larger basis, and
+   every other item (.img-gallery-item--collapsed below) an explicit
+   smaller one, guarantees real growth regardless of how little room the
+   row has, and keeps every item — active or not — inside the row instead
+   of pushing the later ones off the right edge. */
+.img-gallery-item--active {
+  flex-grow: 6;
+  flex-shrink: 0;
+  flex-basis: clamp(140px, 46vw, 320px);
+}
+
+.img-gallery-item--collapsed {
+  flex-grow: 0;
+  flex-basis: clamp(20px, 6vw, 40px);
+  min-width: 18px;
 }
 
 .img-gallery-item img {
@@ -4667,7 +5106,7 @@ body {
 
 @media (max-width: 767px) {
   .img-gallery-row { height: 260px; gap: 5px; }
-  .img-gallery-item { border-radius: 10px; flex-basis: 60px; min-width: 32px; }
+  .img-gallery-item { border-radius: 10px; flex-basis: 52px; min-width: 30px; }
 }
 
 .cs-gal-item {

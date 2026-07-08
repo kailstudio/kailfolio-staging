@@ -51,7 +51,7 @@ function CBSLogo({ size = 120 }) {
   const base = import.meta.env.BASE_URL
   return (
     <img
-      src={`${base}cbs/cbs-logo.png`}
+      src={`${base}cbs/cbs-logo.webp`}
       alt="Care-Based Safety logo"
       width={size}
       height={size}
@@ -501,8 +501,8 @@ const GALLERY_ITEMS = [
   { label: 'Brand Photography',    cls: 'wide', src: `${BASE}cbs/imagery/CBS1.jpg` },
   { label: 'Community in Action',  cls: 'std',  src: `${BASE}cbs/imagery/CBS2.jpg` },
   { label: 'People & Place',       cls: 'std',  src: `${BASE}cbs/imagery/CBS3.jpg` },
-  { label: 'Social Media Content', cls: 'std',  src: `${BASE}cbs/social/1.png` },
-  { label: 'Social Media Content', cls: 'std',  src: `${BASE}cbs/social/2.png` },
+  { label: 'Social Media Content', cls: 'std',  src: `${BASE}cbs/social/1.webp` },
+  { label: 'Social Media Content', cls: 'std',  src: `${BASE}cbs/social/2.webp` },
   { label: 'Illustration System',  cls: 'wide', src: `${BASE}cbs/illustrations/Illustration1.webp` },
   { label: 'Illustration Detail',  cls: 'std',  src: `${BASE}cbs/illustrations/Illustration2.webp` },
   { label: 'Campaign Graphics',    cls: 'std',  src: `${BASE}cbs/illustrations/Illustration3.webp` },
@@ -520,19 +520,41 @@ function GalImg({ src, label }) {
 }
 
 // ── Shared: Accordion image gallery ──────────────────────────────────
+// Desktop already gets the "one grows, the rest shrink to fit" accordion
+// via :hover (see .img-gallery-item:hover in styles.css) — but hover never
+// fires on touch, so on mobile every item just sat at its small resting
+// width with no way to open one up. `activeIndex` gives touch (and click,
+// generally) the same effect: tapping an item pins it open.
+//
+// Ordinary flex-shrink alone isn't enough to make that visible with 6
+// items on a phone-width row — their resting sizes already use up nearly
+// all the available width, so there's no free space left for the active
+// item to grow into. So every OTHER item also gets an explicit
+// `--collapsed` class while one is active, shrinking them well past their
+// resting size (see .img-gallery-item--collapsed in styles.css) — that's
+// what actually frees up the room the active item grows into, and is also
+// what keeps all six items fitting inside the row instead of pushing the
+// later ones off the right edge.
 function ImageGallery({ images, colors = [] }) {
+  const [activeIndex, setActiveIndex] = useState(null)
   if (!images || images.length === 0) return null
+  const hasActive = activeIndex !== null
   return (
     <div className="img-gallery-row">
-      {images.map((src, i) => (
-        <div
-          key={i}
-          className="img-gallery-item"
-          style={{ background: colors[i % colors.length] || 'transparent' }}
-        >
-          <img src={src} alt={`Illustration ${i + 1}`} loading="lazy" />
-        </div>
-      ))}
+      {images.map((src, i) => {
+        const isActive = activeIndex === i
+        const state = isActive ? ' img-gallery-item--active' : hasActive ? ' img-gallery-item--collapsed' : ''
+        return (
+          <div
+            key={i}
+            className={`img-gallery-item${state}`}
+            style={{ background: colors[i % colors.length] || 'transparent' }}
+            onClick={() => setActiveIndex((cur) => (cur === i ? null : i))}
+          >
+            <img src={src} alt={`Illustration ${i + 1}`} loading="lazy" />
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -841,11 +863,11 @@ function PhotoStack({ items, title, accentColor }) {
 
 // ── 10 Applications ──────────────────────────────────────────────────
 const CBS_STACK_ITEMS = [
-  { src: `${BASE}cbs/social/1.png`,      name: 'Social Campaign'     },
+  { src: `${BASE}cbs/social/1.webp`,      name: 'Social Campaign'     },
   { src: `${BASE}cbs/imagery/CBS4.jpg`,  name: 'Brand Photography'   },
-  { src: `${BASE}cbs/social/4.png`,      name: 'Digital Content'     },
+  { src: `${BASE}cbs/social/4.webp`,      name: 'Digital Content'     },
   { src: `${BASE}cbs/imagery/CBS6.jpg`,  name: 'Community'           },
-  { src: `${BASE}cbs/social/7.png`,      name: 'Campaign Materials'  },
+  { src: `${BASE}cbs/social/7.webp`,      name: 'Campaign Materials'  },
 ]
 
 function CSApplications() {
@@ -959,7 +981,7 @@ function PGMLogoImg({ size = 120 }) {
   const base = import.meta.env.BASE_URL
   return (
     <img
-      src={`${base}pgm/pgm-logo.png`}
+      src={`${base}pgm/pgm-logo.webp`}
       alt="PGM logo"
       width={size}
       height={size}
@@ -1293,8 +1315,8 @@ function PGMFlipbook() {
 
 // ── PGM 10 Applications ──────────────────────────────────────────────
 const PGM_STACK_ITEMS = [
-  { src: `${BASE}pgm/applications/mug.png`,              name: 'Brand Merchandise'   },
-  { src: `${BASE}pgm/applications/tote.png`,             name: 'Brand Collateral'    },
+  { src: `${BASE}pgm/applications/mug.webp`,              name: 'Brand Merchandise'   },
+  { src: `${BASE}pgm/applications/tote.webp`,             name: 'Brand Collateral'    },
   { src: `${BASE}pgm/illustrations/Illustration2.webp`,  name: 'Illustration System' },
   { src: `${BASE}pgm/illustrations/Illustration5.webp`,  name: 'Campaign Graphics'   },
   { src: `${BASE}pgm/illustrations/Illustration8.webp`,  name: 'Custom Icons'        },
@@ -1562,12 +1584,12 @@ function PkgLinks({ cs, cfg }) {
 
 const WOODCO_CFG = {
   accent: '#C8785A', dark: '#2E2218', light: '#FAF5EE',
-  heroSrc: `${BASE}woodco/woodco3.png`,
+  heroSrc: `${BASE}woodco/woodco3.webp`,
   heroLabel: 'WOODCO candle packaging — all 6 labels',
   images: [
-    { src: `${BASE}woodco/woodco1.png`, alt: 'Spiced Citrus, Spring Rain and Wild Garden lifestyle shot' },
-    { src: `${BASE}woodco/woodco2.png`, alt: 'Nightlight, Negroni and Waves lifestyle shot' },
-    { src: `${BASE}woodco/woodco3.png`, alt: 'All 6 WOODCO candle labels flat lay' },
+    { src: `${BASE}woodco/woodco1.webp`, alt: 'Spiced Citrus, Spring Rain and Wild Garden lifestyle shot' },
+    { src: `${BASE}woodco/woodco2.webp`, alt: 'Nightlight, Negroni and Waves lifestyle shot' },
+    { src: `${BASE}woodco/woodco3.webp`, alt: 'All 6 WOODCO candle labels flat lay' },
   ],
   galleryLayout: 'two-then-one',
   specs: [
@@ -1599,12 +1621,12 @@ const WOODCO_CFG = {
 
 const LTR_CFG = {
   accent: '#B86048', dark: '#2E1810', light: '#F5EDE0',
-  heroSrc: `${BASE}la-terra-rossa/laterrarossa3.png`,
+  heroSrc: `${BASE}la-terra-rossa/laterrarossa3.webp`,
   heroLabel: 'La Terra Rossa coffee packaging spread',
   images: [
-    { src: `${BASE}la-terra-rossa/laterrarossa1.png`, alt: 'La Terra Rossa Farewell Blend bags — mountain illustration' },
-    { src: `${BASE}la-terra-rossa/laterrarossa2.png`, alt: 'La Terra Rossa Farewell Blend bags — abstract illustration' },
-    { src: `${BASE}la-terra-rossa/laterrarossa3.png`, alt: 'La Terra Rossa full packaging spread' },
+    { src: `${BASE}la-terra-rossa/laterrarossa1.webp`, alt: 'La Terra Rossa Farewell Blend bags — mountain illustration' },
+    { src: `${BASE}la-terra-rossa/laterrarossa2.webp`, alt: 'La Terra Rossa Farewell Blend bags — abstract illustration' },
+    { src: `${BASE}la-terra-rossa/laterrarossa3.webp`, alt: 'La Terra Rossa full packaging spread' },
   ],
   galleryLayout: 'two-then-one',
   specs: [
@@ -1626,12 +1648,12 @@ const LTR_CFG = {
 
 const OC_CFG = {
   accent: '#B89060', dark: '#3C3028', light: '#F8F0E8',
-  heroSrc: `${BASE}oracle-cards/oracle1.png`,
+  heroSrc: `${BASE}oracle-cards/oracle1.webp`,
   heroLabel: 'Self Awakening Oracle Cards — card samples',
   images: [
-    { src: `${BASE}oracle-cards/oracle1.png`, alt: 'Oracle cards — Protection, Truthfulness, Acceptance, Healing' },
-    { src: `${BASE}oracle-cards/oracle2.png`, alt: 'Oracle cards — Perseverance, Balance, Resilience, Sorrow' },
-    { src: `${BASE}oracle-cards/oracle3.png`, alt: 'Oracle cards — Self-Awakening, Judgement, Frustration, Rituals' },
+    { src: `${BASE}oracle-cards/oracle1.webp`, alt: 'Oracle cards — Protection, Truthfulness, Acceptance, Healing' },
+    { src: `${BASE}oracle-cards/oracle2.webp`, alt: 'Oracle cards — Perseverance, Balance, Resilience, Sorrow' },
+    { src: `${BASE}oracle-cards/oracle3.webp`, alt: 'Oracle cards — Self-Awakening, Judgement, Frustration, Rituals' },
   ],
   galleryLayout: 'one-then-two',
   specs: [
@@ -1653,12 +1675,12 @@ const OC_CFG = {
 
 const SB_CFG = {
   accent: '#2A7070', dark: '#1A3838', light: '#EEF5F5',
-  heroSrc: `${BASE}signature-balm/southshorn1.png`,
+  heroSrc: `${BASE}signature-balm/southshorn1.webp`,
   heroLabel: 'Signature Balm piercing care tin packaging',
   images: [
-    { src: `${BASE}signature-balm/southshorn1.png`, alt: 'Signature Balm single tin — angled view' },
-    { src: `${BASE}signature-balm/southshorn2.png`, alt: 'Signature Balm — multiple tins' },
-    { src: `${BASE}signature-balm/southshorn3.png`, alt: 'Signature Balm tin — top view' },
+    { src: `${BASE}signature-balm/southshorn1.webp`, alt: 'Signature Balm single tin — angled view' },
+    { src: `${BASE}signature-balm/southshorn2.webp`, alt: 'Signature Balm — multiple tins' },
+    { src: `${BASE}signature-balm/southshorn3.webp`, alt: 'Signature Balm tin — top view' },
   ],
   galleryLayout: 'one-then-two',
   specs: [

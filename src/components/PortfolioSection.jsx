@@ -45,7 +45,7 @@ export const CATEGORIES = [
     ],
     slides: [
       {
-        id: 1, bg: '#C4B8F0', img: 'projects/cbs.png', label: 'Care-Based Safety',
+        id: 1, bg: '#C4B8F0', img: 'projects/cbs.webp', label: 'Care-Based Safety',
         tags: ['Brand Strategy', 'Visual Identity', 'Tone of Voice'],
         caseStudy: {
           subtitle: 'Brand Strategy · Visual Identity · Tone of Voice',
@@ -122,7 +122,7 @@ export const CATEGORIES = [
         },
       },
       {
-        id: 2, bg: '#2C365E', img: 'projects/pgm.png', label: 'PGM',
+        id: 2, bg: '#2C365E', img: 'projects/pgm.webp', label: 'PGM',
         tags: ['Brand Strategy', 'Community Design', 'Visual Identity'],
         caseStudy: {
           subtitle: 'Brand Strategy · Visual Identity · Community Voice',
@@ -551,8 +551,6 @@ export default function PortfolioSection({ onProjectOpen }) {
 
   return (
     <section className="pf-section" id="work">
-
-      <div className="pf-glass-lip" aria-hidden="true" />
 
       <div className="pf-inner">
         <div className="pf-left">

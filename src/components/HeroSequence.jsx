@@ -14,7 +14,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
-import { PANEL_COUNT } from './PortfolioTypes.jsx'
 
 // ── Frame config ─────────────────────────────────────────────────────
 const FRAME_COUNT  = 121
@@ -100,30 +99,37 @@ export default function HeroSequence() {
   const { scrollY } = useScroll()
   const [scrollRange, setScrollRange] = useState(MOBILE_SPACER)
 
-  // Don't start the character animation until a target PortfolioTypes card
-  // starts arriving on screen — i.e. once the PREVIOUS card begins its exit
-  // and the target one peeks out from behind it. PortfolioTypes.jsx pins
-  // the whole deck over .ptypes-section (height = PANEL_COUNT × 100vh) and
-  // slices that pinned scroll range into (PANEL_COUNT − 1) equal exit
-  // windows, one per card transition; window i spans deck-progress
-  // [i/(N-1), (i+1)/(N-1)]. Card k's window starts at (k-1)/(N-1) — that's
-  // the moment card k begins to show. Converting that deck-progress
-  // fraction to an absolute scrollY offset: sectionTop + fraction ×
-  // (sectionHeight − viewportHeight), since the pinned scroll range covers
-  // exactly (sectionHeight − viewportHeight) px for a sticky
-  // ['start start','end end'] target. Reading .ptypes-section directly
-  // (not summing whatever precedes it) keeps this correct no matter what
-  // gets added/reordered above it later — height-summing broke twice in a
-  // row the other way for earlier versions of this same offset.
+  // Don't start the character animation until a scroll-trigger point is
+  // reached — different one per breakpoint.
   //
-  // Target card differs by breakpoint: desktop waits for the LAST card
-  // (index PANEL_COUNT-1, "web") so the animation plays alongside the
-  // portfolio links section as before. Mobile starts much earlier — as
-  // soon as the SECOND card (index 1, "brand strategy") arrives — so the
-  // character is already animating, low z-index, in the background well
-  // before the portfolio links appear (.hero-char-track's mobile z-index
-  // of 0 keeps it behind .ptypes-section's z:1 and .site-split's z:2/4,
-  // so it only ever reads as a background layer, never covering content).
+  // Mobile: as soon as a target PortfolioTypes card starts arriving on
+  // screen — i.e. once the PREVIOUS card begins its exit and the target one
+  // peeks out from behind it. PortfolioTypes.jsx pins the whole deck over
+  // .ptypes-section (height = PANEL_COUNT × 100vh) and slices that pinned
+  // scroll range into (PANEL_COUNT − 1) equal exit windows, one per card
+  // transition; window i spans deck-progress [i/(N-1), (i+1)/(N-1)]. Card
+  // k's window starts at (k-1)/(N-1) — that's the moment card k begins to
+  // show. Converting that deck-progress fraction to an absolute scrollY
+  // offset: sectionTop + fraction × (sectionHeight − viewportHeight), since
+  // the pinned scroll range covers exactly (sectionHeight − viewportHeight)
+  // px for a sticky ['start start','end end'] target. Reading
+  // .ptypes-section directly (not summing whatever precedes it) keeps this
+  // correct no matter what gets added/reordered above it later —
+  // height-summing broke twice in a row the other way for earlier versions
+  // of this same offset. Mobile targets the SECOND card (index 1, "brand
+  // strategy") — the character is already animating, low z-index, in the
+  // background well before the portfolio links appear (.hero-char-track's
+  // mobile z-index of 0 keeps it behind .ptypes-section's z:1 and
+  // .site-split's z:2/4, so it only ever reads as a background layer, never
+  // covering content).
+  //
+  // Desktop: the moment the "From spark to screen…" headline (.pf-rotate-line,
+  // in PortfolioSection further down the page) reaches the screen while
+  // scrolling — later than the old PortfolioTypes-deck trigger, so the
+  // character now starts alongside that headline rather than mid-deck.
+  // "Reaches the screen" = the instant its top edge crosses into the
+  // viewport from the bottom, converted to an absolute scrollY by
+  // subtracting the viewport height from its page position.
   const [charStartOffset, setCharStartOffset] = useState(0)
 
   useEffect(() => {
@@ -131,14 +137,22 @@ export default function HeroSequence() {
       const mobile = window.innerWidth <= MOBILE_BREAKPT
       setIsMobile(mobile)
 
-      const ptypesEl = document.querySelector('.ptypes-section')
       let offset = 0
-      if (ptypesEl) {
-        const sectionTop   = ptypesEl.getBoundingClientRect().top + window.scrollY
-        const pinRange      = Math.max(ptypesEl.offsetHeight - window.innerHeight, 0)
-        const targetCard    = mobile ? 1 : PANEL_COUNT - 1
-        const targetFrac    = PANEL_COUNT > 1 ? (targetCard - 1) / (PANEL_COUNT - 1) : 0
-        offset = sectionTop + pinRange * targetFrac
+      if (mobile) {
+        // Card index 1's window starts at (1-1)/(N-1) = 0 in the deck-
+        // progress formula described above, i.e. right as .ptypes-section
+        // itself reaches the top of the viewport — so this is just that
+        // section's own page offset, no pinRange/fraction math needed.
+        const ptypesEl = document.querySelector('.ptypes-section')
+        if (ptypesEl) {
+          offset = ptypesEl.getBoundingClientRect().top + window.scrollY
+        }
+      } else {
+        const headlineEl = document.querySelector('.pf-rotate-line')
+        if (headlineEl) {
+          const headlineTop = headlineEl.getBoundingClientRect().top + window.scrollY
+          offset = Math.max(headlineTop - window.innerHeight, 0)
+        }
       }
       setCharStartOffset(offset)
 
