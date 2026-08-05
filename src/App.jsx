@@ -19,6 +19,19 @@ export default function App() {
   const handleReady      = useCallback(() => setSiteReady(true),    [])
   const handleLoaderDone = useCallback(() => setLoaderExited(true), [])
 
+  // Fire a GA4 event every time a project detail panel is opened so you can
+  // see click counts per project in Analytics → Events → project_open.
+  const openProject = useCallback((cat, slide) => {
+    setDetailProject({ cat, slide })
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'project_open', {
+        project_name:     slide.label,
+        project_category: cat.id,
+        project_id:       slide.id,
+      })
+    }
+  }, [])
+
   const ease = [0.16, 1, 0.3, 1]
 
   // ── Lenis smooth scroll ────────────────────────────────────────────
@@ -113,7 +126,7 @@ export default function App() {
       <div className="app-bg" aria-hidden="true" />
 
       {/* Fixed glass header */}
-      <SiteHeader onProjectOpen={(cat, slide) => setDetailProject({ cat, slide })} />
+      <SiteHeader onProjectOpen={openProject} />
 
       {/* Hero — first thing shown once the loader exits. Always mounted
           (like .site-split below) rather than conditionally rendered, so
@@ -139,7 +152,7 @@ export default function App() {
         transition={{ duration: 0.72, ease }}
       >
         <div className="split-left">
-          <PortfolioSection onProjectOpen={(cat, slide) => setDetailProject({ cat, slide })} />
+          <PortfolioSection onProjectOpen={openProject} />
         </div>
         <div className="split-right" aria-hidden="true" />
       </motion.div>

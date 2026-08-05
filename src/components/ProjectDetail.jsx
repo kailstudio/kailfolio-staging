@@ -1780,7 +1780,7 @@ function SpurgeonsEDCaseStudyView({ cat, cs, slide }) {
         heroContent={<VimeoEmbed videoId="800539377" title="Spurgeons ED Awareness" />}
       />
 
-      <CSSection title="Previews" variant="dark">
+      <CSSection title="Snapshots" variant="dark">
         <div className="wl-grid-3">
           <Reveal delay={0.06}><WLMedia src={previews[0]} alt="Spurgeons preview 1" /></Reveal>
           <Reveal delay={0.12}><WLMedia src={previews[1]} alt="Spurgeons preview 2" /></Reveal>
@@ -1878,7 +1878,7 @@ function YouTubeEmbed({ videoId, title }) {
 
 function VimeoEmbed({ videoId, title }) {
   return (
-    <div className="yt-embed-wrap">
+    <div className="yt-embed-wrap yt-embed-wrap--vimeo">
       <iframe
         src={`https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
         title={title || 'Project video'}
@@ -1920,10 +1920,10 @@ function MotionHero({ cs, slide, cfg }) {
   )
 }
 
-function MotionVideo({ slide, cfg }) {
+function MotionVideo({ slide, cfg, title = 'The Work' }) {
   const youtube = cfg.youtube ?? slide.caseStudy?.youtube
   return (
-    <CSSection title="The Work" variant="dark">
+    <CSSection title={title} variant="dark">
       <Reveal delay={0.08}>
         <YouTubeEmbed videoId={youtube} title={slide.label} />
       </Reveal>
@@ -1979,9 +1979,56 @@ function MotionStats({ cfg }) {
 
 // ── Per-project configs ───────────────────────────────────────────────
 
+const BASE_CHARS = import.meta.env.BASE_URL
+
+const STUDIO_INTRO_CHARACTERS = [
+  {
+    name: 'Kiko',
+    img: `${BASE_CHARS}studio-intro/kiko.jpg`,
+    bio: 'A curious dreamer at the beginning of something new. Full of ideas but unsure where to begin, Kiko carries the spark and looks for guidance to shape it into something real.',
+  },
+  {
+    name: 'Poppy',
+    img: `${BASE_CHARS}studio-intro/poppy.jpg`,
+    bio: 'A quiet and intuitive presence who stays close without asking for attention. Poppy senses what is missing and brings balance to every idea, adding the final touch that makes things feel complete.',
+  },
+  {
+    name: 'Ila',
+    img: `${BASE_CHARS}studio-intro/ila.jpg`,
+    bio: 'Always by Ika\'s side — a small and curious wanderer who notices what others overlook. Ily explores gently and gathers details that bring depth, care, and meaning to each idea.',
+  },
+  {
+    name: 'Doti',
+    img: `${BASE_CHARS}studio-intro/doty.jpg`,
+    bio: 'Doti may not always understand the plan, but their warmth and unwavering support makes them impossible not to love. Always there, nodding along and listening, cheerful and steady when it matters.',
+  },
+  {
+    name: 'Ika',
+    img: `${BASE_CHARS}studio-intro/ika.jpg`,
+    bio: 'A bright spark that appears at just the right moment. Ika helps organise scattered thoughts and guides ideas into form, turning imagination into something tangible.',
+  },
+  {
+    name: 'Bexley',
+    img: `${BASE_CHARS}studio-intro/bexley.jpg`,
+    bio: 'Composed, exacting, and not easily impressed. Bexley holds a high standard and expects work to be thoughtful, refined, and considered. Their approval is hard to earn — but when it comes, it truly means something.',
+  },
+]
+
+const STUDIO_INTRO_PALETTE = [
+  { hex: '#335CFF', name: 'Cobalt'  },
+  { hex: '#FFFFFF', name: 'White'   },
+  { hex: '#333333', name: 'Dark'    },
+  { hex: '#E0F87D', name: 'Lime'    },
+  { hex: '#D4C7FF', name: 'Lilac'   },
+]
+
+const STUDIO_INTRO_MEDIA = {
+  previews: [1, 2, 3].map(n => `${BASE}studio-intro/studio-intro-preview${n}.webm`),
+}
+
 const STUDIO_INTRO_CFG = {
   accent: '#335CFF', dark: '#333333',
-  youtube: 'placeholder',
+  youtube: '-kHVMfDEKjo',
   specs: [
     { label: 'Year',    value: '2026' },
     { label: 'Type',    value: 'Studio Rebrand' },
@@ -2082,10 +2129,65 @@ const BLOOM_CFG = {
 // ── Per-project view functions ────────────────────────────────────────
 
 function StudioIntroCaseStudyView({ cat, cs, slide }) {
+  const accent = STUDIO_INTRO_CFG.accent
+  const { previews } = STUDIO_INTRO_MEDIA
   return (
     <div className="cs-wrap pkg-case-study">
       <MotionHero cs={cs} slide={slide} cfg={STUDIO_INTRO_CFG} />
       <MotionVideo slide={slide} cfg={STUDIO_INTRO_CFG} />
+
+      {/* Preview clips — all three on one line */}
+      <CSSection title="Snapshots">
+        <div className="wl-grid-3">
+          {previews.map((src, i) => (
+            <Reveal key={i} delay={i * 0.08}>
+              <WLMedia src={src} />
+            </Reveal>
+          ))}
+        </div>
+      </CSSection>
+
+      {/* Palette */}
+      <CSSection title="Brand Palette">
+        <Reveal>
+          <div className="cs-palette-row">
+            {STUDIO_INTRO_PALETTE.map((swatch) => (
+              <div key={swatch.hex} className="cs-palette-swatch">
+                <div
+                  className="cs-palette-chip"
+                  style={{
+                    background: swatch.hex,
+                    border: swatch.hex === '#FFFFFF' ? '1px solid rgba(0,0,0,0.1)' : 'none',
+                  }}
+                />
+                <span className="cs-palette-hex">{swatch.hex}</span>
+                <span className="cs-palette-name">{swatch.name}</span>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </CSSection>
+
+      {/* Characters */}
+      <CSSection title="Meet the Characters">
+        <div className="si-characters-grid">
+          {STUDIO_INTRO_CHARACTERS.map((char, i) => (
+            <Reveal key={char.name} delay={i * 0.06}>
+              <div className="si-character-card">
+                <div className="si-character-avatar">
+                  {char.img
+                    ? <img src={char.img} alt={char.name} className="si-character-avatar-img" draggable={false} />
+                    : <span className="si-character-avatar-initial" style={{ color: accent }}>{char.name[0]}</span>
+                  }
+                </div>
+                <h3 className="si-character-name" style={{ color: accent }}>{char.name}</h3>
+                <p className="si-character-bio">{char.bio}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </CSSection>
+
       <MotionOverview cs={cs} cfg={STUDIO_INTRO_CFG} />
       <MotionStats cfg={STUDIO_INTRO_CFG} />
       <CSCTA cat={cat} />
@@ -2105,7 +2207,7 @@ function GeometricCaseStudyView({ cat, cs, slide }) {
       <MotionOverview cs={cs} cfg={GEOMETRIC_CFG} />
 
       {/* Previews */}
-      <CSSection title="Previews" variant="dark">
+      <CSSection title="Snapshots" variant="dark">
         <div className="wl-grid-2">
           <Reveal delay={0.06}><WLMedia src={previews[0]} alt="Geometric preview 1" /></Reveal>
           <Reveal delay={0.14}><WLMedia src={previews[1]} alt="Geometric preview 2" /></Reveal>
