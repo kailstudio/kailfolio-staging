@@ -70,8 +70,19 @@
 
 /* ─── Hide scrollbars (all browsers) ────────────────────────────── */
 /* Scrolling remains fully functional via wheel, trackpad, touch, keyboard */
+/* Lenis smooth scroll — disable native smooth so Lenis has full control */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto; /* Lenis handles smoothing */
   scroll-padding-top: var(--header-h);
   scrollbar-width: none;       /* Firefox */
   -ms-overflow-style: none;    /* IE / Edge legacy */
@@ -114,7 +125,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 200;
   height: var(--header-h);
   background: rgba(18, 10, 60, 0.32);
   backdrop-filter: blur(28px) saturate(1.6);
@@ -124,7 +135,8 @@ body {
     0 4px 32px rgba(10, 5, 40, 0.18),
     inset 0 -1px 0 rgba(255, 255, 255, 0.10);
   pointer-events: auto;
-  overflow: hidden;   /* nothing escapes the bar */
+  /* overflow: visible so dropdown panels escape the bar */
+  overflow: visible;
 }
 
 .site-header-inner {
@@ -135,22 +147,206 @@ body {
   padding: 0 clamp(16px, 4vw, 52px);
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: space-between;
   min-width: 0;
+}
+
+/* Logo button wrapper — no button chrome, just clickable */
+.site-header-logo-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .site-header-logo {
   height: clamp(18px, 2.6vw, 28px);
   width: auto;
-  max-width: min(160px, calc(100vw - 40px));  /* never wider than the viewport */
+  max-width: min(160px, calc(100vw - 40px));
   display: block;
   flex-shrink: 0;
   opacity: 0.88;
   transition: opacity 0.2s ease;
 }
+.site-header-logo-btn:hover .site-header-logo { opacity: 1; }
 
-.site-header-logo:hover { opacity: 1; }
+/* ── Category nav ────────────────────────────────────────────────── */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.site-nav-item {
+  position: relative;
+}
+
+.site-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+  white-space: nowrap;
+}
+.site-nav-btn:hover,
+.site-nav-btn.is-active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.site-nav-btn.is-active .site-nav-chevron {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.site-nav-chevron {
+  width: 10px;
+  height: 6px;
+  opacity: 0.6;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
+  flex-shrink: 0;
+}
+
+/* ── Dropdown panel ──────────────────────────────────────────────── */
+.site-nav-dropdown {
+  position: absolute;
+  /* 4px gap — close enough to feel physically connected to the label */
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 260px;
+  width: max-content;
+  max-width: min(480px, calc(100vw - 32px));
+  /* Brand lime — semi-transparent so the page subtly bleeds through */
+  background: rgba(220, 244, 110, 0.60);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(180, 220, 70, 0.5);
+  border-radius: 20px;
+  box-shadow:
+    0 16px 48px rgba(40, 60, 0, 0.18),
+    0 4px 12px rgba(40, 60, 0, 0.1);
+  padding: 10px;
+  z-index: 300;
+}
+
+/* Small connecting pip — points back up at the nav label, making the
+   dropdown feel physically tethered rather than floating free. Scales
+   with the dropdown's own spring (it's part of the same element). */
+.site-nav-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 28px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 7px solid rgba(220, 244, 110, 0.60);
+}
+
+.site-nav-dropdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.site-nav-project {
+  display: block;
+  padding: 5px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 100%;
+}
+.site-nav-project:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.03);
+}
+
+.site-nav-project-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.site-nav-project-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Project name pill — lime-tinted glass overlay on the thumbnail */
+.site-nav-project-label {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.2;
+  text-align: center;
+  background: rgba(140, 190, 20, 0.32);
+  backdrop-filter: blur(14px) saturate(1.8);
+  -webkit-backdrop-filter: blur(14px) saturate(1.8);
+  border: 1px solid rgba(200, 240, 80, 0.30);
+  border-radius: 6px;
+  padding: 5px 8px;
+  box-shadow:
+    0 2px 8px rgba(5, 2, 30, 0.22),
+    inset 0 1px 0 rgba(220, 255, 120, 0.18);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.site-nav-project:hover .site-nav-project-label {
+  background: rgba(160, 210, 30, 0.46);
+  border-color: rgba(220, 255, 100, 0.45);
+}
+
+/* Coming-soon card — plain text tile, no thumbnail */
+.site-nav-project--soon {
+  cursor: default;
+}
+.site-nav-project--soon:hover {
+  background: transparent;
+  transform: none;
+}
+.site-nav-project--soon {
+  grid-column: 1 / -1;
+}
+.site-nav-project-soon-placeholder {
+  width: 100%;
+  aspect-ratio: 6 / 2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 10, 60, 0.18);
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.5);
+}
 
 /* ── Header responsive breakpoints ─────────────────────────────── */
 @media (max-width: 600px) {
@@ -158,13 +354,14 @@ body {
 
   .site-header-inner {
     padding: 0 16px;
-    justify-content: center;  /* logo centred on mobile, matching desktop */
   }
 
   .site-header-logo {
     height: clamp(16px, 5vw, 22px);
     max-width: calc(100vw - 32px);
   }
+
+  .site-nav { display: none; } /* hide nav on mobile — keep just logo */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -180,9 +377,6 @@ body {
 .site-split {
   display: grid;
   grid-template-columns: 70% 30%;
-  /* Must be taller than viewport + animation scroll distance so sticky items
-     never run out of grid area to stick within. */
-  min-height: calc(3000px + 100vh);
 }
 
 @media (max-width: 900px) {
@@ -192,25 +386,6 @@ body {
   }
 
   .split-right { display: none; }
-
-  /* Character animation — smaller on mobile, centred at bottom. Now starts
-     much earlier on mobile (as soon as PortfolioTypes' 2nd card arrives —
-     see HeroSequence.jsx), while .ptypes-section is still on screen, so
-     z-index:0 here matters more than before: it must stay below
-     .ptypes-section (z:1) and .site-split's .split-left/.pf-section
-     (z:2/4) so the animation only ever shows as a background layer behind
-     the cards and portfolio links, never covering their content. */
-  .hero-char-track {
-    left: 0;
-    right: 0;
-    justify-content: center;
-    padding-right: 0;
-    z-index: 0;
-  }
-
-  .hero-char-img {
-    width: 59vw;   /* 66vw × 0.9 = 10% smaller */
-  }
 
   /* Tighten glass panel padding */
   .hero-text-glass {
@@ -536,10 +711,23 @@ body {
 }
 
 .hero-intro-hint {
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.20em;
   text-transform: uppercase;
-  color: var(--text-mid);
+  color: rgba(210, 248, 100, 0.88);
+  background: rgba(120, 160, 20, 0.28);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  border: 1px solid rgba(200, 248, 80, 0.28);
+  border-radius: 999px;
+  padding: 7px 20px;
+  box-shadow:
+    0 0 20px rgba(140, 200, 40, 0.14),
+    inset 0 1px 0 rgba(220, 255, 120, 0.14);
 }
 
 @media (max-width: 640px) {
@@ -606,21 +794,16 @@ body {
  *   split-left        z:  2   portfolio column (transparent bg lets bubbles show)
  *   pf-section        z:  4   portfolio glass panel (backdrop-filter blurs bubbles)
  *   site-header       z:100   fixed nav header
- *   hero-char-track   z:9999  character animation
  *   pd-overlay        z:10000 project detail overlay
  *
  * Bubbles span x: 3 %–97 % so they appear on both sides of the screen.
- * overflow: hidden clips any orb that drifts beyond the viewport boundary
- * during parallax, preventing horizontal scrollbars on fixed-position children.
  */
 .hero-bubbles-panel {
-  opacity: 0; /* Framer Motion reveals when frameReady */
+  opacity: 0; /* Framer Motion reveals on mount */
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* overflow: visible (default) — position:fixed elements do not cause
-     document scroll, so no clip needed. Clipping was hiding edge bubbles. */
 }
 
 /* legacy — kept for class references that may still exist */
@@ -651,7 +834,6 @@ body {
     inset 0 -18px 36px rgba(120, 150, 255, 0.28),
     0 14px 48px rgba(80, 100, 210, 0.18),
     0 3px 10px rgba(100, 120, 240, 0.10);
-  backdrop-filter: blur(2px);
   animation: floatBubble linear infinite;
   will-change: transform;
 }
@@ -664,37 +846,6 @@ body {
   100% { transform: translateY(0px)   scale(1); }
 }
 
-/*
- * Character animation — bottom-pinned, anchored at left:70%.
- * justify-content:flex-end + padding-right:10vw places the image's
- * right edge at 90 vw — 10 vw of intentional negative space.
- * The animation sits confidently close to the browser edge while
- * still floating within its own breathing room.
- */
-.hero-char-track {
-  position: fixed;
-  bottom: 0;
-  left: 70%;
-  right: 0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  padding-right: 10vw;
-  z-index: 9999;
-  pointer-events: none;
-  overflow: visible;
-  opacity: 0; /* Framer Motion reveals when frameReady */
-}
-
-.hero-char-img {
-  /* right edge = 90 vw; fills ~80–95 vh depending on frame aspect ratio */
-  width: 55vw;
-  max-width: none;
-  height: auto;
-  display: block;
-  user-select: none;
-  -webkit-user-drag: none;
-}
 
 /* ═══════════════════════════════════════════════════════════════════
    PORTFOLIO SECTION  —  glassmorphic panel that rises over the hero
@@ -2453,23 +2604,12 @@ body {
    plenty of aurora shows around the edges. */
 .ptypes-stage {
   position: relative;
-  width: min(640px, calc(100% - clamp(32px, 8vw, 80px)));
-  /* Percentage heights through flexbox-in-sticky are a notoriously
-     fragile chain across Chrome versions, so this anchors directly to
-     `dvh` instead (matching .hero-intro-orbit's fix above) — capped
-     against the *real* available height rather than trusting an indirect
-     percentage to carry it through correctly. The plain `vh` line is just
-     a fallback for browsers without dvh support.
-
-     Floor and ceiling were raised well beyond the old 280–520px range —
-     cards are now a tall photo-on-top/text-below shape rather than a
-     short text+square-thumbnail row, so they need substantially more
-     height for the photo to actually read as "prominent" rather than a
-     sliver. Still bounded by the real viewport (the min() clause) so a
-     short screen never forces a card taller than what's actually visible
-     — same reasoning as the old range, just scaled up for the new shape. */
-  height: clamp(460px, min(720px, calc(100vh - var(--header-h) - 40px)), 720px);
-  height: clamp(460px, min(720px, calc(100dvh - var(--header-h) - 40px)), 720px);
+  /* Narrower card so the full width is always visible in the fan */
+  width: min(480px, calc(100% - clamp(48px, 10vw, 100px)));
+  /* Leave ~140px headroom so the fan's stackY offsets (up to 5×16=80px)
+     don't push any card below the sticky viewport boundary */
+  height: clamp(380px, min(560px, calc(100vh - var(--header-h) - 140px)), 560px);
+  height: clamp(380px, min(560px, calc(100dvh - var(--header-h) - 140px)), 560px);
 }
 
 .ptypes-card {
@@ -2479,15 +2619,7 @@ body {
   flex-direction: column;
   border-radius: clamp(20px, 2.4vw, 32px);
   border: 1px solid rgba(255, 255, 255, 0.44);
-  /* Soft glass wash on the outer frame itself now, not just the panel —
-     the sliver of frame visible around the floating .ptypes-content tile
-     below (see its own comment) reads as part of one cohesive glass card
-     instead of a bare gap. Bumped up from 0.12 — against the light aurora
-     background these cards read as too washed-out/hard to read at the
-     old, near-transparent value; a bit more opacity plus a slightly
-     deeper shadow below gives the frame more visual weight and contrast
-     without losing the glass look. */
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(20, 12, 60, 0.4);
   /* Spread pinned to 2px (was 0/unset, relying on the 80px blur alone,
      which read as too diffuse/"spread out" across the fanned stack). */
   box-shadow:
@@ -2497,25 +2629,22 @@ body {
   overflow: hidden;
 }
 
-/* Top region — the full picture, uncropped by any overlay. flex:1 so it
-   claims all the height .ptypes-content (below) doesn't need, which is
-   the whole point: a taller card now means more visible photo, not a
-   bigger overlay. Rounded on its own (not just relying on the outer
-   card's clip) since the floating panel below no longer sits flush against
-   it — its bottom corners are genuinely visible now, not tucked under
-   another element. Still doubles as the placeholder-glyph container for
-   any panel without real art yet (IMAGE_ICON, centred). */
+/* Image slot — fills all card height above the label strip, full-bleed cover. */
 .ptypes-image-slot {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  background: rgba(20, 12, 60, 0.55);
+  color: rgba(90, 70, 160, 0.42);
+}
+
+.ptypes-image-slot-icon {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: clamp(16px, 2vw, 26px);
-  background: rgba(255, 255, 255, 0.6);
-  color: rgba(90, 70, 160, 0.42);
-  overflow: hidden;
 }
 .ptypes-image-slot-icon svg {
   width: clamp(28px, 3.4vw, 40px);
@@ -2527,114 +2656,48 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
   user-select: none;
 }
 
-/* Outro card's art (see PANEL_IMAGES.outro/PANEL_VIDEOS.outro in
-   PortfolioTypes.jsx) doesn't share the other cards' aspect ratio, so the
-   default edge-to-edge object-fit:cover was cropping into it. Sized down
-   to ~65% and switched to contain instead — no longer absolutely
-   positioned, so it drops out of the way of .ptypes-image-slot's own
-   flex centring (align-items/justify-content: center, set above) rather
-   than needing its own margin/centring math. */
-.ptypes-card--outro .ptypes-image-slot-img {
-  position: static;
-  inset: auto;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* Bottom region — a floating glass tile below the photo (NOT laid over
-   it), inset from the card's own edges with a visible gap rather than
-   flush/full-width. That gap + its own rounded corners, border and shadow
-   is what actually reads as "glassmorphism" (a distinct frosted panel)
-   instead of the flat, edge-to-edge bar this used to be — a hard
-   full-width strip with just a top border reads more like a plain toolbar
-   than a glass surface. Sized to its own text content via flex:0 0 auto. */
-.ptypes-content {
+/* Glass label strip — eyebrow + heading pinned to the bottom of the card */
+.ptypes-card-label {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.2vw, 14px);
-  margin: clamp(10px, 1.6vw, 16px) clamp(12px, 2.4vw, 20px) clamp(12px, 2.4vw, 20px);
-  padding: clamp(18px, 2.6vw, 28px);
-  border-radius: clamp(14px, 1.8vw, 22px);
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(34px) saturate(1.8);
-  -webkit-backdrop-filter: blur(34px) saturate(1.8);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    0 14px 38px rgba(30, 20, 70, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  gap: 4px;
+  padding: clamp(14px, 2vw, 20px) clamp(16px, 2.4vw, 24px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-.ptypes-eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.ptypes-eyebrow {
-  font-size: clamp(0.66rem, 0.9vw, 0.76rem);
+.ptypes-card-label-eyebrow {
+  font-size: clamp(0.62rem, 0.82vw, 0.72rem);
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-mid);
 }
 
-.ptypes-heading {
+.ptypes-card-label-name {
   font-family: 'Raleway', sans-serif;
   font-weight: 700;
-  font-size: clamp(1.3rem, 2.6vw, 1.9rem);
-  line-height: 1.12;
+  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+  line-height: 1.15;
   color: var(--text-dark);
-  /* Every category name here is long ("Web, Digital & UX Design",
-     "Packaging, Print & Physical Design", ...) — at the old 18ch cap
-     every single one wrapped to 2+ lines regardless of how much width was
-     actually available, which is what was really driving the card's
-     minimum height (and, on a short viewport, what was pushing past it
-     and getting clipped) — not the viewport itself. Widening this to 22ch
-     still wraps the longest names but shaves a line off most of them,
-     taking real pressure off the card's vertical space. */
-  max-width: 22ch;
+  margin: 0;
 }
 
-.ptypes-tagline {
-  font-size: clamp(0.85rem, 1.1vw, 0.98rem);
-  font-style: italic;
-  color: var(--text-mid);
-  max-width: 34ch;
+/* Outro/CTA card — lime label strip instead of white */
+.ptypes-card--outro {
+  background: rgba(20, 12, 60, 0.3);
 }
-
-/* Intro-card-only body paragraph (moved here from the portfolio links
-   section's old .pf-body-glass panel — see INTRO_PANEL in
-   PortfolioTypes.jsx). Sits below .ptypes-tagline in the same glass tile,
-   so it's styled plainer/smaller than .pf-body used to be — this card
-   already carries an eyebrow, heading and italic tagline above it. */
-.ptypes-body {
-  font-family: 'Raleway', sans-serif;
-  font-size: clamp(0.8rem, 1vw, 0.9rem);
-  font-weight: 400;
-  color: var(--text-mid);
-  line-height: 1.65;
-  max-width: 40ch;
-}
-
-/* Outro/CTA card — closes the deck out with a lime-green "go see the
-   work" card, same full-bleed photo/video treatment as every other card
-   (see PANEL_IMAGES.outro/PANEL_VIDEOS.outro in PortfolioTypes.jsx) plus
-   a button below instead of just a tagline. Frame + content tile swap the
-   shared white glass for a lime tint — the site's actual brand lime
-   (#e0f87d, same paler "KAIL lime" the PTypesBanner ribbon uses), not the
-   more saturated --lime UI-accent token, which read as too bright/toxic a
-   green here. The image slot itself is deliberately left off this list —
-   the photo/video should render at its own natural colours like every
-   other card's, not tinted lime along with the frame around it. */
-.ptypes-card--outro,
-.ptypes-card--outro .ptypes-content {
-  background: rgba(224, 248, 125, 0.6);
+.ptypes-card--outro .ptypes-card-label {
+  background: rgba(224, 248, 125, 0.92);
+  border-top: 1px solid rgba(180, 220, 80, 0.5);
 }
 
 /* Outro card's "go look at the projects" button — a solid pill sitting in
@@ -2687,20 +2750,15 @@ body {
     padding-top: calc(var(--header-h) + clamp(8px, 3vw, 20px));
   }
   .ptypes-stage {
-    width: min(320px, calc(100% - 40px));
-    /* Same dvh-anchored fix as the desktop rule above, mirroring this
-       breakpoint's own taller padding-top (header + clamp(8-20px)). Raised
-       well past the old 300–460px range for the same reason as desktop —
-       the photo now needs real room above the text panel to read as
-       prominent rather than a sliver, still capped against the real
-       visible viewport via the min() clause. */
-    height: clamp(440px, min(640px, calc(100vh - var(--header-h) - clamp(8px, 3vw, 20px) - 30px)), 640px);
-    height: clamp(440px, min(640px, calc(100dvh - var(--header-h) - clamp(8px, 3vw, 20px) - 30px)), 640px);
+    width: min(280px, calc(100% - 40px));
+    /* Enough headroom for mobile fan offsets (5×9=45px) plus chrome UI */
+    height: clamp(340px, min(480px, calc(100dvh - var(--header-h) - 100px)), 480px);
   }
-  .ptypes-content {
-    margin: clamp(8px, 2.4vw, 12px) clamp(10px, 3vw, 14px) clamp(10px, 3vw, 14px);
-    padding: clamp(16px, 5vw, 24px);
-    gap: clamp(6px, 2vw, 10px);
+  .ptypes-card-label {
+    padding: clamp(12px, 4vw, 18px) clamp(14px, 5vw, 20px);
+  }
+  .ptypes-card-label-name {
+    font-size: clamp(1rem, 5vw, 1.4rem);
   }
   .ptypes-banner-ribbon-slot {
     height: clamp(78px, 20vw, 120px);
@@ -3581,6 +3639,127 @@ body {
 
 
 /* ═══════════════════════════════════════════════════════════════════
+   YouTube embed (yt-*)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Responsive 16:9 iframe container */
+/* ── Well Lab editorial media layout ── */
+.wl-media-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.05);
+  line-height: 0;
+}
+.wl-media-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.wl-full {
+  width: 100%;
+}
+.wl-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.wl-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.wl-grid-3:last-child { margin-bottom: 0; }
+.wl-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .wl-grid-2 { grid-template-columns: 1fr; }
+  .wl-grid-3 { grid-template-columns: 1fr; }
+  .wl-grid-4 { grid-template-columns: 1fr 1fr; }
+}
+
+.cs-palette-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cs-palette-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 100px;
+}
+.cs-palette-chip {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.cs-palette-hex {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #333333;
+  letter-spacing: 0.04em;
+}
+.cs-palette-name {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300;
+  font-size: 0.78rem;
+  color: rgba(51,51,51,0.6);
+}
+
+.yt-embed-wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #000;
+}
+.yt-embed-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+  display: block;
+}
+
+/* Placeholder shown when videoId is 'placeholder' or missing */
+.yt-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.yt-placeholder-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.55;
+}
+.yt-placeholder-play {
+  font-size: 2.5rem;
+  color: #fff;
+}
+.yt-placeholder-text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    ScrollExpandMedia (sem-*)
    ─ scroll-intercept intro section above the portfolio
    ═══════════════════════════════════════════════════════════════════ */
@@ -3919,11 +4098,13 @@ body {
 }
 .pkg-stat-value {
   font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-  font-weight: 800; line-height: 1;
+  font-weight: 700; line-height: 1;
+  font-family: 'Raleway', sans-serif;
 }
 .pkg-stat-label {
-  font-size: 0.72rem; font-weight: 600;
+  font-size: 0.72rem; font-weight: 300;
   letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: 'Raleway', sans-serif;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -5676,6 +5857,41 @@ body {
   transition: opacity 0.2s, transform 0.2s;
 }
 .cs-cta-btn:hover { opacity: 0.88; transform: scale(1.03); }
+
+.cs-cta-contacts {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cs-cta-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.07);
+  border: 1px solid rgba(0,0,0,0.10);
+  color: #332824;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.18s, transform 0.18s;
+}
+.cs-cta-contact-link:hover {
+  background: rgba(0,0,0,0.13);
+  transform: translateY(-2px);
+}
+.cs-cta-contact-icon {
+  display: flex;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.cs-cta-contact-icon svg { width: 100%; height: 100%; }
 
 /* ── PGM pill override ────────────────────────────────────────── */
 .pgm-pill {

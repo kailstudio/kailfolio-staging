@@ -211,11 +211,23 @@ export const CATEGORIES = [
     ],
     slides: [
       {
-        id: 1, bg: '#B8D4EC', label: 'Studio Intro',
-        tags: ['Motion Design', 'Brand Animation', 'Self-Promotion'],
+        id: 1, bg: '#B8D4EC', img: 'projects/studio-intro.webp', label: 'Studio Intro',
+        tags: ['Motion Design', '3D Animation', 'Studio Rebrand'],
+        caseStudy: {
+          subtitle: 'Motion Design · 3D Animation · Studio Rebrand',
+          year: '2026',
+          duration: 'Ongoing',
+          status: 'In Production',
+          sections: [
+            {
+              id: 'overview',
+              body: "Studio Intro marks the launch of the Studio KAIL 2026 rebrand, a complete visual refresh built around a new cast of 3D characters that embody the studio's identity, values, and creative direction.\n\nThe animation introduces these characters for the first time, following their journey through a world that reflects the studio's evolved visual language: dimensional, expressive, and deliberately crafted. Each character is designed to carry the studio's personality: curious, purposeful, and never predictable.\n\nA companion brand book documents the characters' design system, the new studio aesthetic, and the creative decisions behind the rebrand. Together, the film and the book form the studio's visual manifesto for 2026 and beyond.",
+            },
+          ],
+        },
       },
       {
-        id: 2, bg: '#F0C8B0', label: 'Spurgeons ED',
+        id: 2, bg: '#F0C8B0', img: 'projects/spurgeons-ed.webp', label: 'Spurgeons ED',
         tags: ['Motion Design', 'Explainer Video', 'Charity'],
         caseStudy: {
           subtitle: 'Motion Design · Explainer Video · Charity Awareness',
@@ -227,30 +239,94 @@ export const CATEGORIES = [
           sections: [
             {
               id: 'overview',
-              body: "A set of five videos and around sixty illustrations made for UK-based children's charity, Spurgeons. Founded in 1867, the charity has supported vulnerable children and families for over 150 years through support programs, parenting courses, child and family therapy, and children's centres.\n\nThis campaign was launched for Eating Disorder Awareness Week to bring attention to eating disorders in teenagers and children. Through five videos each two to three minutes in length, inclusive and friendly characters of all races, sizes and disabilities are seen interacting, facing distress, and navigating complicated relationships with food and body image. The series sheds light on a serious topic while remaining accessible for parents of all ages.\n\nVoiceover and branding guidelines provided by Spurgeons. Original illustrations by illustrator upklyak.",
+              body: "A set of five videos and around sixty illustrations made for UK-based children's charity, Spurgeons. Founded in 1867, the charity has supported vulnerable children and families for over 150 years by providing a range of services including support programs, parenting courses, child and family therapy, and children's centres. This campaign was launched for Eating Disorder Awareness Week to bring attention to eating disorders in teenagers and children.\n\nSpurgeons' branding is designed to convey warmth, approachability, and compassion, reflecting the charity's mission to support some of the most vulnerable members of society. This translated into a series of inclusive, friendly characters of all races, sizes, and disabilities. The videos were designed to be accessible for parents of all ages. Through five videos each around five minutes in length, the characters are seen interacting: talking, eating together, going for walks, as well as navigating situations of distress. Teenagers are shown having a complicated relationship with food and body image, with the series aiming to shed light on a serious matter while remaining inclusive and easy to understand.\n\nVoiceover and branding guidelines provided by Spurgeons. Original illustrations by upklyak.",
             },
           ],
         },
       },
       {
-        id: 3, bg: '#C4B4F0', label: 'Will & Grace Invite',
-        tags: ['Motion Design', 'Brand Animation', 'Wedding'],
+        id: 4, bg: '#C0D4B8', img: 'projects/geometric.webp', label: 'Geometric Showcase',
+        tags: ['Motion Design', 'Abstract', 'Experimental'],
+        caseStudy: {
+          subtitle: 'Motion Design · Abstract · Experimental Animation',
+          year: '2022',
+          duration: 'Self-Initiated',
+          status: 'Published · 45,000+ Views',
+          youtube: 'E1lDvWBNlKM',
+          sections: [
+            {
+              id: 'overview',
+              body: "A purely abstract motion piece built from precise geometry. No narrative, no character, just form, rhythm, and mathematics in motion.\n\nGeometric Showcase became the studio's highest-performing piece on YouTube, accumulating over 45,000 views and 800+ likes from audiences drawn to its minimal precision. The piece demonstrates what becomes possible when animation is stripped to its essentials: exact timing, controlled movement, and the satisfaction of shapes behaving exactly as they should.\n\nThe work stands as a proof of craft: motion design at its most deliberate, built to show what the studio can do when given complete creative freedom.",
+            },
+          ],
+        },
       },
       {
-        id: 4, bg: '#C0D4B8', label: 'Geometric Showcase',
-        tags: ['Motion Design', 'Illustration', 'Freelance'],
+        id: 5, bg: '#A8C0E4', img: 'projects/steps.webp', label: 'STEPS',
+        tags: ['Motion Design', 'Experimental', 'Self-Initiated'],
+        caseStudy: {
+          subtitle: 'Motion Design · Experimental Animation · Self-Initiated',
+          year: '2022',
+          duration: 'Self-Initiated',
+          status: 'Published',
+          youtube: 'B47H1UDrQcc',
+          sections: [
+            {
+              id: 'overview',
+              body: "A self-initiated experimental animation exploring the rhythm and mechanics of movement, made without a brief, without a client, and without constraints beyond the question itself.\n\nSteps is a study in motion principles: how timing shapes feeling, how the simplest movement can carry weight, and what happens when animation is reduced to its most essential form. The piece came from a desire to experiment freely, push craft, and follow a single concept without compromise.\n\nWork made for its own sake often becomes the clearest demonstration of skill. Steps is exactly that.",
+            },
+          ],
+        },
       },
       {
-        id: 5, bg: '#A8C0E4', label: 'STEPS',
-        tags: ['Motion Design', 'Health & Wellbeing', 'Educational'],
+        id: 6, bg: '#B4D0A8', img: 'projects/atoz.webp', label: 'A to Z',
+        tags: ['Motion Design', 'Typography', 'Experimental'],
+        caseStudy: {
+          subtitle: 'Motion Design · Typographic Animation · Self-Initiated',
+          year: '2023',
+          duration: 'Self-Initiated',
+          status: 'Published',
+          youtube: 'JdLVq-FHkfg',
+          sections: [
+            {
+              id: 'overview',
+              body: "A typographic motion exploration working through the full alphabet, each of twenty-six letters its own opportunity to explore a different technique, rhythm, or visual approach.\n\nA to Z is an exercise in constraint and creativity: the same problem, solved twenty-six different ways. One continuous piece made from deliberate variation, a demonstration of range, craft, and the discipline required to keep each solution feeling fresh while maintaining a coherent whole.\n\nBuilt entirely for the challenge of it: the kind of self-directed work that sharpens the skills that make client work better.",
+            },
+          ],
+        },
       },
       {
-        id: 6, bg: '#B4D0A8', label: 'A to Z',
-        tags: ['Motion Design', 'Mindfulness', 'Animation'],
+        id: 7, bg: '#D4CCE8', img: 'projects/bloom.webp', label: 'BLOOM',
+        tags: ['Motion Design', 'Organic', 'Experimental'],
+        caseStudy: {
+          subtitle: 'Motion Design · Organic Animation · Self-Initiated',
+          year: '2022',
+          duration: 'Self-Initiated',
+          status: 'Published',
+          youtube: 'Yjuj-ODZfPY',
+          sections: [
+            {
+              id: 'overview',
+              body: "A self-initiated piece exploring growth, emergence, and organic motion, a personal study in the intersection of the mathematical and the alive.\n\nBloom studies moments of expansion, contraction, and transformation: forms that feel like they are breathing, growing, responding. The work sits at the boundary between the geometric and the organic, using the precision of animation to simulate something that feels genuinely natural.\n\nMade without a brief and without a client, the kind of work that only exists because someone made time for it, and that demonstrates the depth of craft informing every commissioned project.",
+            },
+          ],
+        },
       },
       {
-        id: 7, bg: '#D4CCE8', label: 'BLOOM',
-        tags: ['Motion Design', 'Mindfulness', 'Wellness'],
+        id: 8, bg: '#C8D8CC', img: 'projects/well-lab.webp', label: 'Well Lab',
+        tags: ['Motion Design', 'Explainer Video', 'Brand Animation'],
+        caseStudy: {
+          subtitle: 'Motion Design · Brand Animation · Client Commission',
+          year: '2023',
+          duration: 'Commission',
+          status: 'Delivered',
+          sections: [
+            {
+              id: 'overview',
+              body: "An introductory video for UK-based organisation Well Lab, a consultancy tackling burnout in the workplace. Well Lab works with employers and organisations including the NHS and UCL to support employees' mental health and wellbeing, helping them build sustainable approaches to work.\n\nFollowing the organisation's brand guidelines, the studio translated their shapes and colour palette into a series of whimsical and dynamic movements, with workers and scientists represented as coloured circles falling in and out of balance. The video aims to capture the interest of potential partners by differentiating Well Lab from other firms through sleek, modern design and an abstract approach to human representation.\n\nVoiceover and branding guidelines including shapes and colour palette provided by Well Lab.",
+            },
+          ],
+        },
       },
     ],
   },
@@ -269,7 +345,7 @@ export const CATEGORIES = [
     ],
     slides: [
       {
-        id: 1, bg: '#C8B898', img: 'projects/woodco.jpg', label: 'Woodco',
+        id: 1, bg: '#C8B898', img: 'projects/woodco.webp', label: 'Woodco',
         tags: ['Packaging', 'Label Design', 'Visual Identity'],
         caseStudy: {
           subtitle: 'Packaging Design · Label Design · Visual Identity',
@@ -286,13 +362,13 @@ export const CATEGORIES = [
             {
               id: 'overview',
               title: 'Project Overview',
-              body: `A set of 6 packaging labels were created for Hong Kong-based candle manufacturer, WOODCO. Paired with their fragrance blends using premium fragrance and essential oils, their scented candles are made to achieve a feeling of home and a sense of calmness.\n\nThese labels were created with a focus on simple, abstract shapes and bright, contrasting colours. These colours can be associated with modernity, innovation, and the notion of being forward-thinking. As WOODCO wanted to convey a strong impression while still displaying features of subtlety and femininity — these are displayed in clean, elementary shapes with signs of rigidity to symbolise human-like imperfection.`,
+              body: `A set of 6 packaging labels were created for Hong Kong-based candle manufacturer, WOODCO. Paired with their fragrance blends using premium fragrance and essential oils, their scented candles are made to achieve a feeling of home and a sense of calmness.\n\nThese labels were created with a focus on simple, abstract shapes and bright, contrasting colours. These colours can be associated with modernity, innovation, and the notion of being forward-thinking. As WOODCO wanted to convey a strong impression while still displaying features of subtlety and femininity, this comes through in clean, elementary shapes with signs of rigidity to symbolise human-like imperfection.`,
             },
           ],
         },
       },
       {
-        id: 2, bg: '#E8B098', img: 'projects/la-terra-rossa.jpg', label: 'La Terra Rossa',
+        id: 2, bg: '#E8B098', img: 'projects/la-terra-rossa.webp', label: 'La Terra Rossa',
         tags: ['Packaging', 'Label Design', 'Brand Identity'],
         caseStudy: {
           subtitle: 'Packaging Design · Logo Redesign · Brand Identity',
@@ -306,13 +382,13 @@ export const CATEGORIES = [
             {
               id: 'overview',
               title: 'Project Overview',
-              body: `Along with a logo redesign, a couple of coffee packaging designs were made for the Oregon-based coffee company, La Terra Rossa. La Terra Rossa produces a range of tea and coffee, offering single-payment and subscription services, as well as merchandise such as stickers, mugs, clothing pieces and coffee accessories. Their message focuses on the concept of authenticity, quality, and tradition.\n\nThe branding focuses on a simple, clean design with an earth-tone palette that emphasizes the company's commitment to giving back to the community. The packaging pieces as well as the logo are based on Van Gogh's "The Sower" — a representation of the cycle of life, growth, and renewal. The farmer sowing seeds represents the human effort to cultivate and nurture the land, while the setting sun suggests the passage of time and the inevitability of change.`,
+              body: `Along with a logo redesign, a couple of coffee packaging designs were made for the Oregon-based coffee company, La Terra Rossa. La Terra Rossa produces a range of tea and coffee, offering single-payment and subscription services, as well as merchandise such as stickers, mugs, clothing pieces and coffee accessories. Their message focuses on the concept of authenticity, quality, and tradition.\n\nThe branding focuses on a simple, clean design with an earth-tone palette that emphasizes the company's commitment to giving back to the community. The packaging pieces as well as the logo are based on Van Gogh's "The Sower", a representation of the cycle of life, growth, and renewal. The farmer sowing seeds represents the human effort to cultivate and nurture the land, while the setting sun suggests the passage of time and the inevitability of change.`,
             },
           ],
         },
       },
       {
-        id: 3, bg: '#C8A8D8', img: 'projects/oracle-cards.jpg', label: 'Oracle Cards',
+        id: 3, bg: '#C8A8D8', img: 'projects/oracle-cards.webp', label: 'Oracle Cards',
         tags: ['Print', 'Book Design', 'Illustration'],
         caseStudy: {
           subtitle: 'Book Illustration · Print Design · Mixed Media',
@@ -326,13 +402,13 @@ export const CATEGORIES = [
             {
               id: 'overview',
               title: 'Project Overview',
-              body: `A set of 41 custom illustrations were made for independent writer Annalisa Brizzante to be featured in her book 'SELF AWAKENING ORACLE CARDS: connect to your true potential'. The cards are printed within the book and are intended to be cut out and used as oracle cards.\n\nThe oracle cards, along with the messages from the book, help the reader overcome challenges and create a positive mindset while replacing negative blockages. Each card is unique and has a specific theme or focus, such as frustration, acceptance or sorrow. They generally incorporate a mixed media style with a variation of linework complimented by textures such as paint, ink or watercolour. The textures allowed the illustrations to have more depth and richness — with materials such as rocks, leaves and flowers depicted to create a tactile and multi-sensory experience. Each concept was discussed with the writer to draw from the writer's identity, memory, and personal experiences.`,
+              body: `A set of 41 custom illustrations were made for independent writer Annalisa Brizzante to be featured in her book 'SELF AWAKENING ORACLE CARDS: connect to your true potential'. The cards are printed within the book and are intended to be cut out and used as oracle cards.\n\nThe oracle cards, along with the messages from the book, help the reader overcome challenges and create a positive mindset while replacing negative blockages. Each card is unique and has a specific theme or focus, such as frustration, acceptance or sorrow. They generally incorporate a mixed media style with a variation of linework complimented by textures such as paint, ink or watercolour. The textures allowed the illustrations to have more depth and richness, using materials such as rocks, leaves and flowers to create a tactile and multi-sensory experience. Each concept was discussed with the writer to draw from the writer's identity, memory, and personal experiences.`,
             },
           ],
         },
       },
       {
-        id: 4, bg: '#F0C8C0', img: 'projects/signature-balm.jpg', label: 'Signature Balm',
+        id: 4, bg: '#F0C8C0', img: 'projects/signature-balm.webp', label: 'Signature Balm',
         tags: ['Packaging', 'Label Design', 'Wellness'],
         caseStudy: {
           subtitle: 'Packaging Design · Label Design · Pattern Design',
@@ -367,7 +443,9 @@ export const CATEGORIES = [
       { label: 'Launching',      value: '2025' },
       { label: 'Stay tuned',     value: '→' },
     ],
-    slides: [],
+    slides: [
+      { id: 1, comingSoon: true, label: 'Coming Soon', bg: '#F0CABB' },
+    ],
   },
 ]
 

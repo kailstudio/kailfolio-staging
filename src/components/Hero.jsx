@@ -243,7 +243,7 @@ export default function Hero({ visible }) {
         </div>
 
         <motion.p className="hero-intro-hint" style={{ opacity: hintOpacity }} aria-hidden="true">
-          Scroll to explore ↓
+          Scroll to explore
         </motion.p>
       </div>
     </motion.section>

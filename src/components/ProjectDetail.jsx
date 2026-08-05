@@ -916,15 +916,57 @@ function CSReflection({ cs }) {
 }
 
 // ── 13 Final CTA ─────────────────────────────────────────────────────
+const CTA_CONTACTS = [
+  {
+    name: 'Instagram',
+    href: 'https://www.instagram.com/__ka.il',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Upwork',
+    href: 'https://www.upwork.com/freelancers/~01c78193322f89a4a7?mp_source=share',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M18.561 13.158c-1.102 0-2.135-.467-3.074-1.227l.228-1.076.008-.042c.207-1.143.849-3.06 2.839-3.06 1.492 0 2.703 1.212 2.703 2.703-.001 1.489-1.212 2.702-2.704 2.702zm0-8.14c-2.539 0-4.51 1.649-5.31 4.366-1.22-1.834-2.148-4.036-2.687-5.892H7.828v7.112c-.002 1.406-1.141 2.546-2.547 2.546-1.405 0-2.543-1.14-2.543-2.546V3.492H0v7.112c0 2.914 2.37 5.303 5.281 5.303 2.913 0 5.283-2.389 5.283-5.303v-1.19c.529 1.107 1.182 2.229 1.974 3.221l-1.673 7.873h2.797l1.213-5.71c1.063.679 2.285 1.109 3.686 1.109 3 0 5.439-2.452 5.439-5.45 0-3-2.439-5.439-5.439-5.439z"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Email',
+    href: 'mailto:hello@kail.studio',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2" y="4.5" width="20" height="15" rx="2.5" />
+        <path d="M3 6.5 12 13l9-6.5" />
+      </svg>
+    ),
+  },
+]
+
 function CSCTA({ cat }) {
   return (
     <CSSection className="cs-end-cta">
       <Reveal delay={0.06} className="cs-end-cta-inner">
         <SunburstSVG size={52} color={cat.accentDark} />
-        <h3 className="cs-cta-heading">Working on something that matters? Let's talk.</h3>
-        <a href="mailto:hello@kail.studio" className="cs-cta-btn" style={{ background: cat.accentDark }}>
-          Get in touch ↗
-        </a>
+        <h3 className="cs-cta-heading">Working on something similar? Get in touch.</h3>
+        <div className="cs-cta-contacts">
+          {CTA_CONTACTS.map(({ name, href, icon }) => (
+            <a
+              key={name}
+              href={href}
+              className="cs-cta-contact-link"
+              target={href.startsWith('http') ? '_blank' : undefined}
+              rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+            >
+              <span className="cs-cta-contact-icon">{icon}</span>
+              <span className="cs-cta-contact-name">{name}</span>
+            </a>
+          ))}
+        </div>
       </Reveal>
     </CSSection>
   )
@@ -1422,8 +1464,9 @@ const VimeoSVG = () => (
 
 // ── Generic Pkg components ────────────────────────────────────────────
 
-function PkgHero({ cs, slide, cfg }) {
+function PkgHero({ cs, slide, cfg, heroContent }) {
   const { accent, dark, heroSrc, heroLabel } = cfg
+  const visual = heroContent ?? (heroSrc ? <img src={heroSrc} alt={heroLabel ?? slide.label} className="pkg-hero-img" /> : null)
   return (
     <CSSection className="pkg-hero">
       <Reveal delay={0.04}>
@@ -1437,11 +1480,13 @@ function PkgHero({ cs, slide, cfg }) {
         <h1 className="cs-hero-title" style={{ color: dark }}>{slide.label}</h1>
         <p className="cs-hero-subtitle" style={{ color: dark + '88' }}>{cs.subtitle}</p>
       </Reveal>
-      <Reveal delay={0.18}>
-        <div className="pkg-hero-visual">
-          {heroSrc && <img src={heroSrc} alt={heroLabel ?? slide.label} className="pkg-hero-img" />}
-        </div>
-      </Reveal>
+      {visual && (
+        <Reveal delay={0.18}>
+          <div className="pkg-hero-visual">
+            {visual}
+          </div>
+        </Reveal>
+      )}
       <Reveal delay={0.28}>
         <div className="cs-hero-status">
           <span className="cs-status-dot" style={{ background: accent }} />
@@ -1534,14 +1579,14 @@ function PkgHighlights({ cfg }) {
 }
 
 function PkgImpact({ cfg }) {
-  const { stats, accent, dark } = cfg
+  const { stats } = cfg
   return (
-    <CSSection title="Outcome">
+    <CSSection title="At a Glance" variant="dark">
       <div className="pkg-stats">
         {stats.map(({ value, label }, i) => (
           <Reveal key={label} delay={0.06 + i * 0.08} className="pkg-stat">
-            <span className="pkg-stat-value" style={{ color: accent }}>{value}</span>
-            <span className="pkg-stat-label" style={{ color: dark + '88' }}>{label}</span>
+            <span className="pkg-stat-value" style={{ color: '#E0F87D' }}>{value}</span>
+            <span className="pkg-stat-label" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
           </Reveal>
         ))}
       </div>
@@ -1585,7 +1630,7 @@ function PkgLinks({ cs, cfg }) {
 const WOODCO_CFG = {
   accent: '#C8785A', dark: '#2E2218', light: '#FAF5EE',
   heroSrc: `${BASE}woodco/woodco3.webp`,
-  heroLabel: 'WOODCO candle packaging — all 6 labels',
+  heroLabel: 'WOODCO candle packaging, all 6 labels',
   images: [
     { src: `${BASE}woodco/woodco1.webp`, alt: 'Spiced Citrus, Spring Rain and Wild Garden lifestyle shot' },
     { src: `${BASE}woodco/woodco2.webp`, alt: 'Nightlight, Negroni and Waves lifestyle shot' },
@@ -1609,12 +1654,11 @@ const WOODCO_CFG = {
     { name: 'Waves',         sub: 'Sea Salt · Ocean · Coconut',              color: '#5C7FA8' },
   ],
   highlightsTitle: 'The Collection',
-  highlightsBody: 'Six fragrance blends — each with its own visual identity built from the same abstract shape language and contrasting colour palette.',
+  highlightsBody: 'Six fragrance blends, each with its own visual identity built from the same abstract shape language and contrasting colour palette.',
   stats: [
     { value: 6,  label: 'Scent Labels'    },
     { value: 2,  label: 'Weeks Timeline'  },
     { value: 4,  label: 'Revision Rounds' },
-    { value: 1,  label: 'Happy Client'    },
   ],
   linksBody: 'See the full project on Behance and Dribbble, or visit WOODCO\'s website.',
 }
@@ -1624,8 +1668,8 @@ const LTR_CFG = {
   heroSrc: `${BASE}la-terra-rossa/laterrarossa3.webp`,
   heroLabel: 'La Terra Rossa coffee packaging spread',
   images: [
-    { src: `${BASE}la-terra-rossa/laterrarossa1.webp`, alt: 'La Terra Rossa Farewell Blend bags — mountain illustration' },
-    { src: `${BASE}la-terra-rossa/laterrarossa2.webp`, alt: 'La Terra Rossa Farewell Blend bags — abstract illustration' },
+    { src: `${BASE}la-terra-rossa/laterrarossa1.webp`, alt: 'La Terra Rossa Farewell Blend bags, mountain illustration' },
+    { src: `${BASE}la-terra-rossa/laterrarossa2.webp`, alt: 'La Terra Rossa Farewell Blend bags, abstract illustration' },
     { src: `${BASE}la-terra-rossa/laterrarossa3.webp`, alt: 'La Terra Rossa full packaging spread' },
   ],
   galleryLayout: 'two-then-one',
@@ -1641,7 +1685,6 @@ const LTR_CFG = {
     { value: 2,  label: 'Packaging Designs'  },
     { value: 1,  label: 'Logo Illustration'  },
     { value: 1,  label: 'Week Delivered'     },
-    { value: 1,  label: 'Happy Client'       },
   ],
   linksBody: 'Visit the La Terra Rossa website.',
 }
@@ -1649,11 +1692,11 @@ const LTR_CFG = {
 const OC_CFG = {
   accent: '#B89060', dark: '#3C3028', light: '#F8F0E8',
   heroSrc: `${BASE}oracle-cards/oracle1.webp`,
-  heroLabel: 'Self Awakening Oracle Cards — card samples',
+  heroLabel: 'Self Awakening Oracle Cards, card samples',
   images: [
-    { src: `${BASE}oracle-cards/oracle1.webp`, alt: 'Oracle cards — Protection, Truthfulness, Acceptance, Healing' },
-    { src: `${BASE}oracle-cards/oracle2.webp`, alt: 'Oracle cards — Perseverance, Balance, Resilience, Sorrow' },
-    { src: `${BASE}oracle-cards/oracle3.webp`, alt: 'Oracle cards — Self-Awakening, Judgement, Frustration, Rituals' },
+    { src: `${BASE}oracle-cards/oracle1.webp`, alt: 'Oracle cards: Protection, Truthfulness, Acceptance, Healing' },
+    { src: `${BASE}oracle-cards/oracle2.webp`, alt: 'Oracle cards: Perseverance, Balance, Resilience, Sorrow' },
+    { src: `${BASE}oracle-cards/oracle3.webp`, alt: 'Oracle cards: Self-Awakening, Judgement, Frustration, Rituals' },
   ],
   galleryLayout: 'one-then-two',
   specs: [
@@ -1665,10 +1708,10 @@ const OC_CFG = {
     { label: 'Style',     value: 'Mixed Media' },
   ],
   stats: [
-    { value: 41, label: 'Unique Illustrations' },
-    { value: 2,  label: 'Months of Work'       },
-    { value: 1,  label: 'Published Book'       },
-    { value: '∞', label: 'Revisions Given'     },
+    { value: 41, label: 'Unique Illustrations'    },
+    { value: 2,  label: 'Months of Work'         },
+    { value: 1,  label: 'Published Book'         },
+    { value: 4,  label: 'Illustration Styles'    },
   ],
   linksBody: 'Find the book on Amazon.',
 }
@@ -1678,9 +1721,9 @@ const SB_CFG = {
   heroSrc: `${BASE}signature-balm/southshorn1.webp`,
   heroLabel: 'Signature Balm piercing care tin packaging',
   images: [
-    { src: `${BASE}signature-balm/southshorn1.webp`, alt: 'Signature Balm single tin — angled view' },
-    { src: `${BASE}signature-balm/southshorn2.webp`, alt: 'Signature Balm — multiple tins' },
-    { src: `${BASE}signature-balm/southshorn3.webp`, alt: 'Signature Balm tin — top view' },
+    { src: `${BASE}signature-balm/southshorn1.webp`, alt: 'Signature Balm single tin, angled view' },
+    { src: `${BASE}signature-balm/southshorn2.webp`, alt: 'Signature Balm, multiple tins' },
+    { src: `${BASE}signature-balm/southshorn3.webp`, alt: 'Signature Balm tin, top view' },
   ],
   galleryLayout: 'one-then-two',
   specs: [
@@ -1722,10 +1765,29 @@ const SPURGEONS_CFG = {
 
 // ── Per-project case study views ──────────────────────────────────────
 
+const SPURGEONS_MEDIA = {
+  previews: [1, 2, 3].map(n => `${BASE}spurgeons-ed/spurgeons${n}.webm`),
+}
+
 function SpurgeonsEDCaseStudyView({ cat, cs, slide }) {
+  const { previews } = SPURGEONS_MEDIA
   return (
     <div className="cs-wrap pkg-case-study">
-      <PkgHero cs={cs} slide={slide} cfg={SPURGEONS_CFG} />
+      <PkgHero
+        cs={cs}
+        slide={slide}
+        cfg={SPURGEONS_CFG}
+        heroContent={<VimeoEmbed videoId="800539377" title="Spurgeons ED Awareness" />}
+      />
+
+      <CSSection title="Previews" variant="dark">
+        <div className="wl-grid-3">
+          <Reveal delay={0.06}><WLMedia src={previews[0]} alt="Spurgeons preview 1" /></Reveal>
+          <Reveal delay={0.12}><WLMedia src={previews[1]} alt="Spurgeons preview 2" /></Reveal>
+          <Reveal delay={0.18}><WLMedia src={previews[2]} alt="Spurgeons preview 3" /></Reveal>
+        </div>
+      </CSSection>
+
       <PkgOverview cs={cs} cfg={SPURGEONS_CFG} />
       <PkgImpact cfg={SPURGEONS_CFG} />
       <PkgLinks cs={cs} cfg={SPURGEONS_CFG} />
@@ -1780,8 +1842,443 @@ function SBCaseStudyView({ cat, cs, slide }) {
       <PkgHero cs={cs} slide={slide} cfg={SB_CFG} />
       <PkgOverview cs={cs} cfg={SB_CFG} />
       <PkgGallery cfg={SB_CFG} />
-      <PkgImpact cfg={SB_CFG} />
       <PkgLinks cs={cs} cfg={SB_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MOTION CASE STUDIES
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── YouTube embed ─────────────────────────────────────────────────────
+function YouTubeEmbed({ videoId, title }) {
+  if (!videoId || videoId === 'placeholder') {
+    return (
+      <div className="yt-placeholder">
+        <div className="yt-placeholder-inner">
+          <span className="yt-placeholder-play">▶</span>
+          <p className="yt-placeholder-text">Video coming soon, check back shortly.</p>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="yt-embed-wrap">
+      <iframe
+        src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+        title={title || 'Project video'}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  )
+}
+
+function VimeoEmbed({ videoId, title }) {
+  return (
+    <div className="yt-embed-wrap">
+      <iframe
+        src={`https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+        title={title || 'Project video'}
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  )
+}
+
+// ── Generic motion components ─────────────────────────────────────────
+
+function MotionHero({ cs, slide, cfg }) {
+  const { accent, lightAccent, dark } = cfg
+  const la = lightAccent ?? accent
+  return (
+    <CSSection className="pkg-hero">
+      <Reveal delay={0.04}>
+        <div className="cs-hero-pills">
+          {(slide.tags || []).map((t) => (
+            <span key={t} className="cs-hero-pill"
+              style={{ background: la + '18', color: la, borderColor: la + '44' }}>
+              {t}
+            </span>
+          ))}
+        </div>
+      </Reveal>
+      <Reveal delay={0.1}>
+        <h1 className="cs-hero-title" style={{ color: dark }}>{slide.label}</h1>
+        <p className="cs-hero-subtitle" style={{ color: dark + '88' }}>{cs.subtitle}</p>
+      </Reveal>
+      <Reveal delay={0.28}>
+        <div className="cs-hero-status">
+          <span className="cs-status-dot" style={{ background: la }} />
+          <span className="cs-status-text" style={{ color: dark + 'aa' }}>{cs.status}</span>
+        </div>
+      </Reveal>
+    </CSSection>
+  )
+}
+
+function MotionVideo({ slide, cfg }) {
+  const youtube = cfg.youtube ?? slide.caseStudy?.youtube
+  return (
+    <CSSection title="The Work" variant="dark">
+      <Reveal delay={0.08}>
+        <YouTubeEmbed videoId={youtube} title={slide.label} />
+      </Reveal>
+    </CSSection>
+  )
+}
+
+function MotionOverview({ cs, cfg, children }) {
+  const { accent, lightAccent, dark, specs } = cfg
+  const la = lightAccent ?? accent
+  const overview = cs.sections?.find((s) => s.id === 'overview')
+  const paras = overview?.body?.split('\n\n') ?? []
+  return (
+    <CSSection title="Project Overview">
+      <div className="pkg-overview-grid">
+        <Reveal delay={0.08} className="pkg-overview-text">
+          {paras.map((p, i) => (
+            <p key={i} style={{ color: dark + 'bb', lineHeight: 1.85, marginBottom: 14 }}>{p}</p>
+          ))}
+        </Reveal>
+        {specs?.length > 0 && (
+          <Reveal delay={0.16} className="pkg-spec-stack" style={{ '--pkg-accent': la }}>
+            {specs.map(({ label, value }) => (
+              <div key={label} className="pkg-spec-row">
+                <span className="pkg-spec-label">{label}</span>
+                <span className="pkg-spec-value" style={{ color: dark }}>{value}</span>
+              </div>
+            ))}
+          </Reveal>
+        )}
+      </div>
+      {children && <div style={{ marginTop: 24 }}>{children}</div>}
+    </CSSection>
+  )
+}
+
+function MotionStats({ cfg }) {
+  const { stats } = cfg
+  if (!stats?.length) return null
+  return (
+    <CSSection title="At a Glance" variant="dark">
+      <div className="pkg-stats">
+        {stats.map(({ value, label }, i) => (
+          <Reveal key={label} delay={0.06 + i * 0.08} className="pkg-stat">
+            <span className="pkg-stat-value" style={{ color: '#E0F87D' }}>{value}</span>
+            <span className="pkg-stat-label" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</span>
+          </Reveal>
+        ))}
+      </div>
+    </CSSection>
+  )
+}
+
+// ── Per-project configs ───────────────────────────────────────────────
+
+const STUDIO_INTRO_CFG = {
+  accent: '#335CFF', dark: '#333333',
+  youtube: 'placeholder',
+  specs: [
+    { label: 'Year',    value: '2026' },
+    { label: 'Type',    value: 'Studio Rebrand' },
+    { label: 'Style',   value: '3D Dimensional' },
+    { label: 'Status',  value: 'In Production' },
+  ],
+  stats: [
+    { value: '2026', label: 'Rebrand Year'    },
+    { value: '3D',   label: 'Animation Style' },
+    { value: 6,      label: 'Characters'      },
+    { value: 4,      label: 'Weeks'           },
+  ],
+}
+
+const GEOMETRIC_CFG = {
+  accent: '#E0F87D', lightAccent: '#335CFF', dark: '#333333',
+  youtube: 'E1lDvWBNlKM',
+  specs: [
+    { label: 'Year',    value: '2022' },
+    { label: 'Type',    value: 'Self-Initiated' },
+    { label: 'Views',   value: '45,000+' },
+    { label: 'Likes',   value: '800+' },
+  ],
+  stats: [
+    { value: '45K+',  label: 'YouTube Views' },
+    { value: '800+',  label: 'Likes' },
+    { value: '#1',    label: 'Top Performing' },
+  ],
+  palette: [
+    { hex: '#1A537B', name: 'Deep Blue'   },
+    { hex: '#FAE3D1', name: 'Light Cream' },
+    { hex: '#FCE1D9', name: 'Pale Blush'  },
+    { hex: '#F6AEA1', name: 'Soft Coral'  },
+  ],
+}
+
+const GEOMETRIC_MEDIA = {
+  previews: [1, 2].map(n => `${BASE}geometric/geometric${n}.gif`),
+}
+
+const STEPS_CFG = {
+  accent: '#335CFF', dark: '#333333',
+  youtube: 'B47H1UDrQcc',
+  specs: [
+    { label: 'Year',  value: '2022' },
+    { label: 'Type',  value: 'Self-Initiated' },
+    { label: 'Style', value: 'Experimental' },
+  ],
+  stats: [
+    { value: '2022',  label: 'Year'       },
+    { value: 3,       label: 'Characters' },
+    { value: 1,       label: 'Backdrop'   },
+    { value: '11K+',  label: 'Views'      },
+  ],
+  palette: [
+    { hex: '#F2E6E1', name: 'Warm Off-White'  },
+    { hex: '#F17765', name: 'Light Coral'      },
+    { hex: '#D75546', name: 'Terracotta Red'   },
+    { hex: '#C24519', name: 'Burnt Orange'     },
+    { hex: '#483D3C', name: 'Dark Charcoal'    },
+  ],
+}
+
+const STEPS_MEDIA = {
+  previews: [1, 2, 3, 4].map(n => `${BASE}steps/steps-preview${n}.webm`),
+  large: `${BASE}steps/steps-preview-large.webm`,
+}
+
+const ATOZ_CFG = {
+  accent: '#E0F87D', lightAccent: '#335CFF', dark: '#333333',
+  youtube: 'JdLVq-FHkfg',
+  specs: [
+    { label: 'Year',   value: '2023' },
+    { label: 'Type',   value: 'Self-Initiated' },
+    { label: 'Style',  value: 'Typographic Motion' },
+    { label: 'Count',  value: '26 Letters' },
+  ],
+  stats: [
+    { value: '26',   label: 'Letters Animated' },
+    { value: '2023', label: 'Year' },
+  ],
+}
+
+const BLOOM_CFG = {
+  accent: '#D4C7FF', dark: '#333333',
+  youtube: 'Yjuj-ODZfPY',
+  specs: [
+    { label: 'Year',  value: '2022' },
+    { label: 'Type',  value: 'Self-Initiated' },
+    { label: 'Style', value: 'Organic Motion' },
+  ],
+  stats: [
+    { value: '2022',    label: 'Year' },
+    { value: 'Organic', label: 'Motion Style' },
+  ],
+}
+
+// ── Per-project view functions ────────────────────────────────────────
+
+function StudioIntroCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <MotionHero cs={cs} slide={slide} cfg={STUDIO_INTRO_CFG} />
+      <MotionVideo slide={slide} cfg={STUDIO_INTRO_CFG} />
+      <MotionOverview cs={cs} cfg={STUDIO_INTRO_CFG} />
+      <MotionStats cfg={STUDIO_INTRO_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+
+
+function GeometricCaseStudyView({ cat, cs, slide }) {
+  const { previews } = GEOMETRIC_MEDIA
+  const { palette } = GEOMETRIC_CFG
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <MotionHero cs={cs} slide={slide} cfg={GEOMETRIC_CFG} />
+      <MotionVideo slide={slide} cfg={GEOMETRIC_CFG} />
+      <MotionOverview cs={cs} cfg={GEOMETRIC_CFG} />
+
+      {/* Previews */}
+      <CSSection title="Previews" variant="dark">
+        <div className="wl-grid-2">
+          <Reveal delay={0.06}><WLMedia src={previews[0]} alt="Geometric preview 1" /></Reveal>
+          <Reveal delay={0.14}><WLMedia src={previews[1]} alt="Geometric preview 2" /></Reveal>
+        </div>
+      </CSSection>
+
+      {/* Palette */}
+      <CSSection title="The Palette">
+        <div className="cs-palette-row">
+          {palette.map(({ hex, name }) => (
+            <div key={hex} className="cs-palette-swatch">
+              <div className="cs-palette-chip" style={{ background: hex }} />
+              <span className="cs-palette-hex">{hex}</span>
+              <span className="cs-palette-name">{name}</span>
+            </div>
+          ))}
+        </div>
+      </CSSection>
+
+      <MotionStats cfg={GEOMETRIC_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+function StepsCaseStudyView({ cat, cs, slide }) {
+  const { previews, large } = STEPS_MEDIA
+  const { palette } = STEPS_CFG
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <MotionHero cs={cs} slide={slide} cfg={STEPS_CFG} />
+      <MotionVideo slide={slide} cfg={STEPS_CFG} />
+      <MotionOverview cs={cs} cfg={STEPS_CFG} />
+
+      {/* Previews — 4 small on one line, large on its own */}
+      <CSSection title="The Work" variant="dark">
+        <div className="wl-grid-4" style={{ marginBottom: 12 }}>
+          {previews.map((src, i) => (
+            <Reveal key={src} delay={0.06 + i * 0.06}>
+              <WLMedia src={src} alt={`Steps preview ${i + 1}`} />
+            </Reveal>
+          ))}
+        </div>
+        <Reveal delay={0.06}>
+          <WLMedia src={large} alt="Steps large preview" className="wl-full" />
+        </Reveal>
+      </CSSection>
+
+      {/* Palette */}
+      <CSSection title="The Palette">
+        <div className="cs-palette-row">
+          {palette.map(({ hex, name }) => (
+            <div key={hex} className="cs-palette-swatch">
+              <div className="cs-palette-chip" style={{ background: hex }} />
+              <span className="cs-palette-hex">{hex}</span>
+              <span className="cs-palette-name">{name}</span>
+            </div>
+          ))}
+        </div>
+      </CSSection>
+
+      <MotionStats cfg={STEPS_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+function AtoZCaseStudyView({ cat, cs, slide }) {
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <MotionHero cs={cs} slide={slide} cfg={ATOZ_CFG} />
+      <MotionVideo slide={slide} cfg={ATOZ_CFG} />
+      <MotionOverview cs={cs} cfg={ATOZ_CFG} />
+      <MotionStats cfg={ATOZ_CFG} />
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+const BLOOM_MEDIA = {
+  anims:    ['bloom-inmotion', 'bloom-inmotion2'].map(n => `${BASE}bloom/${n}.webm`),
+  palettes: ['bloom-palette', 'bloom-palette2'].map(n => `${BASE}bloom/${n}.webp`),
+  swatches: ['bloom-actualpallete', 'bloom-actualpallete2'].map(n => `${BASE}bloom/${n}.webp`),
+  stills:   ['bloom-still', 'bloom-still2', 'bloom-still3'].map(n => `${BASE}bloom/${n}.webp`),
+}
+
+function BloomCaseStudyView({ cat, cs, slide }) {
+  const { stills } = BLOOM_MEDIA
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <MotionHero cs={cs} slide={slide} cfg={BLOOM_CFG} />
+      <MotionVideo slide={slide} cfg={BLOOM_CFG} />
+      <MotionOverview cs={cs} cfg={BLOOM_CFG}>
+        <div className="wl-grid-3">
+          <Reveal delay={0.06}><WLMedia src={stills[0]} alt="Bloom still 1" /></Reveal>
+          <Reveal delay={0.12}><WLMedia src={stills[1]} alt="Bloom still 2" /></Reveal>
+          <Reveal delay={0.18}><WLMedia src={stills[2]} alt="Bloom still 3" /></Reveal>
+        </div>
+      </MotionOverview>
+
+      <CSCTA cat={cat} />
+    </div>
+  )
+}
+
+const WELL_LAB_CFG = {
+  accent: '#335CFF', lightAccent: '#335CFF', dark: '#333333',
+  youtube: 'placeholder',
+  specs: [
+    { label: 'Client',  value: 'Well Lab'              },
+    { label: 'Year',    value: '2023'                  },
+    { label: 'Type',    value: 'Commission'             },
+    { label: 'Sector',  value: 'Health & Wellbeing'    },
+    { label: 'Clients', value: 'NHS, UCL'              },
+    { label: 'Format',  value: 'Explainer Video'       },
+  ],
+  stats: [
+    { value: '2 min', label: 'Video Length'      },
+    { value: '6+',    label: 'Scenes'            },
+    { value: 1,       label: 'Introductory Film' },
+    { value: 'NHS',   label: 'Client Reached'    },
+  ],
+}
+
+const WL = {
+  vids:    [1, 3, 4].map(n => `${BASE}well-lab/well-lab${n}.webm`),
+  statics: [2, 3, 4].map(n => `${BASE}well-lab/well-lab-static${n}.webp`),
+}
+
+function WLMedia({ src, alt, className = '' }) {
+  const isVideo = src.endsWith('.webm') || src.endsWith('.mp4')
+  return (
+    <div className={`wl-media-wrap ${className}`}>
+      {isVideo ? (
+        <video
+          className="wl-media-img"
+          src={src}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+      ) : (
+        <img src={src} alt={alt} className="wl-media-img" loading="lazy" />
+      )}
+    </div>
+  )
+}
+
+function WellLabCaseStudyView({ cat, cs, slide }) {
+  const [g, s] = [WL.vids, WL.statics]
+  return (
+    <div className="cs-wrap pkg-case-study">
+      <MotionHero cs={cs} slide={slide} cfg={WELL_LAB_CFG} />
+
+      <CSSection title="The Work" variant="dark">
+        {/* Three videos */}
+        <div className="wl-grid-3">
+          <Reveal delay={0.06}><WLMedia src={g[0]} alt="Well Lab animation 1" /></Reveal>
+          <Reveal delay={0.12}><WLMedia src={g[1]} alt="Well Lab animation 2" /></Reveal>
+          <Reveal delay={0.18}><WLMedia src={g[2]} alt="Well Lab animation 3" /></Reveal>
+        </div>
+        {/* Three stills */}
+        <div className="wl-grid-3">
+          <Reveal delay={0.06}><WLMedia src={s[0]} alt="Well Lab still 1" /></Reveal>
+          <Reveal delay={0.12}><WLMedia src={s[1]} alt="Well Lab still 2" /></Reveal>
+          <Reveal delay={0.18}><WLMedia src={s[2]} alt="Well Lab still 3" /></Reveal>
+        </div>
+      </CSSection>
+
+      <MotionOverview cs={cs} cfg={WELL_LAB_CFG} />
+      <MotionStats cfg={WELL_LAB_CFG} />
       <CSCTA cat={cat} />
     </div>
   )
@@ -1842,7 +2339,13 @@ function CaseStudyView({ cat, slide }) {
     if (slide.id === 4) return <SBCaseStudyView        cat={cat} cs={cs} slide={slide} />
   }
   if (cat.id === 'motion') {
-    if (slide.id === 2) return <SpurgeonsEDCaseStudyView cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 1) return <StudioIntroCaseStudyView  cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 2) return <SpurgeonsEDCaseStudyView  cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 4) return <GeometricCaseStudyView    cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 5) return <StepsCaseStudyView        cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 6) return <AtoZCaseStudyView         cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 7) return <BloomCaseStudyView        cat={cat} cs={cs} slide={slide} />
+    if (slide.id === 8) return <WellLabCaseStudyView      cat={cat} cs={cs} slide={slide} />
   }
   if (cat.id === 'brand' && slide.id === 2) return <PGMCaseStudyView cat={cat} cs={cs} slide={slide} />
   return <CBSCaseStudyView cat={cat} cs={cs} slide={slide} />
@@ -1856,7 +2359,7 @@ export default function ProjectDetail({ cat, slide: initialSlide, onClose }) {
   const csSlides = cat.slides.filter(s => s.caseStudy)
   const [currentSlide, setCurrentSlide] = useState(initialSlide)
   const hasCaseStudy = Boolean(currentSlide?.caseStudy)
-  const sheetRef = useRef(null)
+  const overlayRef = useRef(null)
 
   const currentIdx = csSlides.findIndex(s => s.id === currentSlide?.id)
   const prevSlide  = currentIdx > 0                   ? csSlides[currentIdx - 1] : null
@@ -1864,19 +2367,21 @@ export default function ProjectDetail({ cat, slide: initialSlide, onClose }) {
 
   const navigate = (slide) => {
     setCurrentSlide(slide)
-    sheetRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    overlayRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
     <motion.div
+      ref={overlayRef}
       className="pd-overlay"
+      data-lenis-prevent
       role="dialog"
       aria-modal="true"
       aria-label={currentSlide?.label ?? cat.name}
       {...OVERLAY}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <motion.div className="pd-sheet" ref={sheetRef} {...CONTENT}>
+      <motion.div className="pd-sheet" {...CONTENT}>
 
         <header className="pd-header">
           <button className="pd-back" onClick={onClose} aria-label="Close">&#8592; Back</button>

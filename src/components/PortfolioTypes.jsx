@@ -189,11 +189,9 @@ const IMAGE_ICON = (
 // poster frame indefinitely instead of ever settling on a working image.
 const VIDEO_LOAD_TIMEOUT = 4000
 
-// Card art — plays PANEL_VIDEOS' looping webm when there is one, falling
-// back to the plain PANEL_IMAGES still (poster while it loads, and what
-// actually renders instead if it errors, if the browser can't play webm
-// at all, or if it's taking too long — see VIDEO_LOAD_TIMEOUT above) —
-// or IMAGE_ICON as the last resort if a panel has neither.
+// Card art — full-bleed cover fill. Plays the looping webm when available,
+// falls back to the still (poster while loading, or on error/timeout), or
+// the IMAGE_ICON glyph as a last resort.
 function CardMedia({ video, image }) {
   const [videoFailed, setVideoFailed] = useState(false)
   const timeoutRef = useRef(null)
@@ -379,31 +377,18 @@ function PortfolioTypeCard({ cat, index, total, deckProgress, isMobile }) {
         scale,
       }}
     >
-      {/* Full picture (or looping animated clip, see CardMedia), uncropped
-          by any overlay — real art where available, placeholder glyph
-          otherwise. Fills the top of the card; the glass panel below is a
-          separate area, not laid over this one, so nothing ever covers
-          the photo. */}
+      {/* Full-bleed image/video — fills the entire card above the label strip */}
       <div className="ptypes-image-slot" aria-hidden="true">
         <CardMedia video={PANEL_VIDEOS[cat.id]} image={PANEL_IMAGES[cat.id]} />
       </div>
 
-      <div className="ptypes-content">
-        <div className="ptypes-eyebrow-row">
-          <span className="ptypes-eyebrow">{String(index + 1).padStart(2, '0')} — {cat.eyebrow}</span>
-          {cat.comingSoon && <span className="pf-coming-soon-label">Coming soon</span>}
-        </div>
-
-        <h2 className="ptypes-heading">{cat.name}</h2>
-        <p className="ptypes-tagline">{cat.tagline}</p>
-
-        {/* Intro-card-only body copy, moved here from the portfolio links
-            section (see INTRO_PANEL's own comment above). */}
-        {cat.body && <p className="ptypes-body">{cat.body}</p>}
-
-        {/* Outro-card-only CTA — jumps down to the real project list
-            (PortfolioSection.jsx, id="work") rather than linking to
-            another discipline. */}
+      {/* Glass label strip pinned to the bottom of the card */}
+      <div className="ptypes-card-label">
+        <span className="ptypes-card-label-eyebrow">
+          {String(index + 1).padStart(2, '0')} — {cat.eyebrow}
+          {cat.comingSoon && <span className="pf-coming-soon-label" style={{ marginLeft: 8 }}>Coming soon</span>}
+        </span>
+        <h2 className="ptypes-card-label-name">{cat.name}</h2>
         {cat.cta && (
           <button
             type="button"
@@ -436,10 +421,6 @@ export default function PortfolioTypes() {
       aria-label="Portfolio disciplines"
     >
       <div className="ptypes-sticky">
-        {/* Sits behind .ptypes-stage in normal DOM/paint order — no
-            z-index tug-of-war needed, the opaque cards on top simply
-            cover it wherever they overlap, and it shows through in the
-            gaps around the fan. */}
         <PTypesBanner />
         <div className="ptypes-stage">
           {PANELS.map((cat, i) => (

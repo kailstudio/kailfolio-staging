@@ -1,47 +1,16 @@
 /**
- * HeroSequence.jsx — scroll-driven character animation
- *
- * Assets: 121 RGBA PNGs in /public/frames/ (optimised, ~215 KB each)
- *
- * Scroll driver
- *   animProgress maps [0, scrollRange] → [0, 1]
- *   Frame index = Math.round(progress × 120)
- *
- * Mobile scroll scaffold
- *   hero-mobile-spacer (2500 px) gives the fixed animation enough room
- *   to play all the way through before the portfolio section appears.
+ * HeroSequence.jsx — bubble ecosystem (scroll-driven character animation removed)
  */
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
-
-// ── Frame config ─────────────────────────────────────────────────────
-const FRAME_COUNT  = 121
-const FRAME_PREFIX = `${import.meta.env.BASE_URL}frames/frame_`
-const FRAME_PAD    = 5
-const FRAME_EXT    = '.png'
-
-function framePath(i) {
-  return `${FRAME_PREFIX}${String(i).padStart(FRAME_PAD, '0')}${FRAME_EXT}`
-}
-function preloadAll() {
-  for (let i = 0; i < FRAME_COUNT; i++) {
-    const img = new Image(); img.src = framePath(i)
-  }
-}
-const ALL_FRAMES = Array.from({ length: FRAME_COUNT }, (_, i) => framePath(i))
-
-// ── Scroll scaffold constants ────────────────────────────────────────
-const MOBILE_SPACER  = 2500
-const MOBILE_BREAKPT = 900
+import { useEffect, useState } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 
 // ── Bubble data ──────────────────────────────────────────────────────
 // parallax/drift are the px each bubble has travelled once the user has
 // scrolled BUBBLE_PARALLAX_RANGE px — a fixed, fairly short distance
 // (not "the whole document"), so the effect reads clearly within the
 // first page or so of scrolling rather than smearing out across a very
-// long page. Values bumped up from the original full-page-progress
-// version for a more noticeable effect either way.
+// long page.
 const BUBBLE_PARALLAX_RANGE = 1400
 
 const BUBBLES = [
@@ -67,12 +36,6 @@ const BUBBLES = [
 ]
 
 function ParallaxBubble({ size, x, baseY, blur, speed, parallax, drift = 0, scrollY }) {
-  // Fixed pixel range + clamp, NOT whole-page scrollYProgress — a bubble's
-  // full travel now happens within the first ~1400px of scroll and holds
-  // from there, so the movement rate stays constant (and noticeable)
-  // regardless of how long the overall page is, rather than the original
-  // version where the same total travel got diluted across the entire
-  // document height.
   const y  = useTransform(scrollY, [0, BUBBLE_PARALLAX_RANGE], [0, parallax], { clamp: true })
   const dx = useTransform(scrollY, [0, BUBBLE_PARALLAX_RANGE], [0, drift],    { clamp: true })
   return (
@@ -91,149 +54,25 @@ function ParallaxBubble({ size, x, baseY, blur, speed, parallax, drift = 0, scro
 
 // ── Main component ───────────────────────────────────────────────────
 export default function HeroSequence() {
-  const [frameIndex, setFrameIndex] = useState(0)
-  const [frameReady, setFrameReady] = useState(false)
-  const [isMobile,   setIsMobile]   = useState(() => window.innerWidth <= MOBILE_BREAKPT)
-  const charTrackRef = useRef(null)
-
   const { scrollY } = useScroll()
-  const [scrollRange, setScrollRange] = useState(MOBILE_SPACER)
-
-  // Don't start the character animation until a scroll-trigger point is
-  // reached — same trigger condition on both breakpoints now: the instant
-  // the portfolio LINKS section (PortfolioSection.jsx, id="work" /
-  // .pf-section) starts entering the viewport from the bottom while
-  // scrolling. Converted to an absolute scrollY offset by subtracting the
-  // viewport height from that section's own page position, so
-  // charStartOffset is exactly the scrollY at which its top edge lines up
-  // with the bottom edge of the screen.
-  //
-  // This used to trigger mobile off .ptypes-section (the PortfolioTypes
-  // card deck, well ABOVE the portfolio links section) instead — which is
-  // exactly why the character used to start walking too early on mobile,
-  // mid-deck, well before the portfolio links actually appeared. Desktop
-  // read .pf-rotate-line specifically (a headline inside .pf-section)
-  // rather than the section itself; using the section directly here avoids
-  // depending on a child element that has its own mount-time
-  // opacity/y entrance animation (a transform-based motion value that
-  // could skew a getBoundingClientRect read taken before it settles).
-  const [charStartOffset, setCharStartOffset] = useState(0)
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const update = () => {
-      const mobile = window.innerWidth <= MOBILE_BREAKPT
-      setIsMobile(mobile)
-
-      let offset = 0
-      const workEl = document.querySelector('.pf-section')
-      if (workEl) {
-        const workTop = workEl.getBoundingClientRect().top + window.scrollY
-        offset = Math.max(workTop - window.innerHeight, 0)
-      }
-      setCharStartOffset(offset)
-
-      if (mobile) {
-        setScrollRange(MOBILE_SPACER)
-      } else {
-        const maxScroll = Math.max(
-          document.documentElement.scrollHeight - window.innerHeight, 400
-        )
-        setScrollRange(Math.min(maxScroll, 1200))
-      }
-    }
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    // Brief delay so bubbles fade in on mount
+    const t = setTimeout(() => setVisible(true), 100)
+    return () => clearTimeout(t)
   }, [])
-
-  const animProgress = useTransform(
-    scrollY,
-    [charStartOffset, charStartOffset + scrollRange],
-    [0, 1],
-    { clamp: true }
-  )
-
-  // Frame-cycling now plays on mobile too (it was previously hard-frozen
-  // on frame 0 there). animProgress is clamped, so frameIndex naturally
-  // sits at 0 for any scrollY below charStartOffset — the character shows
-  // up immediately (same fade-in as desktop, see JSX below) but holds on
-  // its first frame until scroll actually reaches the trigger card, then
-  // starts cycling through frames as you keep scrolling.
-  useMotionValueEvent(animProgress, 'change', (p) => {
-    setFrameIndex(Math.round(p * (FRAME_COUNT - 1)))
-  })
-
-  // Wait for frame 0 to decode before revealing — prevents flash
-  useEffect(() => {
-    let cancelled = false
-    const img = new Image()
-    const markReady = () => { if (!cancelled) setFrameReady(true) }
-    img.onload = () => {
-      if (img.decode) img.decode().then(markReady).catch(markReady)
-      else markReady()
-    }
-    img.onerror = markReady
-    img.src = framePath(0)
-    const cap = setTimeout(markReady, 2000)
-    return () => { cancelled = true; clearTimeout(cap) }
-  }, [])
-
-  useEffect(() => { preloadAll() }, [])
-
-  // Lift the char track so it sticks above the video section.
-  // Falls back to footer if video section isn't present.
-  useEffect(() => {
-    const el = charTrackRef.current
-    const stopper = document.querySelector('.video-section') || document.querySelector('.site-footer')
-    if (!el || !stopper) return
-    const update = () => {
-      const overlap = Math.max(0, window.innerHeight - stopper.getBoundingClientRect().top)
-      el.style.bottom = `${overlap}px`
-    }
-    window.addEventListener('scroll', update, { passive: true })
-    update()
-    return () => window.removeEventListener('scroll', update)
-  }, [])
-
-  const ease = [0.16, 1, 0.3, 1]
 
   return (
-    <>
-      {/* Bubble ecosystem */}
-      <motion.div
-        className="hero-bubbles-panel"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: frameReady ? 1 : 0 }}
-        transition={{ duration: 1.0, ease: 'easeOut', delay: 0.2 }}
-      >
-        {BUBBLES.map((b) => (
-          <ParallaxBubble key={b.id} {...b} scrollY={scrollY} />
-        ))}
-      </motion.div>
-
-      {/* Character animation — fades in as soon as frame 0 is decoded, same
-          on mobile as desktop. It holds on that first frame until scroll
-          reaches charStartOffset (see animProgress above), so it reads as
-          "present in the background from the start, starts walking once
-          you reach the target card" rather than popping in mid-scroll. */}
-      <motion.div
-        ref={charTrackRef}
-        className="hero-char-track"
-        aria-hidden="true"
-        initial={{ opacity: 0, y: 18 }}
-        animate={frameReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-        transition={{ duration: 0.85, ease, delay: 0.1 }}
-      >
-        <img
-          src={ALL_FRAMES[frameIndex]}
-          alt=""
-          className="hero-char-img"
-          draggable={false}
-        />
-      </motion.div>
-
-      {/* Mobile scroll scaffold */}
-      <div className="hero-mobile-spacer" aria-hidden="true" />
-    </>
+    <motion.div
+      className="hero-bubbles-panel"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={{ duration: 1.0, ease: 'easeOut', delay: 0.2 }}
+    >
+      {BUBBLES.map((b) => (
+        <ParallaxBubble key={b.id} {...b} scrollY={scrollY} />
+      ))}
+    </motion.div>
   )
 }

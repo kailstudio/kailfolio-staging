@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Lenis from 'lenis'
 import Hero from './components/Hero.jsx'
 import HeroSequence from './components/HeroSequence.jsx'
 import PortfolioSection from './components/PortfolioSection.jsx'
@@ -8,7 +9,6 @@ import ProjectDetail from './components/ProjectDetail.jsx'
 import SiteHeader from './components/SiteHeader.jsx'
 import LoadingScreen from './components/LoadingScreen.jsx'
 import Footer from './components/Footer.jsx'
-import VideoSection from './components/VideoSection.jsx'
 import './styles.css'
 
 export default function App() {
@@ -20,6 +20,28 @@ export default function App() {
   const handleLoaderDone = useCallback(() => setLoaderExited(true), [])
 
   const ease = [0.16, 1, 0.3, 1]
+
+  // ── Lenis smooth scroll ────────────────────────────────────────────
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      touchMultiplier: 2,
+    })
+
+    let rafId
+    function raf(time) {
+      lenis.raf(time)
+      rafId = requestAnimationFrame(raf)
+    }
+    rafId = requestAnimationFrame(raf)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      lenis.destroy()
+    }
+  }, [])
 
   // ── Custom cursor ──────────────────────────────────────────────────
   // Floats toward the pointer with time-based exponential smoothing rather
@@ -91,7 +113,7 @@ export default function App() {
       <div className="app-bg" aria-hidden="true" />
 
       {/* Fixed glass header */}
-      <SiteHeader />
+      <SiteHeader onProjectOpen={(cat, slide) => setDetailProject({ cat, slide })} />
 
       {/* Hero — first thing shown once the loader exits. Always mounted
           (like .site-split below) rather than conditionally rendered, so
@@ -106,13 +128,7 @@ export default function App() {
       {/* HeroSequence mounts only after loader fully exits */}
       {loaderExited && <HeroSequence />}
 
-      {/* Portfolio types — stacked pinned story panels (Brand / Motion /
-          Packaging / Web), directly below Hero, before the portfolio links
-          section. Always mounted (same reasoning as Hero above: it's real,
-          tall document flow, so mounting it late would shove everything
-          below it down after the fact). Naturally hidden below the fold
-          during loading either way, and its own reveal is scroll-triggered
-          per panel. */}
+      {/* Portfolio types — stacked pinned story panels */}
       <PortfolioTypes />
 
       {/* Page content fades in once loader has exited */}
@@ -127,9 +143,6 @@ export default function App() {
         </div>
         <div className="split-right" aria-hidden="true" />
       </motion.div>
-
-      {/* Video showreel */}
-      <VideoSection />
 
       {/* Footer */}
       <Footer />

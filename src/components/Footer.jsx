@@ -196,8 +196,8 @@ const BEHANCE = {
   name: 'Behance',
   href: 'https://www.behance.net/ka-il',
   icon: (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M6.938 4.503c.702 0 1.34.06 1.92.188.577.13 1.07.33 1.485.61.41.28.733.65.96 1.12.225.47.34 1.05.34 1.73 0 .74-.17 1.36-.507 1.86-.336.5-.837.9-1.502 1.22.906.26 1.576.72 2.022 1.37.448.66.665 1.45.665 2.36 0 .75-.13 1.39-.41 1.93-.28.55-.67 1-1.16 1.35-.48.348-1.05.6-1.68.767-.635.165-1.3.254-1.99.254H0V4.503h6.938zm-.34 5.65c.585 0 1.07-.14 1.44-.42.37-.28.557-.73.557-1.35 0-.34-.06-.62-.18-.84-.12-.22-.29-.4-.5-.53-.21-.13-.45-.22-.727-.27-.276-.05-.57-.075-.88-.075H3.467v3.485H6.6zm.162 5.935c.334 0 .65-.03.95-.1.3-.07.563-.18.79-.33.228-.15.413-.36.552-.63.14-.27.21-.61.21-1.02 0-.81-.228-1.39-.683-1.73-.455-.34-1.06-.51-1.81-.51H3.467v4.32H6.76zm8.24-5.44c.46-.47 1.12-.7 1.99-.7.55 0 1.03.1 1.44.31.41.21.75.49 1.03.85.28.36.48.77.6 1.23.12.46.19.94.19 1.44H14.2c.06.77.32 1.34.78 1.7.46.37 1.03.55 1.72.55.47 0 .87-.11 1.2-.32.33-.21.55-.44.66-.7h2.32c-.37 1.13-.94 1.94-1.7 2.43-.77.49-1.7.73-2.8.73-.76 0-1.45-.12-2.07-.37-.62-.25-1.15-.61-1.58-1.07-.43-.46-.77-1.02-.99-1.65-.23-.64-.34-1.34-.34-2.1 0-.74.12-1.43.36-2.07.24-.63.58-1.18 1.02-1.63zm3.44 1.26c-.38-.41-.93-.62-1.66-.62-.49 0-.9.09-1.21.28-.32.19-.57.43-.75.71-.18.28-.3.58-.37.9h4.27c-.04-.72-.28-1.27-.66-1.69zM16.6 5.278h4.8v1.33H16.6V5.278z"/>
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M4.654 3c.461 0 .887.035 1.278.14.39.07.711.216.996.391.286.176.497.426.641.747.14.32.216.711.216 1.137 0 .496-.106.922-.356 1.242-.215.32-.566.606-.997.746.606.176 1.067.496 1.348.922.281.426.461.957.461 1.563 0 .496-.105.922-.285 1.278a2.317 2.317 0 0 1-.782.887c-.32.215-.711.39-1.137.496a5.329 5.329 0 0 1-1.278.176L0 12.803V3h4.654zm-.285 3.978c.39 0 .71-.105.957-.285.246-.18.355-.497.355-.887 0-.216-.035-.426-.105-.567a.981.981 0 0 0-.32-.355 1.84 1.84 0 0 0-.461-.176 2.264 2.264 0 0 0-.567-.07H1.668v2.34h2.7zm.105 4.193c.215 0 .426-.035.567-.07.176-.035.32-.106.461-.216s.25-.215.356-.356c.07-.14.105-.32.105-.566 0-.47-.14-.82-.425-1.067-.25-.215-.641-.32-1.137-.32H1.668v2.595h2.806zm6.957.035c.286.285.711.426 1.278.426.39 0 .746-.106 1.032-.286.285-.215.46-.426.53-.641h1.74c-.286.851-.712 1.457-1.278 1.848-.566.355-1.243.567-2.06.567a4.135 4.135 0 0 1-1.527-.285 2.827 2.827 0 0 1-1.137-.796 2.884 2.884 0 0 1-.712-1.172 4.515 4.515 0 0 1-.25-1.493c0-.536.07-1.032.25-1.493.18-.46.426-.852.747-1.172.32-.32.711-.566 1.137-.746.46-.181.957-.286 1.493-.286.606 0 1.137.105 1.598.355.46.25.851.567 1.137.992.285.391.496.852.641 1.348.07.496.105.996.07 1.563h-5.15c0 .58.21 1.11.461 1.351zm2.24-3.732c-.25-.25-.641-.39-1.137-.39-.32 0-.606.07-.817.178-.215.105-.39.25-.496.39a1.813 1.813 0 0 0-.285.497c-.036.175-.07.32-.07.461h3.196c-.07-.526-.25-.886-.39-1.136zm-3.127-3.728h3.978v.957h-3.978V3.746z"/>
     </svg>
   ),
 }
@@ -224,9 +224,12 @@ const MAIL = {
 }
 const UPWORK = {
   name: 'Upwork',
-  href: '#',
-  placeholder: true,
-  icon: <span className="footer-card-btn-mono">Up</span>,
+  href: 'https://www.upwork.com/freelancers/~01c78193322f89a4a7?mp_source=share',
+  icon: (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M18.561 13.158c-1.102 0-2.135-.467-3.074-1.227l.228-1.076.008-.042c.207-1.143.849-3.06 2.839-3.06 1.492 0 2.703 1.212 2.703 2.703-.001 1.489-1.212 2.702-2.704 2.702zm0-8.14c-2.539 0-4.51 1.649-5.31 4.366-1.22-1.834-2.148-4.036-2.687-5.892H7.828v7.112c-.002 1.406-1.141 2.546-2.547 2.546-1.405 0-2.543-1.14-2.543-2.546V3.492H0v7.112c0 2.914 2.37 5.303 5.281 5.303 2.913 0 5.283-2.389 5.283-5.303v-1.19c.529 1.107 1.182 2.229 1.974 3.221l-1.673 7.873h2.797l1.213-5.71c1.063.679 2.285 1.109 3.686 1.109 3 0 5.439-2.452 5.439-5.45 0-3-2.439-5.439-5.439-5.439z"/>
+    </svg>
+  ),
 }
 
 // ── Card groups shown in the footer ────────────────────────────────
@@ -387,83 +390,6 @@ const STACK_SPRING = { type: 'spring', stiffness: 260, damping: 22, mass: 0.7 }
 // wiggle/lift/neighbour-nudge choreography, which doesn't mean much on touch.
 const STACK_MOBILE_MQ = '(max-width: 820px)'
 
-// ── Scroll-driven staggered reveal ───────────────────────────────────
-// Each card rises into place independently as the footer approaches, on
-// its own slice of scroll progress — not all at once, and not on a timer.
-// Progress here is position-based (how close the stack's top edge is to a
-// fixed band of the viewport) rather than distance-from-page-bottom like
-// the wordmark: the footer isn't the last thing on the page (the wordmark
-// follows below), so there's always scroll room left for a normal
-// "element enters the viewport" range to fully resolve.
-//
-// CARDS_START_VH / CARDS_END_VH define that band: progress is 0 while the
-// stack's top is still down near the bottom of the viewport, and 1 once
-// it's risen up near the upper-middle — a natural ~half-viewport window of
-// scroll for the whole cascade to play out in.
-const CARDS_START_VH = 0.92
-const CARDS_END_VH   = 0.42
-
-// Per-card [start, span] slice of that 0→1 progress, plus how far (px) it
-// still has to rise at the start of its own slice. Staggered starts create
-// the one-after-another cascade; overlapping spans keep it reading as
-// fluid rather than robotically sequential. Varied rise distances keep
-// the three cards from moving in lockstep.
-const CARD_REVEAL = [
-  { start: 0.00, span: 0.55, rise: 104 },
-  { start: 0.16, span: 0.52, rise: 76 },
-  { start: 0.32, span: 0.52, rise: 122 },
-]
-
-// Ease-out: fast start, gentle settle — reads as the card "arriving" and
-// coming to rest, which suits a one-time reveal-on-scroll better than the
-// symmetric ease used for the reversible wordmark letters above.
-function easeOutCubic(p) {
-  return 1 - Math.pow(1 - p, 3)
-}
-
-function useCardsReveal(stackRef, cardRefs) {
-  useEffect(() => {
-    let rafId = null
-    let scheduled = false
-
-    const update = () => {
-      scheduled = false
-      const stack = stackRef.current
-      if (!stack) return
-
-      const rect    = stack.getBoundingClientRect()
-      const startPx = window.innerHeight * CARDS_START_VH
-      const endPx   = window.innerHeight * CARDS_END_VH
-      let progress  = (startPx - rect.top) / (startPx - endPx)
-      progress = Math.min(1, Math.max(0, progress))
-
-      CARD_REVEAL.forEach((cfg, i) => {
-        const el = cardRefs.current[i]
-        if (!el) return
-        let p = (progress - cfg.start) / cfg.span
-        p = Math.min(1, Math.max(0, p))
-        const eased = easeOutCubic(p)
-        el.style.transform = `translateY(${(1 - eased) * cfg.rise}px)`
-      })
-    }
-
-    const onScrollOrResize = () => {
-      if (scheduled) return
-      scheduled = true
-      rafId = requestAnimationFrame(update)
-    }
-
-    update() // correct initial state on mount, before any scroll fires
-    window.addEventListener('scroll', onScrollOrResize, { passive: true })
-    window.addEventListener('resize', onScrollOrResize)
-    return () => {
-      window.removeEventListener('scroll', onScrollOrResize)
-      window.removeEventListener('resize', onScrollOrResize)
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [stackRef, cardRefs])
-}
-
 function useIsStackMobile() {
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== 'undefined' && window.matchMedia(STACK_MOBILE_MQ).matches
@@ -496,13 +422,13 @@ function CardBody({ title, items, image, video }) {
       </div>
 
       <div className="footer-card-row">
-        {items.map(({ name, href, icon, placeholder }) => (
+        {items.map(({ name, href, icon }) => (
           <a
             key={name}
             href={href}
             target={href.startsWith('http') ? '_blank' : undefined}
             rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-            className={`footer-card-btn${placeholder ? ' footer-card-btn--placeholder' : ''}`}
+            className="footer-card-btn"
             aria-label={name}
             title={name}
             onClick={(e) => e.stopPropagation()}
@@ -627,24 +553,15 @@ function FooterCardExpanded({ card, onClose }) {
 function FooterCardStack() {
   const [hoveredIndex, setHoveredIndex]   = useState(null)
   const [expandedIndex, setExpandedIndex] = useState(null)
-  const isMobile   = useIsStackMobile()
-  const stackRef   = useRef(null)
-  const revealRefs = useRef([])
-  useCardsReveal(stackRef, revealRefs)
+  const isMobile = useIsStackMobile()
+  const stackRef = useRef(null)
 
   return (
     <div className="footer-card-stack" ref={stackRef}>
       {CARDS.map((card, i) => (
-        // .footer-card-reveal owns the scroll-linked entrance (translateY,
-        // written directly via useCardsReveal's rAF loop — no React
-        // re-renders on scroll). Because a non-none `transform` always
-        // creates a new stacking context, this wrapper — not the inner
-        // card — is what needs the "bring to front on hover" z-index, or
-        // it'd be trapped below its own reveal wrapper's paint order.
         <div
           key={card.id}
           className="footer-card-reveal"
-          ref={(el) => { revealRefs.current[i] = el }}
           style={{ zIndex: hoveredIndex === i ? 20 : i + 1 }}
         >
           <FooterStackCard
