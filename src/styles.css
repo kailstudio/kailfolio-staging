@@ -3903,6 +3903,161 @@ body {
   .wl-grid-4 { grid-template-columns: 1fr 1fr; }
 }
 
+/* ── Well Lab — pill glassmorphism video player ────────────────── */
+.wlp-outer {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4px; /* glow buffer */
+}
+
+.wlp-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 36px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(51, 92, 255, 0.12),
+    0 8px 48px rgba(0, 0, 0, 0.45),
+    0 2px 12px rgba(51, 92, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.wlp-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 36px;
+}
+
+/* big centre play button */
+.wlp-centre-btn {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 68px;
+  height: 68px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.22s ease, transform 0.22s ease, background 0.18s ease;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.30);
+  z-index: 2;
+}
+.wlp-centre-btn:hover { background: rgba(255, 255, 255, 0.28); transform: scale(1.08); }
+.wlp-centre-btn--hidden { opacity: 0; pointer-events: none; }
+
+/* glassmorphism control bar */
+.wlp-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  height: 52px;
+  border-radius: 999px;
+  background: rgba(212, 199, 255, 0.60);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 4px 24px rgba(140, 100, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  z-index: 3;
+}
+.wlp-bar--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wlp-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.30);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  color: rgba(40, 20, 80, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.wlp-btn:hover { background: rgba(255, 255, 255, 0.55); transform: scale(1.08); }
+
+.wlp-time {
+  font-size: 0.72rem;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 500;
+  color: rgba(40, 20, 80, 0.75);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.03em;
+}
+
+/* scrubber */
+.wlp-track {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(140, 100, 255, 0.20);
+  position: relative;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+.wlp-track:hover { height: 6px; }
+.wlp-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #335CFF, #a78bfa);
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+.wlp-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  pointer-events: none;
+  transition: left 0.1s linear;
+}
+
+@media (max-width: 600px) {
+  .wlp-shell { border-radius: 20px; }
+  .wlp-video { border-radius: 20px; }
+  .wlp-bar { bottom: 10px; left: 10px; right: 10px; height: 44px; gap: 7px; padding: 0 12px; }
+  .wlp-centre-btn { width: 52px; height: 52px; }
+  .wlp-time { font-size: 0.65rem; }
+}
+
 /* ── Studio Intro — characters grid ───────────────────────────── */
 .si-characters-grid {
   display: grid;

@@ -2540,6 +2540,145 @@ const WELL_LAB_CFG = {
 const WL = {
   vids:    [1, 3, 4].map(n => `${BASE}well-lab/well-lab${n}.webm`),
   statics: [2, 3, 4].map(n => `${BASE}well-lab/well-lab-static${n}.webp`),
+  full:    `${BASE}well-lab/well%20lab%20full%20video.mp4`,
+}
+
+// ── Pill-shaped glassmorphism video player ───────────────────────────
+function WellLabPlayer() {
+  const videoRef  = useRef(null)
+  const [playing, setPlaying]   = useState(false)
+  const [muted,   setMuted]     = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [current,  setCurrent]  = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [showCtrl, setShowCtrl] = useState(true)
+  const hideTimer = useRef(null)
+
+  const fmt = (s) => {
+    if (!s || isNaN(s)) return '0:00'
+    const m = Math.floor(s / 60)
+    const sec = Math.floor(s % 60).toString().padStart(2, '0')
+    return `${m}:${sec}`
+  }
+
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused) { v.play(); setPlaying(true) }
+    else          { v.pause(); setPlaying(false) }
+  }
+
+  const toggleMute = () => {
+    const v = videoRef.current
+    if (!v) return
+    v.muted = !v.muted
+    setMuted(v.muted)
+  }
+
+  const onTimeUpdate = () => {
+    const v = videoRef.current
+    if (!v || !v.duration) return
+    setCurrent(v.currentTime)
+    setProgress((v.currentTime / v.duration) * 100)
+  }
+
+  const onLoadedMetadata = () => {
+    setDuration(videoRef.current?.duration ?? 0)
+  }
+
+  const onEnded = () => setPlaying(false)
+
+  const seek = (e) => {
+    const v = videoRef.current
+    if (!v) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const pct  = (e.clientX - rect.left) / rect.width
+    v.currentTime = pct * v.duration
+  }
+
+  const revealControls = () => {
+    setShowCtrl(true)
+    clearTimeout(hideTimer.current)
+    if (playing) {
+      hideTimer.current = setTimeout(() => setShowCtrl(false), 2800)
+    }
+  }
+
+  useEffect(() => () => clearTimeout(hideTimer.current), [])
+
+  const toggleFullscreen = () => {
+    const el = videoRef.current
+    if (!el) return
+    if (!document.fullscreenElement) el.requestFullscreen?.()
+    else document.exitFullscreen?.()
+  }
+
+  return (
+    <div className="wlp-outer" onMouseMove={revealControls} onMouseLeave={() => playing && setShowCtrl(false)}>
+      {/* pill video shell */}
+      <div className="wlp-shell">
+        <video
+          ref={videoRef}
+          className="wlp-video"
+          src={WL.full}
+          playsInline
+          preload="metadata"
+          onTimeUpdate={onTimeUpdate}
+          onLoadedMetadata={onLoadedMetadata}
+          onEnded={onEnded}
+          onClick={togglePlay}
+        />
+
+        {/* big centre play/pause */}
+        <button
+          className={`wlp-centre-btn${playing ? ' wlp-centre-btn--hidden' : ''}`}
+          onClick={togglePlay}
+          aria-label={playing ? 'Pause' : 'Play'}
+        >
+          {playing ? (
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M8 5v14l11-7z"/></svg>
+          )}
+        </button>
+
+        {/* glassmorphism control bar */}
+        <div className={`wlp-bar${showCtrl ? ' wlp-bar--visible' : ''}`}>
+          {/* play/pause pill */}
+          <button className="wlp-btn" onClick={togglePlay} aria-label={playing ? 'Pause' : 'Play'}>
+            {playing ? (
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M8 5v14l11-7z"/></svg>
+            )}
+          </button>
+
+          {/* time */}
+          <span className="wlp-time">{fmt(current)} / {fmt(duration)}</span>
+
+          {/* scrubber */}
+          <div className="wlp-track" onClick={seek} role="slider" aria-label="Seek">
+            <div className="wlp-fill" style={{ width: `${progress}%` }} />
+            <div className="wlp-thumb" style={{ left: `${progress}%` }} />
+          </div>
+
+          {/* mute */}
+          <button className="wlp-btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
+            {muted ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="16" height="16"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="16" height="16"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+            )}
+          </button>
+
+          {/* fullscreen */}
+          <button className="wlp-btn" onClick={toggleFullscreen} aria-label="Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="16" height="16"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function WLMedia({ src, alt, className = '' }) {
@@ -2568,6 +2707,13 @@ function WellLabCaseStudyView({ cat, cs, slide }) {
   return (
     <div className="cs-wrap pkg-case-study">
       <MotionHero cs={cs} slide={slide} cfg={WELL_LAB_CFG} />
+
+      {/* Full video — pill glassmorphism player */}
+      <CSSection title="Full Film" variant="dark">
+        <Reveal delay={0.08}>
+          <WellLabPlayer />
+        </Reveal>
+      </CSSection>
 
       <CSSection title="The Work" variant="dark">
         {/* Three videos */}
