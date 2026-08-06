@@ -133,13 +133,13 @@ body {
   right: 0;
   z-index: 200;
   height: var(--header-h);
-  background: rgba(18, 10, 60, 0.32);
-  backdrop-filter: blur(28px) saturate(1.6);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(212, 199, 255, 0.60);
+  backdrop-filter: blur(28px) saturate(1.8) brightness(1.05);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8) brightness(1.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow:
-    0 4px 32px rgba(10, 5, 40, 0.18),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.10);
+    0 4px 32px rgba(140, 100, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
   pointer-events: auto;
   /* overflow: visible so dropdown panels escape the bar */
   overflow: visible;
@@ -198,19 +198,20 @@ body {
   border-radius: 999px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: #333333;
   font-family: 'Raleway', sans-serif;
   font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
   white-space: nowrap;
 }
 .site-nav-btn:hover,
 .site-nav-btn.is-active {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  color: #111111;
 }
 .site-nav-btn.is-active .site-nav-chevron {
   transform: rotate(180deg);

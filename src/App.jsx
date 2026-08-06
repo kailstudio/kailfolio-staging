@@ -34,13 +34,18 @@ export default function App() {
 
   const ease = [0.16, 1, 0.3, 1]
 
-  // ── Lenis smooth scroll ────────────────────────────────────────────
+  // ── Lenis smooth scroll (desktop / mouse only) ────────────────────
+  // Mobile browsers have native momentum scrolling — Lenis intercepts
+  // touch events and replaces that with JS easing, which feels sluggish
+  // or erratic compared to the platform's own physics. Skip it on touch.
   useEffect(() => {
+    const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches
+    if (isTouch) return
+
     const lenis = new Lenis({
       duration: 1.1,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      touchMultiplier: 2,
     })
 
     let rafId
