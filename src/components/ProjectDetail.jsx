@@ -1142,7 +1142,10 @@ function CSCTA() {
     <section className="cs-end-cta">
       {/* Background image — large, right-anchored, bottom may be clipped */}
       <div className="cs-cta-img-wrap" aria-hidden="true">
-        <img src={`${BASE}footer/getintouch.webp`} alt="" className="cs-cta-img" />
+        <img src={`${BASE}footer/getintouch.webp`} alt="" className="cs-cta-img cs-cta-img--desktop" />
+      </div>
+      <div className="cs-cta-img-wrap cs-cta-img-wrap--mobile" aria-hidden="true">
+        <img src={`${BASE}footer/getintouch-mobile.webp`} alt="" className="cs-cta-img" />
       </div>
       {/* Foreground content: heading + links */}
       <div className="cs-cta-content">

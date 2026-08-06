@@ -6279,6 +6279,7 @@ body {
   z-index: 0;
   isolation: isolate;
 }
+.cs-cta-img-wrap--mobile { display: none; }
 .cs-cta-img {
   width: 100%;
   height: auto;
@@ -6531,4 +6532,10 @@ body {
   .cs-apps-grid       { grid-template-columns: 1fr; }
   .cs-gallery         { grid-template-columns: 1fr; }
   .cs-gal-item--wide  { grid-column: span 1; }
+  /* CTA section — mobile */
+  .cs-cta-img-wrap            { display: none; }
+  .cs-cta-img-wrap--mobile    { display: block; position: absolute; bottom: 0; top: auto; right: 0; width: 47%; pointer-events: none; z-index: 0; }
+  .cs-cta-link-label  { display: none; }
+  .cs-cta-link        { padding: 12px; }
+  .cs-cta-link-icon svg { width: 20px; height: 20px; }
 }
