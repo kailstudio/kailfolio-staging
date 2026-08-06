@@ -454,7 +454,7 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
             className="pdff-mfs"
             role="dialog"
             aria-modal="true"
-            aria-label={`${title} — full screen`}
+            aria-label={`${title} full screen`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

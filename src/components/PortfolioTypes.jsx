@@ -135,7 +135,7 @@ const OUTRO_PANEL = {
   cta: true,
   eyebrow: 'Explore',
   name: 'See Our Work',
-  tagline: 'Every discipline above, in practice — browse the individual projects.',
+  tagline: 'Every discipline above, in practice. Browse the individual projects.',
   accent: '#e0f87d',
   accentDark: '#9aab52',
 }
@@ -385,7 +385,7 @@ function PortfolioTypeCard({ cat, index, total, deckProgress, isMobile }) {
       {/* Glass label strip pinned to the bottom of the card */}
       <div className="ptypes-card-label">
         <span className="ptypes-card-label-eyebrow">
-          {String(index + 1).padStart(2, '0')} — {cat.eyebrow}
+          {String(index + 1).padStart(2, '0')} · {cat.eyebrow}
           {cat.comingSoon && <span className="pf-coming-soon-label" style={{ marginLeft: 8 }}>Coming soon</span>}
         </span>
         <h2 className="ptypes-card-label-name">{cat.name}</h2>

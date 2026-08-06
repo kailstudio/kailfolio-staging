@@ -2197,7 +2197,7 @@ const STUDIO_INTRO_CHARACTERS = [
   {
     name: 'Ila',
     img: `${BASE_CHARS}studio-intro/ila.jpg`,
-    bio: 'Always by Ika\'s side — a small and curious wanderer who notices what others overlook. Ily explores gently and gathers details that bring depth, care, and meaning to each idea.',
+    bio: 'Always by Ika\'s side, a small and curious wanderer who notices what others overlook. Ily explores gently and gathers details that bring depth, care, and meaning to each idea.',
   },
   {
     name: 'Doti',
@@ -2212,7 +2212,7 @@ const STUDIO_INTRO_CHARACTERS = [
   {
     name: 'Bexley',
     img: `${BASE_CHARS}studio-intro/bexley.jpg`,
-    bio: 'Composed, exacting, and not easily impressed. Bexley holds a high standard and expects work to be thoughtful, refined, and considered. Their approval is hard to earn — but when it comes, it truly means something.',
+    bio: 'Composed, exacting, and not easily impressed. Bexley holds a high standard and expects work to be thoughtful, refined, and considered. Their approval is hard to earn, but when it comes, it truly means something.',
   },
 ]
 
