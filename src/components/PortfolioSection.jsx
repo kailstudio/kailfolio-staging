@@ -217,7 +217,7 @@ export const CATEGORIES = [
           subtitle: 'Motion Design · 3D Animation · Studio Rebrand',
           year: '2026',
           duration: 'Ongoing',
-          status: 'In Production',
+          status: 'Published',
           sections: [
             {
               id: 'overview',
@@ -256,7 +256,7 @@ export const CATEGORIES = [
           sections: [
             {
               id: 'overview',
-              body: "A purely abstract motion piece built from precise geometry. No narrative, no character, just form, rhythm, and mathematics in motion.\n\nGeometric Showcase became the studio's highest-performing piece on YouTube, accumulating over 45,000 views and 800+ likes from audiences drawn to its minimal precision. The piece demonstrates what becomes possible when animation is stripped to its essentials: exact timing, controlled movement, and the satisfaction of shapes behaving exactly as they should.\n\nThe work stands as a proof of craft: motion design at its most deliberate, built to show what the studio can do when given complete creative freedom.",
+              body: "A purely abstract motion piece built from precise geometry. No narrative, no character, just form, rhythm, and mathematics in motion.\n\nGeometric Showcase became the studio's highest-performing piece on YouTube, accumulating over 45,000 views and 800+ likes from audiences drawn to its minimal precision. The piece demonstrates what becomes possible when animation is stripped to its essentials: exact timing, controlled movement, and the satisfaction of shapes behaving exactly as they should.",
             },
           ],
         },
@@ -273,7 +273,7 @@ export const CATEGORIES = [
           sections: [
             {
               id: 'overview',
-              body: "A self-initiated experimental animation exploring the rhythm and mechanics of movement, made without a brief, without a client, and without constraints beyond the question itself.\n\nSteps is a study in motion principles: how timing shapes feeling, how the simplest movement can carry weight, and what happens when animation is reduced to its most essential form. The piece came from a desire to experiment freely, push craft, and follow a single concept without compromise.\n\nWork made for its own sake often becomes the clearest demonstration of skill. Steps is exactly that.",
+              body: "Steps is a self-initiated motion study exploring the foundations of character animation through a simple walk cycle. Created using abstract shapes to represent people and animals, the project focuses on how even the most minimal forms can communicate personality, weight, and movement.\n\nThe animation demonstrates the core principles of motion design, including timing, spacing, easing, balance, and simple physics. By stripping the character back to its most essential forms, the project highlights how thoughtful movement alone can create life, rhythm, and expression.\n\nSince its release, Steps has become one of Studio KAIL's signature pieces, receiving over 10,000 views on YouTube. It continues to serve as a showcase of the studio's approach to motion craft, demonstrating how strong animation is built on mastering the fundamentals.",
             },
           ],
         },
@@ -290,7 +290,7 @@ export const CATEGORIES = [
           sections: [
             {
               id: 'overview',
-              body: "A typographic motion exploration working through the full alphabet, each of twenty-six letters its own opportunity to explore a different technique, rhythm, or visual approach.\n\nA to Z is an exercise in constraint and creativity: the same problem, solved twenty-six different ways. One continuous piece made from deliberate variation, a demonstration of range, craft, and the discipline required to keep each solution feeling fresh while maintaining a coherent whole.\n\nBuilt entirely for the challenge of it: the kind of self-directed work that sharpens the skills that make client work better.",
+              body: "A to Z is a self-initiated typographic motion project exploring animation through every letter of the alphabet. Each of the twenty-six letters presents a unique opportunity to experiment with different transitions, timing, rhythm, and visual techniques while maintaining a cohesive overall style.\n\nThe project demonstrates a broad range of motion design principles, showcasing how typography can be transformed through movement alone. From playful transformations to seamless transitions, each animation explores a different approach, creating a collection that highlights versatility, technical craft, and attention to detail.",
             },
           ],
         },
@@ -307,7 +307,7 @@ export const CATEGORIES = [
           sections: [
             {
               id: 'overview',
-              body: "A self-initiated piece exploring growth, emergence, and organic motion, a personal study in the intersection of the mathematical and the alive.\n\nBloom studies moments of expansion, contraction, and transformation: forms that feel like they are breathing, growing, responding. The work sits at the boundary between the geometric and the organic, using the precision of animation to simulate something that feels genuinely natural.\n\nMade without a brief and without a client, the kind of work that only exists because someone made time for it, and that demonstrates the depth of craft informing every commissioned project.",
+              body: "Bloom is a self-initiated motion study following the simple lifecycle of a flower as it blooms. Designed with a playful, cartoon-inspired aesthetic, the project explores how colour, timing, and movement can transform a simple illustration into a warm, expressive animation.\n\nThe piece begins with a sepia-toned palette, evoking a nostalgic, vintage feel before gradually transitioning into a vibrant blue colour scheme as the flower comes to life. Through subtle easing, organic motion, and thoughtful colour progression, Bloom demonstrates how animation can create emotion and tell a visual story using the simplest of subjects.\n\nWith its softer, vintage-inspired art direction, Bloom showcases a different side of Studio KAIL's motion work while highlighting the studio's ability to combine expressive illustration, colour, and animation into charming, characterful pieces.",
             },
           ],
         },

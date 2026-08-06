@@ -112,7 +112,7 @@ const PANEL_VIDEOS = {
 const INTRO_PANEL = {
   id: 'intro',
   eyebrow: 'Portfolio',
-  name: 'Four Disciplines, One Studio',
+  name: 'We specialise in 4 distinct areas of design.',
   tagline: 'A closer look at how Studio KAIL works, discipline by discipline.',
   body: 'We design strategic brand foundations across identity, websites, animation, print, and packaging: building cohesive systems that work seamlessly across digital and physical spaces.',
   accent: '#C4B8F0',
@@ -134,7 +134,7 @@ const OUTRO_PANEL = {
   id: 'outro',
   cta: true,
   eyebrow: 'Explore',
-  name: 'See The Work',
+  name: 'See Our Work',
   tagline: 'Every discipline above, in practice — browse the individual projects.',
   accent: '#e0f87d',
   accentDark: '#9aab52',
@@ -413,11 +413,17 @@ export default function PortfolioTypes() {
     offset: ['start start', 'end end'],
   })
 
+  // On mobile, momentum scrolling burns through 100vh-per-card too fast
+  // for any card to be readable. Bumping to 160vh per panel gives the dwell
+  // window ~44% more scroll distance, so fast swipes still settle on each
+  // card long enough to read it before the next arrives.
+  const panelVh = isMobile ? 160 : 100
+
   return (
     <section
       className="ptypes-section"
       ref={sectionRef}
-      style={{ height: `${PANELS.length * 100}vh` }}
+      style={{ height: `${PANELS.length * panelVh}vh` }}
       aria-label="Portfolio disciplines"
     >
       <div className="ptypes-sticky">

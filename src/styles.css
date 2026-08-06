@@ -86,6 +86,10 @@ html {
   scroll-padding-top: var(--header-h);
   scrollbar-width: none;       /* Firefox */
   -ms-overflow-style: none;    /* IE / Edge legacy */
+  /* Fallback color that matches the gradient's dominant lilac stop.
+     Shows during iOS rubber-band overscroll or any moment .app-bg
+     hasn't painted — visually indistinguishable from the animated layer. */
+  background: #C4B8F0;
 }
 html::-webkit-scrollbar { display: none; } /* Chrome / Safari / Edge */
 
@@ -103,7 +107,9 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #ddd5ff;
+  /* Transparent so html's #C4B8F0 fallback shows through cleanly —
+     no more mismatched purple flash during fast scroll. */
+  background: transparent;
 }
 
 /* ─── App shell ─────────────────────────────────────────────────── */
@@ -361,8 +367,230 @@ body {
     max-width: calc(100vw - 32px);
   }
 
-  .site-nav { display: none; } /* hide nav on mobile — keep just logo */
+  .site-nav { display: none; } /* hide desktop nav — hamburger shown instead */
 }
+
+/* ── Mobile hamburger button ────────────────────────────────────────
+   Hidden on desktop; visible only at ≤600px.
+   Three lines morph to an × when `.is-open` is set.
+──────────────────────────────────────────────────────────────────── */
+.site-mobile-menu-btn {
+  display: none; /* desktop: hidden */
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.site-mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.20);
+}
+
+@media (max-width: 600px) {
+  .site-mobile-menu-btn { display: flex; }
+}
+
+/* Three-line icon container */
+.site-mobile-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4.5px;
+  width: 18px;
+  height: 14px;
+}
+
+.site-mobile-hamburger span {
+  display: block;
+  height: 1.5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.88);
+  transform-origin: center;
+  transition:
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.20s ease,
+    width     0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Morph to × when open */
+.site-mobile-menu-btn.is-open .site-mobile-hamburger span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.site-mobile-menu-btn.is-open .site-mobile-hamburger span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.site-mobile-menu-btn.is-open .site-mobile-hamburger span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ── Mobile full-screen overlay ─────────────────────────────────────
+   Fixed below the header, covering everything else. Dark glass that
+   lets the aurora gradient bleed through — same visual language as
+   the site header itself. Only rendered on mobile (the button that
+   opens it is hidden on desktop, so this panel never appears there).
+──────────────────────────────────────────────────────────────────── */
+/* Overlay — heavily frosted, near-white. Full-bleed rows sit edge-to-edge
+   so no horizontal padding here; only top/bottom breathing room. */
+.site-mobile-menu {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 190;
+  background: rgba(224, 248, 125, 0.40);
+  backdrop-filter: blur(56px) saturate(2.2);
+  -webkit-backdrop-filter: blur(56px) saturate(2.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.60);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 16px 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Category accordion row ─────────────────────────────────────── */
+.site-mobile-cat {
+  display: flex;
+  flex-direction: column;
+}
+
+.site-mobile-cat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.site-mobile-cat-btn:active {
+  opacity: 0.75;
+}
+
+.site-mobile-cat-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 300;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #000;
+  /* Lime glass pill — full width */
+  display: block;
+  width: 100%;
+  background: rgba(224, 248, 125, 1);
+  backdrop-filter: blur(8px) saturate(1.6);
+  -webkit-backdrop-filter: blur(8px) saturate(1.6);
+  border-radius: 999px;
+  padding: 14px 24px;
+  border: 1px solid #fff;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.site-mobile-cat-btn.is-open .site-mobile-cat-label {
+  background: rgba(224, 248, 125, 1);
+  color: #000;
+}
+
+.site-mobile-cat-chevron {
+  display: none;
+}
+
+/* ── Project grid inside expanded accordion ─────────────────────── */
+.site-mobile-cat-projects {
+  background: transparent;
+}
+
+.site-mobile-projects-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 4px 24px 20px;
+}
+
+.site-mobile-project {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+}
+.site-mobile-project:active {
+  transform: scale(0.94);
+  opacity: 0.85;
+}
+.site-mobile-project--soon {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* Thumbnail — clean, no border, just radius + gentle shadow */
+.site-mobile-project-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(60, 40, 140, 0.10);
+}
+
+.site-mobile-project-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Label — small caps tracking, muted */
+.site-mobile-project-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(40, 30, 90, 0.45);
+  line-height: 1;
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-mobile-project-soon {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(100, 80, 200, 0.04);
+  border: 1px dashed rgba(100, 80, 200, 0.14);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(60, 50, 120, 0.30);
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════
    SPLIT-SCREEN LAYOUT
@@ -492,20 +720,12 @@ body {
 .app-bg {
   position: fixed;
   inset: 0;
-  /* `inset:0` alone sizes this against the fixed-position containing block,
-     which mobile browsers can compute from the *layout* viewport rather
-     than the *visual* one. Scrolling triggers the address-bar collapse,
-     which grows the visual viewport without this element growing to
-     match — for the length of that toolbar animation there's a sliver at
-     the bottom where this fixed background falls short, revealing the
-     plain `body` background (`#ddd5ff`, the purple flash) underneath.
-     `dvh`/`dvw` track the real, currently-visible viewport as the toolbar
-     animates, closing that gap; the plain vh/vw lines are just a fallback
-     for browsers without dvh support. */
-  width: 100vw;
-  width: 100dvw;
-  height: 100vh;
-  height: 100dvh;
+  /* `position: fixed; inset: 0` pins all four edges to the visual viewport
+     directly — no explicit width/height needed. Explicit dvh/dvw values
+     were causing a resize flash during fast scroll on mobile because dvh
+     updates dynamically as the browser chrome hides/shows, triggering a
+     repaint mid-scroll. The html background (#C4B8F0) covers any gap that
+     might briefly appear during rubber-band overscroll. */
   z-index: -1;
   /*
    * Studio KAIL brand gradient — blue / lilac / lime at background-safe
@@ -2675,8 +2895,9 @@ body {
 }
 
 .ptypes-card-label-eyebrow {
+  font-family: 'Raleway', sans-serif;
   font-size: clamp(0.62rem, 0.82vw, 0.72rem);
-  font-weight: 600;
+  font-weight: 300;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--text-mid);
@@ -2684,7 +2905,7 @@ body {
 
 .ptypes-card-label-name {
   font-family: 'Raleway', sans-serif;
-  font-weight: 700;
+  font-weight: 300;
   font-size: clamp(1.1rem, 2.2vw, 1.6rem);
   line-height: 1.15;
   color: var(--text-dark);
@@ -2714,7 +2935,7 @@ body {
   background: rgba(255, 255, 255, 0.55);
   color: #1a1a2e;
   font-family: 'Raleway', sans-serif;
-  font-weight: 600;
+  font-weight: 300;
   font-size: clamp(0.82rem, 1vw, 0.92rem);
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -4476,6 +4697,138 @@ body {
 .pgm-reflection { background: #2C365E !important; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   PDF FLIPBOOK — mobile preview card + download button
+   Only rendered on mobile (isMobile branch in PDFFlipbook.jsx).
+   Full flipbook styles follow below.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Outer wrapper — same border-radius language as the full .pdff */
+.pdff-mobile-preview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Canvas container — rounded card, glass feel */
+.pdff-mobile-preview-canvas-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 8px 32px rgba(80, 60, 180, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdff-mobile-preview-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 18px;
+}
+
+/* Loading / error state inside the canvas wrap */
+.pdff-mobile-preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(60, 50, 120, 0.55);
+}
+
+/* Page-count pill overlaid on the bottom-right of the preview */
+.pdff-mobile-preview-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  white-space: nowrap;
+}
+
+/* ── Download CTA button ─────────────────────────────────────────── */
+.pdff-mobile-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 22px;
+  text-decoration: none;
+  /* White glass — stands out clearly against the project-detail overlay */
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.90);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(80, 60, 180, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transition: background 0.22s ease, transform 0.18s ease, box-shadow 0.22s ease;
+}
+.pdff-mobile-download-btn:active {
+  transform: scale(0.975);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 4px 16px rgba(80, 60, 180, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* Download arrow icon circle */
+.pdff-mobile-download-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(51, 85, 255, 0.10);
+  border: 1px solid rgba(51, 85, 255, 0.18);
+  flex-shrink: 0;
+  color: var(--blue);
+}
+
+/* Text block: label + subtitle */
+.pdff-mobile-download-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pdff-mobile-download-label {
+  font-family: 'Raleway', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: 0.01em;
+}
+
+.pdff-mobile-download-sub {
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(60, 50, 120, 0.55);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    PDF FLIPBOOK — PDFFlipbook.jsx
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -5901,78 +6254,217 @@ body {
   font-style: italic;
 }
 
-/* ── End CTA ──────────────────────────────────────────────────── */
+/* ── End CTA — glassmorphism card matching other cs-section blocks ── */
 .cs-end-cta {
-  padding: clamp(60px,10vw,100px) clamp(24px,6vw,80px);
+  position: relative;
+  overflow: hidden;   /* clips image and banner at section edges */
+  /* top padding = banner height + small breathing room */
+  padding: calc(clamp(70px, 8vw, 100px) + 12px) clamp(24px, 6vw, 72px) clamp(40px, 6vw, 72px);
+  margin: 0 0 12px;
+  border-radius: 24px;
+  background: rgba(249, 240, 230, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.80);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
 }
 
-.cs-end-cta-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  text-align: center;
+/* Background image — right-anchored, clearly behind all content */
+.cs-cta-img-wrap {
+  position: absolute;
+  right: -4%;
+  top: 0;
+  width: 67%;
+  pointer-events: none;
+  z-index: 0;
+  isolation: isolate;
+}
+.cs-cta-img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.cs-cta-heading {
+/* Foreground content — sits clearly above the background image */
+.cs-cta-content {
+  position: relative;
+  z-index: 10;
+  isolation: isolate;
+}
+
+.cs-cta-eyebrow span {
+  white-space: nowrap;
+}
+
+/* "Working on something similar?" — large, semi-bold */
+.cs-cta-eyebrow {
   font-family: 'Raleway', sans-serif;
-  font-size: clamp(1.5rem, 3.5vw, 2.6rem);
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  color: #332824;
-  max-width: 560px;
-  margin: 0;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 36px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
-.cs-cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 32px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  transition: opacity 0.2s, transform 0.2s;
+/* Banner — pinned to the top edge of the section, full width */
+.cs-cta-banner-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(70px, 8vw, 100px);
+  pointer-events: none;
+  z-index: 10;
 }
-.cs-cta-btn:hover { opacity: 0.88; transform: scale(1.03); }
 
-.cs-cta-contacts {
+/* Ribbon slot — fills the banner wrap */
+.cs-cta-banner-slot {
+  position: absolute;
+  inset: 0;
+  left: -40px;
+  right: -40px;
+  pointer-events: none;
+}
+
+/* Drag layer — mirrors .ptypes-banner-drag-layer */
+.cs-cta-banner-drag-layer {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+/* Scrolling track — mirrors .ptypes-banner-track */
+.cs-cta-banner-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  animation: ctaBannerScroll 31.5s linear infinite;
+  will-change: transform;
+}
+
+@keyframes ctaBannerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-1 * var(--cta-period, 820px))); }
+}
+
+/* SVG wrapper — mirrors .ptypes-banner-svg */
+.cs-cta-banner-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cs-cta-banner-track:hover .cs-cta-banner-svg {
+  transform: scale(1.08);
+}
+
+/* Lime ribbon — same colour as homepage banner */
+.cs-cta-banner-ribbon {
+  stroke: #e0f87d;
+}
+
+/* Text — dark, uppercase, same style as homepage */
+.cs-cta-banner-text {
+  fill: #333333;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: var(--cta-banner-font, 34px);
+}
+
+/* Word hover → bold — intentional snappy toggle, same as homepage */
+.cs-cta-banner-word:hover {
+  font-weight: 600;
+}
+
+/* Social / contact links row */
+.cs-cta-links {
   display: flex;
+  gap: clamp(10px, 2vw, 20px);
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
-.cs-cta-contact-link {
+.cs-cta-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 22px;
-  border-radius: 999px;
-  background: rgba(0,0,0,0.07);
-  border: 1px solid rgba(0,0,0,0.10);
-  color: #332824;
-  font-size: 0.88rem;
-  font-weight: 600;
   text-decoration: none;
-  transition: background 0.18s, transform 0.18s;
+  color: #2a2a2a;
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(0.8rem, 1.4vw, 0.95rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-radius: 100px;
+  /* glassmorphism base */
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  position: relative;
+  overflow: hidden;
+  /* pseudo glow layer */
+  isolation: isolate;
+  transition:
+    color 0.4s ease,
+    box-shadow 0.4s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.cs-cta-contact-link:hover {
-  background: rgba(0,0,0,0.13);
-  transform: translateY(-2px);
+/* lime shimmer that slides in on hover */
+.cs-cta-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    rgba(224, 248, 125, 0) 0%,
+    rgba(224, 248, 125, 0.92) 50%,
+    rgba(224, 248, 125, 0) 100%
+  );
+  transform: translateX(-110%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1;
 }
-.cs-cta-contact-icon {
+.cs-cta-link:hover::before {
+  transform: translateX(110%);
+}
+.cs-cta-link:hover {
+  color: #1a1a1a;
+  box-shadow:
+    0 4px 24px rgba(180, 220, 60, 0.45),
+    0 1px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+}
+
+.cs-cta-link-icon {
   display: flex;
   align-items: center;
-  width: 18px;
-  height: 18px;
+  justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.cs-cta-contact-icon svg { width: 100%; height: 100%; }
+.cs-cta-link:hover .cs-cta-link-icon {
+  transform: scale(1.15);
+}
+.cs-cta-link-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.cs-cta-link-label {
+  line-height: 1;
+}
 
 /* ── PGM pill override ────────────────────────────────────────── */
 .pgm-pill {

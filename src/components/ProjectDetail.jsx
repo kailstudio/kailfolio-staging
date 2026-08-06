@@ -947,28 +947,230 @@ const CTA_CONTACTS = [
   },
 ]
 
-function CSCTA({ cat }) {
+// ── CTA banner constants (mirrors PTypesBanner physics) ───────────────
+const CTA_BANNER_LABEL    = 'Get in touch'
+const CTA_BANNER_WORDS    = CTA_BANNER_LABEL.split(' ')
+const CTA_BANNER_SEP      = '   •   '
+const CTA_BANNER_REPEATS  = 12
+const CTA_BANNER_PERIOD   = 820
+const CTA_BANNER_PT_SPACE = 16
+const CTA_BANNER_PUSH_R   = 280
+const CTA_BANNER_SETTLE   = 0.09
+const CTA_BANNER_EPSILON  = 0.05
+
+const CTA_BANNER_SEGMENTS = []
+for (let r = 0; r < CTA_BANNER_REPEATS; r++) {
+  CTA_BANNER_WORDS.forEach((word, i) => {
+    CTA_BANNER_SEGMENTS.push({
+      key: `cta-${r}-${i}`,
+      text: i < CTA_BANNER_WORDS.length - 1 ? `${word} ` : word,
+    })
+  })
+  CTA_BANNER_SEGMENTS.push({ key: `cta-${r}-sep`, text: CTA_BANNER_SEP })
+}
+
+// ── CTABanner — same wave/push/drag physics as PTypesRibbon ──────────
+function CTABanner() {
+  const trackRef      = useRef(null)
+  const svgRef        = useRef(null)
+  const pathRef       = useRef(null)
+  const pointsRef     = useRef([])
+  const targetXRef    = useRef(null)
+  const dirRef        = useRef(1)
+  const rafRef        = useRef(null)
+  const dragLayerRef  = useRef(null)
+  const dragOffsetRef = useRef(0)
+  const pushAmountRef = useRef(80)
+
+  useEffect(() => {
+    const track = trackRef.current
+    const svg   = svgRef.current
+    const path  = pathRef.current
+    if (!track || !svg || !path) return
+
+    const rebuild = () => {
+      const rect       = track.getBoundingClientRect()
+      const width      = rect.width || window.innerWidth
+      const height     = rect.height || 160
+      const totalWidth = width + CTA_BANNER_PERIOD * 2
+      const centerY    = height / 2
+      const amplitude  = 0  // straight line
+
+      svg.setAttribute('viewBox', `${-CTA_BANNER_PERIOD} 0 ${totalWidth} ${height}`)
+      svg.setAttribute('width', totalWidth)
+      svg.setAttribute('height', height)
+      path.setAttribute('stroke-width', height * 0.4)
+      track.style.setProperty('--cta-banner-font', `${height * 0.16}px`)
+      pushAmountRef.current = height * 0.08
+
+      const points = []
+      for (let x = -CTA_BANNER_PERIOD; x <= totalWidth - CTA_BANNER_PERIOD; x += CTA_BANNER_PT_SPACE) {
+        points.push({ x, baseY: centerY + Math.sin((x / CTA_BANNER_PERIOD) * Math.PI * 2) * amplitude, push: 0 })
+      }
+      pointsRef.current = points
+
+      let d = ''
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i]
+        d += `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${(p.baseY + p.push).toFixed(1)} `
+      }
+      path.setAttribute('d', d)
+    }
+    rebuild()
+
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(rebuild)
+    ro.observe(track)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => () => {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+  }, [])
+
+  const startLoop = useCallback(() => {
+    if (rafRef.current != null) return
+    const tick = () => {
+      const points  = pointsRef.current
+      const targetX = targetXRef.current
+      const dir     = dirRef.current
+      const pushAmt = pushAmountRef.current
+      let maxAbsPush = 0
+
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i]
+        let target = 0
+        if (targetX != null) {
+          const dist = Math.abs(p.x - targetX)
+          if (dist < CTA_BANNER_PUSH_R) {
+            const falloff = 0.5 * (1 + Math.cos((dist / CTA_BANNER_PUSH_R) * Math.PI))
+            target = falloff * pushAmt * dir
+          }
+        }
+        p.push += (target - p.push) * CTA_BANNER_SETTLE
+        const abs = Math.abs(p.push)
+        if (abs > maxAbsPush) maxAbsPush = abs
+      }
+
+      let d = ''
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i]
+        d += `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${(p.baseY + p.push).toFixed(1)} `
+      }
+      if (pathRef.current) pathRef.current.setAttribute('d', d)
+
+      if (targetX != null || maxAbsPush > CTA_BANNER_EPSILON) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        rafRef.current = null
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const handleMouseMove = useCallback((e) => {
+    const track = trackRef.current
+    if (!track) return
+    const rect = track.getBoundingClientRect()
+    targetXRef.current = e.clientX - rect.left
+    dirRef.current = (e.clientY - rect.top) < rect.height / 2 ? 1 : -1
+    startLoop()
+  }, [startLoop])
+
+  const handleMouseLeave = useCallback(() => {
+    targetXRef.current = null
+    startLoop()
+  }, [startLoop])
+
+  const handlePointerDown = useCallback((e) => {
+    if (e.button !== undefined && e.button !== 0) return
+    const layer = dragLayerRef.current
+    if (!layer) return
+    const startClientX = e.clientX
+    const startOffset  = dragOffsetRef.current
+    layer.style.cursor = 'grabbing'
+    const onMove = (ev) => {
+      let next = startOffset + (ev.clientX - startClientX)
+      while (next <= -CTA_BANNER_PERIOD) next += CTA_BANNER_PERIOD
+      while (next >= CTA_BANNER_PERIOD)  next -= CTA_BANNER_PERIOD
+      dragOffsetRef.current = next
+      layer.style.transform = `translateX(${next}px)`
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      layer.style.cursor = ''
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+  }, [])
+
   return (
-    <CSSection className="cs-end-cta">
-      <Reveal delay={0.06} className="cs-end-cta-inner">
-        <SunburstSVG size={52} color={cat.accentDark} />
-        <h3 className="cs-cta-heading">Working on something similar? Get in touch.</h3>
-        <div className="cs-cta-contacts">
-          {CTA_CONTACTS.map(({ name, href, icon }) => (
-            <a
-              key={name}
-              href={href}
-              className="cs-cta-contact-link"
-              target={href.startsWith('http') ? '_blank' : undefined}
-              rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-            >
-              <span className="cs-cta-contact-icon">{icon}</span>
-              <span className="cs-cta-contact-name">{name}</span>
-            </a>
-          ))}
+    <div className="cs-cta-banner-slot">
+      <div
+        className="cs-cta-banner-drag-layer"
+        ref={dragLayerRef}
+        onPointerDown={handlePointerDown}
+      >
+        <div
+          className="cs-cta-banner-track"
+          ref={trackRef}
+          style={{ '--cta-period': `${CTA_BANNER_PERIOD}px` }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          <svg ref={svgRef} className="cs-cta-banner-svg" preserveAspectRatio="none">
+            <path ref={pathRef} id="ctaBannerWavePath" className="cs-cta-banner-ribbon" fill="none" strokeLinecap="round" />
+            <text className="cs-cta-banner-text" dominantBaseline="central">
+              <textPath href="#ctaBannerWavePath" startOffset="0">
+                {CTA_BANNER_SEGMENTS.map((seg) => (
+                  <tspan key={seg.key} className="cs-cta-banner-word">{seg.text}</tspan>
+                ))}
+              </textPath>
+            </text>
+          </svg>
         </div>
-      </Reveal>
-    </CSSection>
+      </div>
+    </div>
+  )
+}
+
+function CSCTA() {
+  return (
+    <section className="cs-end-cta">
+      {/* Background image — large, right-anchored, bottom may be clipped */}
+      <div className="cs-cta-img-wrap" aria-hidden="true">
+        <img src={`${BASE}footer/getintouch.webp`} alt="" className="cs-cta-img" />
+      </div>
+      {/* Foreground content: heading + links */}
+      <div className="cs-cta-content">
+        <Reveal delay={0.06}>
+          <p className="cs-cta-eyebrow"><span style={{ fontWeight: 300, display: 'block' }}>Working on</span><span style={{ fontWeight: 600, display: 'block' }}>something similar?</span></p>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <div className="cs-cta-links">
+            {CTA_CONTACTS.map(({ name, href, icon }) => (
+              <a
+                key={name}
+                href={href}
+                target={name === 'Email' ? undefined : '_blank'}
+                rel="noopener noreferrer"
+                className="cs-cta-link"
+              >
+                <span className="cs-cta-link-icon">{icon}</span>
+                <span className="cs-cta-link-label">{name}</span>
+              </a>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+      {/* Banner pinned across the bottom */}
+      <div className="cs-cta-banner-wrap" aria-hidden="true">
+        <CTABanner />
+      </div>
+    </section>
   )
 }
 

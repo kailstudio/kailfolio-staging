@@ -277,6 +277,65 @@ export function PDFFlipbook({ pdfUrl, title = 'Brand Guidelines', accentColor = 
   const isError    = status === 'error'
   const isRendering = status === 'rendering'
 
+  // ── Mobile: first-page preview + download button ───────────────────────
+  // Rendering a 40+ page interactive flipbook on a phone is heavy and the
+  // UX is poor (small tap targets, awkward scrolling). Instead we render
+  // only page 1 to a canvas as a visual preview, and give the user a
+  // prominent download button to open the full PDF in their native viewer.
+  if (isMobile) {
+    return (
+      <div className="pdff-mobile-preview">
+        {/* Page 1 canvas */}
+        <div className="pdff-mobile-preview-canvas-wrap" ref={containerRef}>
+          {isLoading && (
+            <div className="pdff-mobile-preview-loading">
+              <div className="pdff-spinner" style={{ borderTopColor: accentColor }} />
+              <span>Loading preview…</span>
+            </div>
+          )}
+          {isError && (
+            <div className="pdff-mobile-preview-loading">
+              <span style={{ opacity: 0.5 }}>⚠ Preview unavailable</span>
+            </div>
+          )}
+          {!isLoading && !isError && (
+            <>
+              <canvas ref={canvasRef} className="pdff-mobile-preview-canvas" />
+              {/* Page count pill */}
+              {totalPages > 0 && (
+                <span className="pdff-mobile-preview-badge"
+                  style={{ background: `${accentColor}22`, color: accentColor, borderColor: `${accentColor}44` }}>
+                  {totalPages} pages
+                </span>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Download CTA */}
+        <a
+          href={pdfUrl}
+          download
+          className="pdff-mobile-download-btn"
+          aria-label={`Download ${title} PDF`}
+        >
+          <span className="pdff-mobile-download-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </span>
+          <span className="pdff-mobile-download-text">
+            <span className="pdff-mobile-download-label">Download PDF</span>
+            <span className="pdff-mobile-download-sub">{title}</span>
+          </span>
+        </a>
+      </div>
+    )
+  }
+
   return (
     <>
     <div className={`pdff${isFullscreen ? ' pdff--fullscreen' : ''}`} ref={containerRef}>

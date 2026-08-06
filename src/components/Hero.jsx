@@ -49,6 +49,7 @@ const START_IMAGE = `${BASE}hero-intro/herointrostart.webp`
 // every animated asset). START_IMAGE above stays as its fallback.
 const START_VIDEO = `${BASE}hero-intro/herointrostart.webm`
 const CHIP_IMAGES = [1, 2, 4, 5, 6].map((n) => `${BASE}hero-intro/herointro${n}.webp`).concat(START_IMAGE)
+const CHIP_VIDEOS = [1, 2, 4, 5, 6].map((n) => `${BASE}hero-intro/herointro${n}.webm`).concat(START_VIDEO)
 
 const CHIP_COUNT = CHIP_IMAGES.length
 const MOBILE_MQ  = '(max-width: 640px)'
@@ -69,6 +70,7 @@ const CHIP_SPACING          = 1.25 // radius, as a multiple of chip size — >1 
 const CHIPS = CHIP_IMAGES.map((img, i) => ({
   id: i,
   img,
+  video: CHIP_VIDEOS[i],
   label: `Work ${i + 1}`,
   angle: -Math.PI / 2 + i * ((2 * Math.PI) / CHIP_COUNT),
 }))
@@ -100,7 +102,7 @@ function useIsHeroMobile() {
 // rather than relying on a fixed CSS `top: calc(50% - halfsize)` — the CSS
 // side just anchors at top:50%/left:50% and lets this handle the rest,
 // since the actual pixel half-size isn't known until measured/solved here.
-function HeroChip({ angle, label, img, size, radius, opacity }) {
+function HeroChip({ angle, label, img, video, size, radius, opacity }) {
   const x = useTransform(radius, (r) => r * Math.cos(angle) - size / 2)
   const y = useTransform(radius, (r) => r * Math.sin(angle) - size / 2)
   return (
@@ -110,7 +112,12 @@ function HeroChip({ angle, label, img, size, radius, opacity }) {
       aria-hidden="true"
       title={label}
     >
-      <img src={img} alt="" className="hero-intro-chip-img" draggable={false} />
+      <LoopMedia
+        webmSrc={video}
+        webpSrc={img}
+        alt=""
+        className="hero-intro-chip-img"
+      />
     </motion.div>
   )
 }
@@ -216,7 +223,7 @@ export default function Hero({ visible }) {
               herointrostart shows at the very start. They fade in together
               as scroll actually fans them outward. */}
           {CHIPS.map((chip) => (
-            <HeroChip key={chip.id} angle={chip.angle} label={chip.label} img={chip.img} size={chipSize} radius={radius} opacity={chipOpacity} />
+            <HeroChip key={chip.id} angle={chip.angle} label={chip.label} img={chip.img} video={chip.video} size={chipSize} radius={radius} opacity={chipOpacity} />
           ))}
 
           <motion.div
